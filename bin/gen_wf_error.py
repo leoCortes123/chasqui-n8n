@@ -37,14 +37,20 @@ w.pg("Registrar",
 w.link("Clasificar", "Registrar")
 
 # Arma notificación a los admins con el detalle técnico.
+#
+# El texto NO se concatena acá: va la clave de plantilla y los datos como vars
+# (migración 057). Antes esta era la única frase del sistema que no se podía
+# cambiar sin editar Python y reimportar el workflow.
 w.pg("Admins",
      "SELECT jsonb_build_object("
      "  'chat_id', telegram_chat_id,"
      "  'respuestas', jsonb_build_array(jsonb_build_object("
-     "    'plantilla', '⚠️ Falla en {{ $('Clasificar').first().json.workflow }} "
-     "(' || '{{ $('Clasificar').first().json.tipo }}' || '): "
-     "{{ String($('Clasificar').first().json.detalle.mensaje).replaceAll(\"'\",\"''\").slice(0,200) }}',"
-     "    'vars', '{}'))) AS payload"
+     "    'plantilla', 'falla.aviso_admin',"
+     "    'vars', jsonb_build_object("
+     "      'workflow', '{{ String($('Clasificar').first().json.workflow).replaceAll(\"'\",\"''\") }}',"
+     "      'tipo',     '{{ $('Clasificar').first().json.tipo }}',"
+     "      'mensaje',  '{{ String($('Clasificar').first().json.detalle.mensaje).replaceAll(\"'\",\"''\").slice(0,200) }}'"
+     "    )))) AS payload"
      " FROM usuarios WHERE rol='admin' AND telegram_chat_id IS NOT NULL;",
      [660, 300])
 w.link("Registrar", "Admins")

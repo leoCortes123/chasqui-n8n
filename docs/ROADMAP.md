@@ -13,8 +13,13 @@ registro histórico de las Fases 1-4 viejas.*
 | **A2** Inventario declarado | ✅ **hecha y verificada** | `054_inventario_declarado.sql` |
 | **A3** Impacto tipado + fix de `validar_cifras` | ✅ **hecha y verificada** | `055_impacto_tipado.sql` |
 | **A4** Router modular | ✅ **hecha y verificada** | `056_router_modular.sql` |
-| **A5** Limpieza + interfaz de matching | ⏭️ **siguiente** | `057_limpieza.sql` |
-| B, C, D, E, F | pendientes | — |
+| **A5** Limpieza + interfaz de matching | ✅ **hecha y verificada** | `057_limpieza.sql` |
+| **B1** Snapshot del estado empresarial | ⏭️ **siguiente** | `058_snapshot_negocio.sql` |
+| B2-B4, C, D, E, F | pendientes | — |
+
+**La Fase A está cerrada.** Las cuatro restricciones globales se sostienen, los
+cinco hallazgos que ordenaban el roadmap (H1-H5) están resueltos, y C3 —el
+bloqueo declarado de la Fase C— también.
 
 ### Lo que dejó A3
 
@@ -76,6 +81,60 @@ mensaje normal sí la refresca.
 enteras entre migraciones. Son mucho más chicas que el router y ninguna está
 en el camino crítico de B/C/D, pero el mecanismo que produjo H5 sigue vivo
 para ellas.
+
+### Lo que dejó A5
+
+**Bajas** (por migración nueva, sin tocar el histórico): `servicios.pasos`,
+`plantillas_pdf` + el contenedor Gotenberg del compose, el parámetro fantasma
+`rotacion_baja_dias` y `teclado_servicios()`. `ejecucion_preparar` dejó de
+consultar `plantillas_pdf` en cada corrida para publicar un dato que ningún
+nodo leía desde la 020.
+
+**El segundo menú se fue.** `teclado_servicios()` listaba los mismos servicios
+que `teclado_modulo` con textos propios. Lo reemplaza `teclado_intake()`, que
+sigue la regla de la 045/046 —módulo primero— con el atajo obvio cuando hay un
+solo módulo activo. Efecto visible: el teclado de "¿qué querés hacer?" pasa de
+`[servicios… + ✖️ Cancelar]` a `[servicios… + ❓ Cómo funciona + ⬅️ Volver]`,
+que es el mismo de la bienvenida. Es el único cambio de UX de la fase, y fue a
+propósito.
+
+**El `periodo` volvió.** Restaurado en `ingesta_resumen_sesion` y en su
+plantilla, que también había perdido el hueco `{{periodo}}`: la función podía
+calcularlo y nadie lo mostraba. Es H5 servido en bandeja — durante tres
+migraciones, quien subía dos semanas de ventas no se enteraba de que eran dos
+semanas hasta ver el informe.
+
+**Los textos salieron de los nodos.** Las cuatro frases de error de
+`wf_ingesta` ("no reconocí el formato", "no pude descargarlo del chat", "se me
+cayó guardándolo", "no pude leerlo") y el aviso al admin de `wf_error` vivían
+dentro de nodos: cambiarles una palabra obligaba a regenerar y reimportar un
+workflow. Ahora cada rama nombra su plantilla y solo pasa datos. Verificado:
+`grep` de esas frases en `bin/` y `workflows/` no devuelve nada.
+
+**C3 cerrado, que es lo que bloqueaba la Fase C.** `match_confirmar_alias`
+existía desde la 005 sin un solo llamador. Ahora hay tres:
+
+- `/matching` dejó de mentir por omisión. Antes decía "85% resuelto", que suena
+  bien aunque ese 15% sea la mitad de la facturación. Ahora encabeza con
+  **cuánta plata queda fuera de los cálculos** y qué porcentaje del movimiento
+  es. La vista pasó a basarse en `negocios` en vez de `alias`: antes un negocio
+  con movimientos sin resolver pero sin filas en `alias` no aparecía.
+- `/pendientes` (admin) lista los textos sin resolver con su mejor candidato del
+  trigram y cuánto dinero representa cada uno.
+- **Portal, pestaña Ventas → Productos sin resolver**: la lista con el candidato
+  preseleccionado y un botón para confirmar. `portal_alias_confirmar` valida que
+  alias y producto sean del negocio de la sesión antes de delegar.
+
+Probado de punta a punta con un pendiente sintético: $35.000 en 2 movimientos
+(2% del movimiento) detectados y reportados por los tres caminos, el candidato
+sugerido con similitud 0.577, y al confirmar los dos movimientos entran a los
+cálculos y el pendiente desaparece. Un producto de otro negocio se rechaza.
+
+**Hallado de paso**: `bin/exportar-workflows.sh` hacía `rm -rf workflows` y se
+llevaba puestos los `wf_*.json` de los generadores, que son la fuente que lee
+`importar-workflows.sh`. Solo no había explotado porque nadie exportaba después
+de generar. Corregido: ahora borra únicamente las fotos con nombre de id. Las
+fotos versionadas estaban congeladas en el 24 de julio; quedaron al día.
 
 ---
 
@@ -171,7 +230,7 @@ El filtro del plan free hoy es de **escritura**, y por eso **ningún lector tien
 **C2 — `documentos.filas_fuera_de_plan` cambia de significado.**
 Hoy cuenta filas **descartadas**. Con A1 pasa a contar filas **guardadas pero fuera de la ventana de lectura**, y como `plan_desde` se desplaza cada mes (`051:40-50`, `date_trunc('month', current_date)`), el contador caduca solo. Decisión: se conserva la columna y el incremento (el trigger pasa a `RETURN NEW`), se acepta la caducidad porque es un dato informativo del momento de la carga, y **cambia el texto al usuario**: de "se descartaron N filas" a "N filas quedan fuera de tu ventana gratis; las guardo y se activan si pasás de plan". Esa frase, además, es un argumento de venta que hoy no existe.
 
-**C3 — `match_confirmar_alias` no tiene ni un solo llamador.** Verificado en `db/`, `bin/` y `portal/`: cero referencias fuera de su propia definición (`005:93`). Los alias `origen='pendiente'` se acumulan sin salida, y un movimiento sin `producto_id` **no entra a ningún cálculo**: no tiene margen, no tiene rotación, no entra al Pareto. Es una pérdida silenciosa de datos que degrada exactamente las cifras del producto. `/matching` reporta el porcentaje pero no ofrece cómo arreglarlo.
+**C3 — `match_confirmar_alias` no tiene ni un solo llamador.** *(Resuelto en `057`.)* Verificado en `db/`, `bin/` y `portal/`: cero referencias fuera de su propia definición (`005:93`). Los alias `origen='pendiente'` se acumulan sin salida, y un movimiento sin `producto_id` **no entra a ningún cálculo**: no tiene margen, no tiene rotación, no entra al Pareto. Es una pérdida silenciosa de datos que degrada exactamente las cifras del producto. `/matching` reporta el porcentaje pero no ofrece cómo arreglarlo.
 **Consecuencia**: la resolución de pendientes debe existir **antes de la Fase C**. Si no, "¿cuál es mi producto más rentable?" se responde ignorando parte de las ventas sin decirlo.
 
 **C4 — El snapshot tiene datos previos disponibles.** `ejecuciones.hallazgos jsonb` (`001`) ya persiste el JSON completo de cada corrida. Eso confirma la corrección del usuario (snapshot ≠ informe) y abarata B1: hay material histórico para un backfill parcial. Pero **no sirve como snapshot**: su forma cambió cuatro veces (025, 029, 043, 047) y volverá a cambiar. El snapshot debe ser tipado y versionado.
@@ -224,7 +283,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 | Prompts de `ventas_compras` / `mercado_compras` | 047 | **CORE** | Contrato JSON estructurado |
 | `parametros` de umbrales | 003, 047 | **CORE** | Calibración por negocio |
 | `tipos_negocio` + `negocios.tipo` | 046 | **CORE** | Sin él se compara contra un promedio inexistente |
-| `parametros.rotacion_baja_dias` | 003 | **ELIMINAR** | Nunca leído; reemplazado de hecho por `rotacion_lenta_dias` (047) |
+| `parametros.rotacion_baja_dias` | 003 | ~~ELIMINAR~~ ✅ dado de baja en `057` | Nunca leído; reemplazado de hecho por `rotacion_lenta_dias` (047) |
 | `productos.categoria` | 001 | **CORE latente** | Se mapea en la ingesta y no se agrega en ninguna métrica. Análisis gratis sin usar |
 
 ### 3.2 Datos: ingesta, matching, inventario
@@ -236,10 +295,10 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 | Compuerta de calidad (`max_pct_nulos`) | 017 | **HABILITADOR crítico** | "No inserta ni una fila" antes que corromper en silencio |
 | `ingesta_parsear_dian` | 004→036 | **HABILITADOR crítico** | **Riesgo abierto**: fixtures sintéticos, sin XML real de cliente |
 | Matching (`match_resolver_producto`, `_documento`, `alias`, `norm_texto`) | 005 | **HABILITADOR crítico** | La calidad del margen depende de esto |
-| `match_confirmar_alias` | 005 | **HABILITADOR sin interfaz** | **C3**: cero llamadores. Debe resolverse antes de la Fase C |
-| `movimientos_limite_plan()` (trigger) | 051 | **ELIMINAR y rehacer** | **H1**, viola R-II |
+| `match_confirmar_alias` | 005 | ~~sin interfaz~~ ✅ **HABILITADOR** — `057` le dio tres llamadores | **C3**: cero llamadores. Debe resolverse antes de la Fase C |
+| `movimientos_limite_plan()` (trigger) | 051 | ~~ELIMINAR y rehacer~~ ✅ rehecho en `053` | **H1**, viola R-II |
 | Stock declarado | — | **NO EXISTE** | **H3**. Bloquea la corrección de R4/R5 |
-| `ingesta_resumen_documento` / `_resumen_sesion` | 017→038, 042→046→051 | **SECUNDARIA** | Recuperar el `periodo` que la 051 borró (H5) |
+| `ingesta_resumen_documento` / `_resumen_sesion` | 017→038, 042→046→051→`057` | **SECUNDARIA** | ~~Recuperar el `periodo` que la 051 borró (H5)~~ ✅ `057` |
 
 ### 3.3 Cerebro / conocimiento
 
@@ -257,15 +316,15 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 
 | Pieza | Migración | Clase | Nota |
 |---|---|---|---|
-| `router_procesar_mensaje` | 012…051 (8 copias) | **HABILITADOR — refactor obligatorio** | **H5**. Cuello de botella de todo el roadmap |
+| `router_procesar_mensaje` | 012…053 (8 copias) | ~~refactor obligatorio~~ ✅ partido en handlers en `056` | **H5**. Cuello de botella de todo el roadmap |
 | `router_respuesta` | 024 | **HABILITADOR** | Elimina de raíz el bug de literales jsonb |
 | `usuario_de_canal` / `identidades` / `canal_de_chat` / `chat_de_usuario` | 029→044→050 | **HABILITADOR** | 3 copias íntegras. `canal='portal'` anunciado y nunca creado |
 | `resolver_plantilla` + `plantillas` + `teclado_markup` + `esc_html` | 002, 022, 023, 027 | **HABILITADOR** | La tesis "comportamiento como filas" |
 | WhatsApp (`wa_texto`, `wa_payload`, `wf_wa_router`) | 044 | **HABILITADOR** | Construido, **no desplegado**: no hay `wfWa*.json` con ID entre los importados |
 | `modulos` + `teclado_modulos`/`teclado_modulo` | 045 | **SECUNDARIA** | Menú de dos niveles |
-| `teclado_servicios()` | 030 | **ELIMINAR (unificar)** | Segundo menú coexistiendo con `teclado_modulo`, con textos distintos |
+| `teclado_servicios()` | 030 | ~~ELIMINAR (unificar)~~ ✅ reemplazado por `teclado_intake()` en `057` | Segundo menú coexistiendo con `teclado_modulo`, con textos distintos |
 | `admin_reporte` + vistas de observabilidad | 008, 015 | **HABILITADOR** | `/embudo` y `/matching` son los dos que informan producto |
-| `servicios.pasos` | 003 | **ELIMINAR** | Letra muerta desde la 012 |
+| `servicios.pasos` | 003 | ~~ELIMINAR~~ ✅ dado de baja en `057` | Letra muerta desde la 012 |
 | Consentimiento en contexto | 051 | **HABILITADOR** | Requisito legal, bien resuelto |
 | Aviso de IA | 051, 052 | **HABILITADOR** | Obligatorio bajo "IA como interfaz" |
 
@@ -293,7 +352,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 
 ### 3.7 Muerto confirmado
 
-`plantillas_pdf` + contenedor Gotenberg (muertos desde la 020; `ejecucion_preparar` todavía devuelve la plantilla, y `docs/GUIA_TECNICA.md:39,50` aún los dibuja en la topología) · `cifra_canonica` (ya dropeada por 026) · `plantilla_cuerpo_srv` sin variantes (N consultas fallidas por render).
+~~`plantillas_pdf` + contenedor Gotenberg~~ ✅ dados de baja en `057`, junto con la referencia de `ejecucion_preparar` y la topología de `docs/GUIA_TECNICA` · `cifra_canonica` (ya dropeada por 026) · `plantilla_cuerpo_srv` sin variantes (N consultas fallidas por render).
 
 ### 3.8 Workflows (n8n)
 
@@ -369,7 +428,7 @@ Partir `router_procesar_mensaje` en handlers por estado (`router_h_comandos`, `r
 
 **El contrato**: un solo argumento `ctx jsonb` —agregarle un dato no cambia ninguna firma— y `NULL` como "no me toca, seguí". `NULL` es inequívoco porque `router_respuesta` construye siempre un objeto, incluso cuando la respuesta no lleva texto.
 
-**A5. Limpieza y calidad de datos** — `057_limpieza.sql`
+**A5. Limpieza y calidad de datos** — `057_limpieza.sql` ✅ **APLICADA 2026-08-15**
 Dar de baja (por migración nueva, nunca editando el histórico): `servicios.pasos`, `plantillas_pdf` + Gotenberg del compose, `parametros.rotacion_baja_dias`, `teclado_servicios()`. *(`hallazgos_compras(bigint)` sale de esta lista: está viva.)* Recuperar el `periodo` de `ingesta_resumen_sesion`. Bajar a `plantillas` los textos hard-codeados de `gen_wf_ingesta.py` y `gen_wf_error.py`. Corregir `docs/GUIA_TECNICA.md:39,50`.
 **Más la capacidad mínima de matching (C3)**: `/pendientes` para admin y RPC `portal_alias_pendientes` / `portal_alias_confirmar` sobre `match_confirmar_alias`, y `/matching` reportando cuánto **dinero** queda fuera de los cálculos, no solo cuántos aliases.
 

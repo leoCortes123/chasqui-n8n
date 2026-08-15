@@ -68,6 +68,7 @@ SELECT _t('A6 acepto suelto',     _ev('acepto'));
 SELECT _t('A7 acepto:svc',        _ev('acepto:svc:ventas_compras'));
 SELECT _t('A8 svc sin autorizar', _ev('svc:ventas_compras'));
 SELECT _t('A9 /salud no admin',   _ev('/salud'));
+SELECT _t('A10 /pendientes no admin', _ev('/pendientes'));
 
 -- Ahora sí: el usuario existe y está autorizado.
 SELECT usuario_de_canal('telegram', _ev(''));
@@ -143,6 +144,7 @@ SELECT _t('F1 /salud',            _ev('/salud'));
 SELECT _t('F2 /embudo',           _ev('/embudo'));
 SELECT _t('F3 /matching',         _ev('/matching'));
 SELECT _t('F4 /admin',            _ev('/admin'));
+SELECT _t('F5 /pendientes',       _ev('/pendientes'));
 -- El admin NO debe refrescar ultima_actividad de la sesión abierta.
 UPDATE usuarios SET rol = 'dueno' WHERE telegram_user_id = 777001;
 

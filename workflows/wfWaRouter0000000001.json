@@ -1,40 +1,40 @@
 {
-  "updatedAt": "2026-07-28T17:32:42.374Z",
-  "createdAt": "2026-07-24T20:06:47.893Z",
-  "id": "wfRouter000000000001",
-  "name": "wf_router",
+  "updatedAt": "2026-07-28T23:50:53.903Z",
+  "createdAt": "2026-07-28T23:50:51.135Z",
+  "id": "wfWaRouter0000000001",
+  "name": "wf_wa_router",
   "description": null,
   "active": true,
   "isArchived": false,
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "telegram",
-        "responseMode": "onReceived",
+        "httpMethod": "GET",
+        "path": "whatsapp-e2908689",
+        "responseMode": "responseNode",
         "options": {}
       },
-      "id": "Webhook",
-      "name": "Webhook",
+      "id": "WebhookGet",
+      "name": "WebhookGet",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
         0,
-        300
+        100
       ],
-      "webhookId": "wfRouterWebhook00001"
+      "webhookId": "wfWaRouterWebhookG01"
     },
     {
       "parameters": {
-        "jsCode": "\nconst item = $input.first().json;\nconst secretOk = (item.headers?.['x-telegram-bot-api-secret-token'] || '') === 'ed5a7589ec01eaf170c3b5ce7527a4021392f1238c7a053b';\nif (!secretOk) return [];              // rechaza lo que no venga de Telegram\nconst b = item.body || item;\nconst msg = b.message || b.edited_message || b.callback_query?.message || {};\nconst from = b.message?.from || b.callback_query?.from || msg.from || {};\nconst texto = b.message?.text || b.callback_query?.data || msg.caption || '';\nconst tiene_documento = !!(msg.document || (msg.photo && msg.photo.length));\nif (!from.id) return [];\nreturn [{ json: { evento: {\n  canal: 'telegram',\n  from: { id: from.id, username: from.username },\n  chat: { id: msg.chat?.id || from.id },\n  texto, tiene_documento,\n  // Solo presente cuando el update es un toque de botón.\n  callback_id: b.callback_query?.id || null,\n  file_id: msg.document?.file_id || (msg.photo ? msg.photo[msg.photo.length-1].file_id : null),\n  file_name: msg.document?.file_name || null,\n  mime: msg.document?.mime_type || null\n} } }];\n"
+        "jsCode": "\nconst q = $input.first().json.query || {};\nreturn [{ json: {\n  ok: q['hub.mode'] === 'subscribe' && q['hub.verify_token'] === '39ada60a745bc1329d518a2f1b99cf23d1f26d3d2e8e8af3',\n  challenge: q['hub.challenge'] || ''\n} }];\n"
       },
-      "id": "Normalizar",
-      "name": "Normalizar",
+      "id": "Verificar",
+      "name": "Verificar",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        220,
-        300
+        200,
+        100
       ]
     },
     {
@@ -46,7 +46,7 @@
           "combinator": "and",
           "conditions": [
             {
-              "leftValue": "={{ !!$json.evento.callback_id }}",
+              "leftValue": "={{ $json.ok }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -57,42 +57,81 @@
           ]
         }
       },
-      "id": "EsBoton?",
-      "name": "EsBoton?",
+      "id": "TokenOk?",
+      "name": "TokenOk?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        400,
-        300
+        380,
+        100
       ]
     },
     {
       "parameters": {
-        "resource": "callback",
-        "operation": "answerQuery",
-        "queryId": "={{ $json.evento.callback_id }}",
-        "additionalFields": {}
+        "respondWith": "text",
+        "responseBody": "={{ $json.challenge }}",
+        "options": {}
       },
-      "id": "Responder",
-      "name": "Responder",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "id": "Challenge",
+      "name": "Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
       "position": [
-        600,
-        200
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "chasquiTg0000000001",
-          "name": "Chasqui Telegram"
+        560,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "no",
+        "options": {
+          "responseCode": 403
         }
       },
-      "onError": "continueRegularOutput"
+      "id": "Rechazar",
+      "name": "Rechazar",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-e2908689",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "Webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "wfWaRouterWebhookP01"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst PNID = '';\nconst body = $input.first().json.body || {};\nconst out = [];\nfor (const e of (body.entry || [])) for (const ch of (e.changes || [])) {\n  const v = ch.value || {};\n  if (PNID && v.metadata?.phone_number_id !== PNID) continue;\n  for (const m of (v.messages || [])) {\n    if (!m.from) continue;\n    const doc = m.document || null;\n    const img = m.image || null;\n    const texto = m.text?.body\n      || m.interactive?.button_reply?.id\n      || m.interactive?.list_reply?.id\n      || doc?.caption || img?.caption || '';\n    const nombre = (v.contacts || []).find(c => c.wa_id === m.from)?.profile?.name;\n    out.push({ json: { evento: {\n      canal: 'whatsapp',\n      from: { id: m.from, username: nombre || null },\n      chat: { id: m.from },\n      texto, tiene_documento: !!(doc || img),\n      callback_id: null,           // WhatsApp no exige answerCallbackQuery\n      file_id: doc?.id || img?.id || null,\n      file_name: doc?.filename || null,\n      mime: doc?.mime_type || img?.mime_type || null\n    } } });\n  }\n}\nreturn out;\n"
+      },
+      "id": "Normalizar",
+      "name": "Normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        400
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT router_procesar_mensaje('{{ JSON.stringify($('Normalizar').first().json.evento).replaceAll(\"'\",\"''\") }}'::jsonb) AS r;",
+        "query": "SELECT router_procesar_mensaje('{{ JSON.stringify($json.evento).replaceAll(\"'\",\"''\") }}'::jsonb) AS r;",
         "options": {}
       },
       "id": "Router",
@@ -100,8 +139,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        800,
-        300
+        440,
+        400
       ],
       "credentials": {
         "postgres": {
@@ -112,15 +151,15 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst r = $input.first().json.r || {};\nconst ev = $('Normalizar').first().json.evento;\nconst out = [];\nif ((r.respuestas||[]).length)\n  out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });\nfor (const a of (r.acciones||[]))\n  out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });\nreturn out;\n"
+        "jsCode": "\nconst evs = $('Normalizar').all();\nconst out = [];\n$input.all().forEach((item, i) => {\n  const r = item.json.r || {};\n  const ev = evs[i]?.json.evento;\n  if ((r.respuestas || []).length)\n    out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });\n  for (const a of (r.acciones || []))\n    out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });\n});\nreturn out;\n"
       },
       "id": "Despachar",
       "name": "Despachar",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1000,
-        300
+        660,
+        400
       ]
     },
     {
@@ -193,8 +232,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
       "position": [
-        1220,
-        300
+        880,
+        400
       ]
     },
     {
@@ -215,8 +254,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1440,
-        180
+        1100,
+        280
       ],
       "onError": "continueRegularOutput"
     },
@@ -238,8 +277,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1440,
-        300
+        1100,
+        400
       ],
       "onError": "continueRegularOutput"
     },
@@ -261,8 +300,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1440,
-        440
+        1100,
+        540
       ],
       "onError": "continueRegularOutput"
     },
@@ -284,13 +323,53 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1660,
-        440
+        1320,
+        540
       ],
       "onError": "continueRegularOutput"
     }
   ],
   "connections": {
+    "WebhookGet": {
+      "main": [
+        [
+          {
+            "node": "Verificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar": {
+      "main": [
+        [
+          {
+            "node": "TokenOk?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TokenOk?": {
+      "main": [
+        [
+          {
+            "node": "Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Webhook": {
       "main": [
         [
@@ -303,35 +382,6 @@
       ]
     },
     "Normalizar": {
-      "main": [
-        [
-          {
-            "node": "EsBoton?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "EsBoton?": {
-      "main": [
-        [
-          {
-            "node": "Responder",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Responder": {
       "main": [
         [
           {
@@ -409,18 +459,18 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": null,
-  "versionId": "b9a2466a-9ff7-4c47-9a64-358e39c57487",
-  "activeVersionId": "b9a2466a-9ff7-4c47-9a64-358e39c57487",
-  "versionCounter": 7,
-  "triggerCount": 1,
+  "versionId": "98a67a7f-446d-49a8-8366-224a66d7b466",
+  "activeVersionId": "98a67a7f-446d-49a8-8366-224a66d7b466",
+  "versionCounter": 1,
+  "triggerCount": 2,
   "sourceWorkflowId": null,
   "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-07-24T20:06:47.893Z",
-      "createdAt": "2026-07-24T20:06:47.893Z",
+      "updatedAt": "2026-07-28T23:50:51.135Z",
+      "createdAt": "2026-07-28T23:50:51.135Z",
       "role": "workflow:owner",
-      "workflowId": "wfRouter000000000001",
+      "workflowId": "wfWaRouter0000000001",
       "projectId": "ARxLsftxtA8Uahtb",
       "project": {
         "updatedAt": "2026-07-24T21:19:59.774Z",

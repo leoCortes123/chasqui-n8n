@@ -8,7 +8,7 @@ Documento de referencia para quien opera, mantiene o extiende el sistema.
 
 n8n es un **runtime fijo de 6 workflows** que casi nunca se tocan. Todo el
 comportamiento del sistema —los pasos de la conversación, los textos, los
-umbrales, los prompts del LLM, las plantillas de PDF, los formatos de archivo
+umbrales, los prompts del LLM, los formatos de archivo
 que se aceptan— **vive en filas de Postgres**, no en nodos de n8n.
 
 La regla operativa que lo verifica: **si para lanzar un servicio nuevo hay que
@@ -19,8 +19,8 @@ Corolario de reparto de responsabilidades:
 
 - **Postgres hace** todo lo determinístico: parseo, normalización, matching,
   cálculo, máquina de estados de la conversación, decisiones.
-- **n8n hace** solo lo que Postgres no puede: llamadas HTTP (LLM), render de
-  PDF, descarga de archivos, reintentos con backoff. Nada de aritmética ni
+- **n8n hace** solo lo que Postgres no puede: llamadas HTTP (LLM), descarga de
+  archivos, reintentos con backoff. Nada de aritmética ni
   reglas de negocio en los nodos.
 
 Motivo técnico, no estético: dentro de una transacción de Postgres una llamada
@@ -34,10 +34,10 @@ tomado el lock de la sesión bloqueando al usuario.
 ```
 Telegram  ──webhook──►  cloudflared (túnel)  ──►  n8n :5678
                                                     │
-                            ┌───────────────────────┼─────────────┐
-                            ▼                        ▼             ▼
-                       Postgres :5432          Gotenberg :3000   DeepSeek API
-                       ├── base "chasqui"      (render PDF)      (redacción)
+                            ┌───────────────────────┴─────────────┐
+                            ▼                                     ▼
+                       Postgres :5432                      Proveedor LLM
+                       ├── base "chasqui"                  (redacción)
                        │   (negocio: todo)
                        └── base "n8n"
                            (runtime n8n)
@@ -47,7 +47,6 @@ Telegram  ──webhook──►  cloudflared (túnel)  ──►  n8n :5678
 |---|---|---|
 | `postgres` | postgres:16 | Dos bases separadas en una instancia: `chasqui` (negocio) y `n8n` (runtime). |
 | `n8n` | n8nio/n8n:2.31.5 | Orquestador. Backend en la base `n8n` (no SQLite). |
-| `gotenberg` | gotenberg/gotenberg:8 | HTML → PDF vía Chromium. Sin puertos publicados; solo la red interna. |
 | `cloudflared` | cloudflare/cloudflared | Quick tunnel. Perfil `local`. |
 | `registrador` | alpine:3.20 | Descubre la URL del túnel y re-registra el webhook de Telegram. Perfil `local`. |
 
@@ -97,8 +96,10 @@ fallos, que son los que se miran. `N8N_DEFAULT_BINARY_DATA_MODE=filesystem`
 rol, autorizacion_datos, autorizacion_fecha, creado_en`
 
 **`servicios`** — catálogo declarativo.
-`codigo (PK), nombre, descripcion, pasos jsonb, entrada, funcion_hallazgos,
+`codigo (PK), nombre, descripcion, entrada, funcion_hallazgos,
 modulo_codigo, orden, activo`
+*(`pasos jsonb` — el guion de intake de la 001 — se dio de baja en la `057`:
+letra muerta desde la 012, cuando el router pasó a resolver los pasos solo.)*
 `entrada` distingue los que piden archivos de los que se disparan escribiendo.
 `modulo_codigo` dice bajo qué botón del menú aparece (NULL = no se ofrece).
 
@@ -174,9 +175,6 @@ nodo. Las compone `informe_render`.
 sistema, usuario, modelo, temperatura, max_tokens, activo`. Índice único parcial:
 un solo prompt activo por servicio. Iterar el tono = INSERT de otra versión + apagar la anterior.
 
-**`plantillas_pdf`** — `id, servicio_codigo, version, html, css, activo`. Un
-activo por servicio.
-
 **`tipos_negocio`** — la naturaleza del negocio, como botones. `codigo (PK),
 nombre, orden, activo`. Se pregunta una sola vez, antes del primer análisis, y
 queda en `negocios.tipo`; de ahí viaja a los hallazgos como `tipo_negocio`. Un
@@ -242,7 +240,7 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `esc_html` | `(text) → text` IMMUTABLE | escapa `& < >` para el modo HTML de Telegram. |
 | `resolver_plantilla` | `(clave, vars jsonb, teclado jsonb) → jsonb` | devuelve `{texto, formato, teclado}`. Sustituye `{{var}}` escapando el valor salvo que la variable esté en `crudas`; degrada devolviendo la clave (escapada) si la plantilla no existe. El `teclado` del parámetro pisa el de la fila solo si es un array (así `'null'::jsonb` no borra el de la fila). |
 | `teclado_markup` | `(teclado jsonb, vars jsonb) → jsonb` | traduce el teclado abstracto a `reply_markup`. Aplana a **un botón por fila**, descarta botones sin `dato` o con `url`, recorta el `callback_data` a 64 caracteres y aplica el tope de `parametros.teclado_max_filas` (ver §6.4 por qué). Nunca devuelve NULL: sin botones da `{"inline_keyboard": []}`. |
-| `teclado_servicios` | `() → jsonb` | un botón por servicio activo (`svc:<codigo>`) + Cancelar. Un servicio nuevo aparece solo en el menú. |
+| `teclado_intake` | `() → jsonb` | El teclado de "¿qué querés hacer?". Con un solo módulo activo entra directo a sus servicios; con varios muestra los módulos. Reemplaza (`057`) a `teclado_servicios`, que era un segundo menú con textos propios para los mismos servicios. |
 | `usuario_de_telegram` | `(evento jsonb) → bigint` | localiza o crea el usuario por `telegram_user_id`. |
 | `cifra_norm` / `cifra_variantes` | `(text) → text` / `text[]` IMMUTABLE | forma canónica de un número y sus lecturas posibles (`1.234` = mil doscientos treinta y cuatro **o** uno con 234 milésimas). Las usa `validar_cifras`. |
 | `fmt_decimal` | `(numeric) → text` IMMUTABLE | decimal con coma y sin ceros de relleno (`28.40` → `28,4`). |
@@ -272,7 +270,8 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 |---|---|
 | `match_resolver_producto(negocio_id, texto) → jsonb` | (1) alias exacto; (2) trigram sobre productos ≥ umbral → auto-confirma y memoriza alias; (3) si no, alias `pendiente`. Umbral: `parametro('match_umbral_trgm')`, default 0.45. |
 | `match_resolver_documento(documento_id) → jsonb` | Recorre los movimientos del documento. Compras con código de barras **siembran** el catálogo (producto por código); sin código, resuelven por texto. Devuelve `{total, resueltos, pendientes, productos_nuevos}`. |
-| `match_confirmar_alias(alias_id, producto_id) → void` | Confirmación manual; reaplica a los movimientos huérfanos que coincidan. |
+| `match_confirmar_alias(alias_id, producto_id) → void` | Confirmación manual; reaplica a los movimientos huérfanos que coincidan. Desde la `057` tiene llamadores: `portal_alias_confirmar`. |
+| `alias_pendientes(negocio_id, limite) → jsonb` | Los alias sin resolver, cada uno con **cuántos movimientos y cuánta plata** representa y el mejor candidato del trigram. Solo lee. |
 
 ### 4.4 Cálculo y ejecución
 
@@ -298,7 +297,7 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `router_h_intake(ctx) → jsonb` | Hay sesión y falta elegir servicio (match difuso por nombre o código). |
 | `router_h_recibiendo(ctx) → jsonb` | Hay servicio elegido y entran archivos: `/todos`, `/faltan`, `/listo`. |
 | `router_respuesta(chat, plantilla, vars, teclado, acciones) → jsonb` | Arma ese valor de retorno. Evita repetir quince veces el mismo `jsonb_build_object` y elimina de raíz el error de tipado de la migración 016 (literales `'{}'` entrando como `text`). Con `plantilla = NULL` devuelve solo acciones. |
-| `admin_reporte(cmd) → text` | Formatea las vistas de operación como texto para Telegram (`/salud`, `/embudo`, `/fallas`, `/consumo`, `/matching`). |
+| `admin_reporte(cmd) → text` | Formatea las vistas de operación como texto para Telegram (`/salud`, `/embudo`, `/fallas`, `/consumo`, `/matching`, `/pendientes`). |
 
 **Botón y texto son el mismo camino.** Los `callback_data` de los teclados son
 los propios comandos (`/nueva`, `/listo`, `/cancelar`, `acepto`), así que
@@ -482,7 +481,7 @@ contesta cada cosa:
 /cancelar                 → cierra la sesión abierta (o sin_sesion si no hay)
 /nueva                    → cierra sesiones previas; con 1 servicio activo va
                             directo a recibiendo(cargar_archivos), si no abre
-                            intake(elegir_servicio) con teclado_servicios()
+                            intake(elegir_servicio) con teclado_intake()
 sin sesión + documento    → con 1 servicio: abre sesión y {ingerir}; si hay
                             varios, pregunta cuál                h_sin_sesion
 sin sesión                → sin_sesion                                ″
@@ -561,7 +560,9 @@ continue: que no se pinte el indicador no puede frenar un análisis) →
 
 Confluencia en `Consolidar` → `Cerrar` (`ejecucion_cerrar` con texto+tokens) →
 `RespFinal` (parte el informe en mensajes de chat). El PDF quedó fuera del camino;
-Gotenberg y `plantillas_pdf` siguen en su lugar para poder volver atrás.
+Gotenberg y `plantillas_pdf` se dieron de baja en la `057`: hacía ocho
+migraciones que nadie volvía atrás, y `ejecucion_preparar` seguía consultando
+la tabla en cada corrida para publicar un dato que ya nadie leía.
 
 > El indicador "escribiendo…" va **en la cadena**, no como rama paralela: un
 > sub-workflow le devuelve al padre la salida del **último nodo ejecutado**, y
@@ -815,11 +816,10 @@ INSERT INTO prompts (servicio_codigo, sistema, usuario, modelo)
 VALUES ('consumo_publicos', '…', '… {{hallazgos}}', 'deepseek-v4-flash');
 
 -- 5. la plantilla PDF (opcional: hoy el informe se entrega como texto)
-INSERT INTO plantillas_pdf (servicio_codigo, html, css) VALUES ('consumo_publicos', '…', '…');
 ```
 
 **El botón del servicio aparece solo**: `teclado_modulo()` lee los servicios
-activos de ese módulo (y `teclado_servicios()`, los de `/nueva`), así que los
+activos de ese módulo (y `teclado_intake()`, el de `/nueva`), así que los
 menús se arman en el momento. No hay nada que tocar en n8n… con un límite: el
 teclado tope 6 botones (`parametros.teclado_max_filas`), o sea **4 servicios por
 módulo** (los otros dos los gastan "Cómo funciona" y "Volver"), o 5 en el menú

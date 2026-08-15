@@ -287,9 +287,10 @@ w.link("Preguntar?", "Pregunta", 0)
 w.code("RespuestaError", """
 const r = $('Resolver').first().json.r || {};
 return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla: 'ingesta.error_archivo',
-    vars: { nombre_archivo: r.nombre_archivo || 'archivo',
-            motivo: r.error || 'no pude leerlo' } }] } }];
+  respuestas: [{ plantilla: r.error ? 'ingesta.error_archivo'
+                                    : 'ingesta.error_no_soportado',
+    vars: { nombre_archivo: r.nombre_archivo || $('Empaquetar').first().json.nombre,
+            motivo: r.error || '', detalle: '' } }] } }];
 """, [3800, 500])
 w.link("CargoBien?", "RespuestaError", 1)
 
@@ -298,17 +299,16 @@ w.link("CargoBien?", "RespuestaError", 1)
 w.code("NoSoportado", """
 const reg = $input.first().json.reg || {};
 return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla:'ingesta.error_archivo',
+  respuestas: [{ plantilla:'ingesta.error_no_soportado',
     vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,
-           motivo: reg.error || 'no reconocí el formato' } }] } }];
+           detalle: reg.error ? '\\n\\n' + reg.error : '' } }] } }];
 """, [1000, 620])
 w.link("Reconocido?", "NoSoportado", 1)   # false
 
 w.code("ErrorDescarga", """
 return [{ json: { chat_id: $('Inicio').first().json.chat_id,
-  respuestas: [{ plantilla:'ingesta.error_archivo',
-    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || 'archivo',
-           motivo:'no pude descargarlo del chat' } }] } }];
+  respuestas: [{ plantilla:'ingesta.error_descarga',
+    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || '' } }] } }];
 """, [400, 620])
 # El INSERT del documento también puede reventar (una constraint, la base
 # caída). Antes eso mataba la ejecución sin decir nada: el usuario mandaba diez
@@ -318,9 +318,9 @@ w.code("ErrorRegistrar", """
 const e = $input.first().json.error;
 const msg = (e?.message || e || '').toString();
 return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla:'ingesta.error_archivo',
+  respuestas: [{ plantilla:'ingesta.error_guardando',
     vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,
-           motivo: 'se me cayó guardándolo (' + msg.slice(0, 120) + ')' } }] } }];
+           detalle: msg ? '\\n\\n<code>' + msg.slice(0, 120) + '</code>' : '' } }] } }];
 """, [600, 620])
 w.link("Registrar", "ErrorRegistrar", 1)
 

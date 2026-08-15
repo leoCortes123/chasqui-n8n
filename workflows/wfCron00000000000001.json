@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-07-24T20:05:26.368Z",
+  "updatedAt": "2026-07-28T17:32:28.609Z",
   "createdAt": "2026-07-24T20:05:26.368Z",
   "id": "wfCron00000000000001",
   "name": "wf_cron",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -122,16 +122,26 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "wfError0000000000001"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Cada5min": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "meta": null,
   "nodeGroups": [],
   "pinData": null,
-  "versionId": "85afc2b8-7bd3-4c57-9054-0a514547a396",
-  "activeVersionId": null,
-  "versionCounter": 1,
-  "triggerCount": 0,
+  "versionId": "b1b1f9ac-ac01-4c71-90e9-42daa25e1fa9",
+  "activeVersionId": "b1b1f9ac-ac01-4c71-90e9-42daa25e1fa9",
+  "versionCounter": 3,
+  "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
   "shared": [
@@ -142,10 +152,10 @@
       "workflowId": "wfCron00000000000001",
       "projectId": "ARxLsftxtA8Uahtb",
       "project": {
-        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "updatedAt": "2026-07-24T21:19:59.774Z",
         "createdAt": "2026-07-24T19:13:33.081Z",
         "id": "ARxLsftxtA8Uahtb",
-        "name": "Unnamed Project",
+        "name": "leonardo cortes <drleocortex@gmail.com>",
         "type": "personal",
         "icon": null,
         "description": null,

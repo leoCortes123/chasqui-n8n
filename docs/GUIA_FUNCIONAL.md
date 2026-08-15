@@ -273,7 +273,8 @@ Restringidos por rol; un usuario normal no los ve. Se responden en el mismo chat
 | `/embudo` | Dónde abandona la gente: iniciadas, completadas, abandonadas, en qué paso se caen. |
 | `/fallas` | Errores de las últimas 24 horas. |
 | `/consumo` | Tokens y costo del mes por negocio. |
-| `/matching` | Calidad del reconocimiento de productos: % resuelto, pendientes. |
+| `/matching` | Calidad del reconocimiento de productos: **cuánta plata queda fuera de los cálculos** por no tener producto resuelto, y el % de aliases resuelto. |
+| `/pendientes` | Los productos sin resolver, con su mejor candidato y cuánto dinero representan. Se confirman en la pestaña Ventas del portal. |
 
 `/embudo` es el más valioso durante la validación con clientes: dice en qué paso
 exacto se cae la gente, que es la única forma de saber si el problema es el
@@ -322,6 +323,24 @@ vendido, no un conteo tuyo"*.
 
 Desde el conteo en adelante Chasqui sigue la cuenta solo: suma lo que se compra
 y resta lo que se vende. No hace falta volver a contar cada semana.
+
+### 8bis. Productos que Chasqui no supo emparejar
+
+Un archivo de ventas dice *"YOGURT ALPINA X 1 LITRO"* y el catálogo dice
+*"YOGURT ALPINA 1L"*. Casi siempre Chasqui los une solo; cuando no puede, esa
+línea queda **sin producto**, y una línea sin producto **no entra a ningún
+cálculo**: no tiene margen, no tiene rotación, no aparece en el Pareto ni en
+ninguna recomendación. Se pierde de vista, sin ruido.
+
+Eso importa por una razón concreta: el porcentaje de productos reconocidos
+engaña. *"85% resuelto"* suena bien, pero si lo que quedó fuera es justo lo que
+más se vende, puede ser la mitad de la facturación la que no se está analizando.
+
+Por eso el portal (pestaña **Ventas → Productos sin resolver**) encabeza con la
+plata: *"$X en N movimientos no entran a ningún cálculo"*. Debajo, cada texto sin
+resolver con el producto que Chasqui cree que es —se puede cambiar— y un botón
+para confirmarlo. Al confirmar, **los movimientos viejos se recuperan solos**:
+todas las líneas que decían lo mismo pasan a contar desde ese momento.
 
 ---
 

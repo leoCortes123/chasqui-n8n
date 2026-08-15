@@ -624,7 +624,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst r = $('Resolver').first().json.r || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla: 'ingesta.error_archivo',\n    vars: { nombre_archivo: r.nombre_archivo || 'archivo',\n            motivo: r.error || 'no pude leerlo' } }] } }];\n"
+        "jsCode": "\nconst r = $('Resolver').first().json.r || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla: r.error ? 'ingesta.error_archivo'\n                                    : 'ingesta.error_no_soportado',\n    vars: { nombre_archivo: r.nombre_archivo || $('Empaquetar').first().json.nombre,\n            motivo: r.error || '', detalle: '' } }] } }];\n"
       },
       "id": "RespuestaError",
       "name": "RespuestaError",
@@ -637,7 +637,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst reg = $input.first().json.reg || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           motivo: reg.error || 'no reconocí el formato' } }] } }];\n"
+        "jsCode": "\nconst reg = $input.first().json.reg || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_no_soportado',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           detalle: reg.error ? '\\n\\n' + reg.error : '' } }] } }];\n"
       },
       "id": "NoSoportado",
       "name": "NoSoportado",
@@ -650,7 +650,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nreturn [{ json: { chat_id: $('Inicio').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || 'archivo',\n           motivo:'no pude descargarlo del chat' } }] } }];\n"
+        "jsCode": "\nreturn [{ json: { chat_id: $('Inicio').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_descarga',\n    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || '' } }] } }];\n"
       },
       "id": "ErrorDescarga",
       "name": "ErrorDescarga",
@@ -663,7 +663,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst e = $input.first().json.error;\nconst msg = (e?.message || e || '').toString();\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           motivo: 'se me cayó guardándolo (' + msg.slice(0, 120) + ')' } }] } }];\n"
+        "jsCode": "\nconst e = $input.first().json.error;\nconst msg = (e?.message || e || '').toString();\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_guardando',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           detalle: msg ? '\\n\\n<code>' + msg.slice(0, 120) + '</code>' : '' } }] } }];\n"
       },
       "id": "ErrorRegistrar",
       "name": "ErrorRegistrar",

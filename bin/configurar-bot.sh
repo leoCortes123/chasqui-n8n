@@ -71,6 +71,7 @@ ADMIN='[
   {"command":"fallas",  "description":"Últimas fallas"},
   {"command":"consumo", "description":"Consumo de tokens"},
   {"command":"matching","description":"Estado del matching de productos"},
+  {"command":"pendientes","description":"Productos sin resolver y cuánta plata son"},
   {"command":"admin",   "description":"Resumen de operación"}
 ]'
 

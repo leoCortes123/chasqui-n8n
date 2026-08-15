@@ -46,7 +46,7 @@ Tres decisiones detrás de esa forma:
    sin escribir. Lo pone `bin/configurar-bot.sh`.
 2. **Menú de comandos con ámbitos** (`setMyCommands` + `setChatMenuButton`):
    el ámbito de defecto solo tiene comandos de usuario; `/salud`, `/embudo`,
-   `/fallas`, `/consumo`, `/matching` y `/admin` se registran en el ámbito de
+   `/fallas`, `/consumo`, `/matching`, `/pendientes` y `/admin` se registran en el ámbito de
    cada chat de admin, que sale de `usuarios.rol` — no de una variable de
    entorno. Para el resto de la gente esos comandos no existen.
    El registrador ya no toca el menú (pisaba la separación en cada reconexión

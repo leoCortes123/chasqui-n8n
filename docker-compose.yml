@@ -76,11 +76,6 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
 
-  gotenberg:
-    image: gotenberg/gotenberg:8
-    restart: unless-stopped
-    # Sin puertos publicados: solo n8n le habla, por la red interna.
-
   # --- El portal ------------------------------------------------------------
   # PostgREST es la API: expone la base por HTTP sin una línea de backend. No
   # puede leer ninguna tabla —el rol no tiene GRANTs— así que lo único visible

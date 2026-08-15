@@ -47,7 +47,10 @@ h2:first-child { margin-top: 0; }
 .tarjeta p { margin: 0; color: var(--suave); font-size: 14px;
              overflow-wrap: anywhere; }
 .fila { display: flex; gap: 10px; align-items: baseline;
-        justify-content: space-between; }
+        justify-content: space-between; flex-wrap: wrap; }
+/* El desplegable de "productos sin resolver" tiene nombres largos: que se
+   encoja en vez de empujar el botón fuera de la pantalla. */
+.fila select { flex: 1 1 140px; min-width: 0; max-width: 100%; }
 .etiqueta {
   display: inline-block; font-size: 11px; text-transform: uppercase;
   letter-spacing: .05em; color: var(--suave); border: 1px solid var(--linea);
@@ -151,6 +154,12 @@ nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
     <h2>Inventario</h2>
     <p class="vacio" id="v-inv-nota"></p>
     <div id="v-inv"></div>
+    <!-- Productos que Chasqui no supo emparejar. Mientras estén acá, sus
+         ventas no entran a ningún cálculo: ni margen, ni rotación, ni el
+         Pareto. Por eso lo primero que se dice es cuánta plata es. -->
+    <h2>Productos sin resolver</h2>
+    <p class="vacio" id="v-pend-nota"></p>
+    <div id="v-pend"></div>
     <h2>Últimos movimientos</h2>
     <div id="v-movs"></div>
     <h2>Archivos subidos</h2>
@@ -454,6 +463,60 @@ async function cargarInventario() {
   })));
 }
 
+// Productos sin resolver (C3). Un movimiento cuyo texto Chasqui no supo
+// emparejar con un producto queda fuera de TODOS los cálculos, en silencio.
+// Hasta ahora no había forma de arreglarlo: `match_confirmar_alias` existía
+// desde la migración 005 y no tenía un solo llamador. Esta pantalla es ese
+// llamador, y encabeza con el dinero porque es lo que decide si vale la pena.
+async function cargarPendientes() {
+  const r = await rpc('portal_alias_pendientes', { p_limite: 50 });
+  const lista = r.pendientes || [];
+  const res = r.resumen || {};
+
+  $('#v-pend-nota').textContent = lista.length === 0
+    ? 'Todos tus movimientos están emparejados con un producto.'
+    : pesos(res.dinero_sin_producto) + ' en ' + res.movs_sin_producto
+      + ' movimientos (' + (res.pct_dinero_fuera ?? 0) + '% de lo que movés) '
+      + 'no entran a ningún cálculo porque no sé qué producto son. '
+      + 'Confirmalos y aparecen en márgenes, rotación y recomendaciones.';
+
+  const cont = $('#v-pend');
+  if (!lista.length) { cont.replaceChildren(); return; }
+
+  const prods = await rpc('portal_productos');
+
+  cont.replaceChildren(tarjetaLista(lista.map(p => {
+    const fila = el('div', undefined, 'fila');
+    fila.append(el('span', p.texto));
+    fila.append(el('span', p.movimientos + ' movs · ' + pesos(p.dinero)));
+
+    // El candidato del trigram viene preseleccionado, pero se puede cambiar:
+    // la sugerencia es una ayuda, no una decisión de Chasqui.
+    const sel = el('select');
+    sel.append(el('option', '— elegí el producto —'));
+    sel.lastChild.value = '';
+    for (const q of prods) {
+      const o = el('option', q.nombre);
+      o.value = q.id;
+      if (q.id === p.candidato_id) o.selected = true;
+      sel.append(o);
+    }
+    fila.append(sel);
+
+    const b = el('button', 'Es este');
+    b.onclick = async () => {
+      if (!sel.value) { alert('Elegí a qué producto corresponde.'); return; }
+      const out = await rpc('portal_alias_confirmar',
+                            { p_alias_id: p.alias_id, p_producto_id: Number(sel.value) });
+      if (!out || out.ok === false) { alert('No se pudo confirmar.'); return; }
+      await cargarPendientes();
+      await cargarInventario();
+    };
+    fila.append(b);
+    return fila;
+  })));
+}
+
 async function cargarVentas() {
   const [r, movs, docs] = await Promise.all([
     rpc('portal_movimientos_resumen'),
@@ -461,6 +524,7 @@ async function cargarVentas() {
     rpc('portal_documentos', { p_limite: 15 })]);
   await cargarCartera();
   await cargarInventario();
+  await cargarPendientes();
 
   const m = r.mes_actual || {};
   $('#v-mes').replaceChildren(

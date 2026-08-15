@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-07-24T19:45:28.953Z",
+  "updatedAt": "2026-08-15T04:18:24.879Z",
   "createdAt": "2026-07-24T19:40:03.299Z",
   "id": "wfEjecutar000000001",
   "name": "wf_ejecutar",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -23,7 +23,78 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT ejecucion_preparar( COALESCE( NULLIF('{{ $json.ejecucion_id ?? \"\" }}','')::bigint, (SELECT id FROM ejecuciones WHERE estado='preparando' ORDER BY id DESC LIMIT 1) ) ) AS prep;",
+        "query": "SELECT canal_de_chat(COALESCE(NULLIF('{{ $('Inicio').first().json.chat_id ?? \"\" }}','')::bigint, 0)) AS canal;",
+        "options": {}
+      },
+      "id": "CanalChat",
+      "name": "CanalChat",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        110,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.canal }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "EsTelegram?",
+      "name": "EsTelegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        110,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Inicio').first().json.chat_id }}",
+        "action": "typing"
+      },
+      "id": "Escribiendo",
+      "name": "Escribiendo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        110,
+        140
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ejecucion_preparar( COALESCE( NULLIF('{{ $('Inicio').first().json.ejecucion_id ?? \"\" }}','')::bigint, (SELECT id FROM ejecuciones WHERE estado='preparando' ORDER BY id DESC LIMIT 1) ) ) AS prep;",
         "options": {}
       },
       "id": "Preparar",
@@ -82,7 +153,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst prep = $input.first().json.prep;\nconst plantilla = prep.bloqueado ? 'ejecucion.bloqueada_cupo' : 'ejecucion.fallida';\nreturn [{ json: { respuestas: [{ plantilla, vars: {\n  limite: prep.limite ?? null } }] } }];\n"
+        "jsCode": "\nconst prep = $input.first().json.prep;\nconst plantilla = prep.bloqueado ? 'ejecucion.bloqueada_cupo' : 'ejecucion.fallida';\n// Sin chat_id wf_enviar corre `SELECT (undefined)::bigint`. Acá no hubo cierre\n// del que sacarlo, así que sale del input del sub-workflow.\nlet chat_id = null;\ntry { chat_id = $('Inicio').first().json.chat_id ?? null; } catch (e) {}\nreturn [{ json: { chat_id, respuestas: [{ plantilla, vars: {\n  limite: prep.limite ?? null } }] } }];\n"
       },
       "id": "RespBloqueo",
       "name": "RespBloqueo",
@@ -95,7 +166,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst prep = $input.first().json.prep;\nconst p = prep.prompt;\nconst usuario = p.usuario.replace('{{hallazgos}}', JSON.stringify(prep.hallazgos, null, 2));\nreturn [{ json: {\n  ejecucion_id: prep.ejecucion_id,\n  hallazgos: prep.hallazgos,\n  plantilla_pdf: prep.plantilla_pdf,\n  modelo: p.modelo, temperatura: p.temperatura, max_tokens: p.max_tokens,\n  body: { model: p.modelo, temperature: p.temperatura, max_tokens: p.max_tokens,\n    messages: [ {role:'system', content:p.sistema}, {role:'user', content:usuario} ] }\n} }];\n"
+        "jsCode": "\nconst prep = $input.first().json.prep;\nconst p = prep.prompt;\nconst usuario = p.usuario.replace('{{hallazgos}}', JSON.stringify(prep.hallazgos, null, 2));\nreturn [{ json: {\n  ejecucion_id: prep.ejecucion_id,\n  hallazgos: prep.hallazgos,\n  modelo: p.modelo, temperatura: p.temperatura, max_tokens: p.max_tokens,\n  body: { model: p.modelo, temperature: p.temperatura, max_tokens: p.max_tokens,\n    response_format: { type: 'json_object' },\n    messages: [ {role:'system', content:p.sistema}, {role:'user', content:usuario} ] }\n} }];\n"
       },
       "id": "ArmarLLM",
       "name": "ArmarLLM",
@@ -109,7 +180,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.deepseek.com/chat/completions",
+        "url": "https://opencode.ai/zen/v1/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -139,7 +210,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst src = $('ArmarLLM').first().json;\nconst r = $input.first().json;\nconst texto = r.choices?.[0]?.message?.content ?? '';\nconst u = r.usage ?? {};\nreturn [{ json: { ...src,\n  texto, tokens_prompt: u.prompt_tokens ?? 0, tokens_salida: u.completion_tokens ?? 0 } }];\n"
+        "jsCode": "\nconst src = $('ArmarLLM').first().json;\nconst r = $input.first().json;\nconst u = r.usage ?? {};\nconst truncado = r.choices?.[0]?.finish_reason === 'length';\n// Con response_format json_object el cerco de ```json no debería aparecer, pero\n// limpiarlo cuesta una línea y ya se vio pasar en wf_ingesta.\nlet txt = String(r.choices?.[0]?.message?.content ?? '')\n  .replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim();\nlet estructura = null;\ntry { estructura = JSON.parse(txt); } catch (e) {}\nconst invalido = truncado || estructura === null || typeof estructura !== 'object'\n                 || Array.isArray(estructura);\nreturn [{ json: { ...src, estructura: invalido ? {} : estructura, bruto: txt,\n  truncado, invalido,\n  tokens_prompt: u.prompt_tokens ?? 0, tokens_salida: u.completion_tokens ?? 0 } }];\n"
       },
       "id": "Extraer1",
       "name": "Extraer1",
@@ -153,11 +224,11 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT validar_cifras( '{{ String($json.texto).replaceAll(\"'\",\"''\") }}', '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb ) AS v;",
+        "query": "SELECT informe_render( '{{ JSON.stringify($json.estructura).replaceAll(\"'\",\"''\") }}'::jsonb, '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb, (SELECT servicio_codigo FROM ejecuciones    WHERE id = ({{ $json.ejecucion_id }})::bigint) ) AS texto;",
         "options": {}
       },
-      "id": "Validar1",
-      "name": "Validar1",
+      "id": "Render1",
+      "name": "Render1",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
@@ -173,6 +244,27 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT validar_cifras( '{{ String($json.texto ?? \"\").replaceAll(\"'\",\"''\") }}', '{{ JSON.stringify($('Extraer1').first().json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb ) AS v;",
+        "options": {}
+      },
+      "id": "Validar1",
+      "name": "Validar1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1540,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "typeValidation": "loose"
@@ -180,7 +272,7 @@
           "combinator": "and",
           "conditions": [
             {
-              "leftValue": "={{ $json.v.ok }}",
+              "leftValue": "={{ $json.v.ok === true && $('Extraer1').first().json.invalido !== true && !!$('Render1').first().json.texto }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -196,20 +288,20 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1540,
+        1760,
         460
       ]
     },
     {
       "parameters": {
-        "jsCode": "\nconst ctx = $('Extraer1').first().json;\nreturn [{ json: { ...ctx, narrado: true } }];\n"
+        "jsCode": "\nconst ctx = $('Extraer1').first().json;\nreturn [{ json: { ...ctx, texto: $('Render1').first().json.texto, narrado: true } }];\n"
       },
       "id": "TextoOK",
       "name": "TextoOK",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1760,
+        1980,
         340
       ]
     },
@@ -222,14 +314,14 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1760,
-        600
+        1980,
+        620
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.deepseek.com/chat/completions",
+        "url": "https://opencode.ai/zen/v1/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -244,8 +336,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1980,
-        600
+        2200,
+        620
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -259,21 +351,42 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst src = $('ArmarLLM').first().json;\nconst r = $input.first().json;\nconst texto = r.choices?.[0]?.message?.content ?? '';\nconst u = r.usage ?? {};\nreturn [{ json: { ...src,\n  texto, tokens_prompt: u.prompt_tokens ?? 0, tokens_salida: u.completion_tokens ?? 0 } }];\n"
+        "jsCode": "\nconst src = $('ArmarLLM').first().json;\nconst r = $input.first().json;\nconst u = r.usage ?? {};\nconst truncado = r.choices?.[0]?.finish_reason === 'length';\n// Con response_format json_object el cerco de ```json no debería aparecer, pero\n// limpiarlo cuesta una línea y ya se vio pasar en wf_ingesta.\nlet txt = String(r.choices?.[0]?.message?.content ?? '')\n  .replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim();\nlet estructura = null;\ntry { estructura = JSON.parse(txt); } catch (e) {}\nconst invalido = truncado || estructura === null || typeof estructura !== 'object'\n                 || Array.isArray(estructura);\nreturn [{ json: { ...src, estructura: invalido ? {} : estructura, bruto: txt,\n  truncado, invalido,\n  tokens_prompt: u.prompt_tokens ?? 0, tokens_salida: u.completion_tokens ?? 0 } }];\n"
       },
       "id": "Extraer2",
       "name": "Extraer2",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2200,
-        600
+        2420,
+        620
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT validar_cifras( '{{ String($json.texto).replaceAll(\"'\",\"''\") }}', '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb ) AS v;",
+        "query": "SELECT informe_render( '{{ JSON.stringify($json.estructura).replaceAll(\"'\",\"''\") }}'::jsonb, '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb, (SELECT servicio_codigo FROM ejecuciones    WHERE id = ({{ $json.ejecucion_id }})::bigint) ) AS texto;",
+        "options": {}
+      },
+      "id": "Render2",
+      "name": "Render2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2640,
+        620
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT validar_cifras( '{{ String($json.texto ?? \"\").replaceAll(\"'\",\"''\") }}', '{{ JSON.stringify($('Extraer2').first().json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb ) AS v;",
         "options": {}
       },
       "id": "Validar2",
@@ -281,8 +394,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2420,
-        600
+        2860,
+        620
       ],
       "credentials": {
         "postgres": {
@@ -300,7 +413,7 @@
           "combinator": "and",
           "conditions": [
             {
-              "leftValue": "={{ $json.v.ok }}",
+              "leftValue": "={{ $json.v.ok === true && $('Extraer2').first().json.invalido !== true && !!$('Render2').first().json.texto }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -316,120 +429,36 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2640,
-        600
+        3080,
+        620
       ]
     },
     {
       "parameters": {
-        "jsCode": "\nconst ctx = $('Extraer2').first().json;\nreturn [{ json: { ...ctx, narrado: true } }];\n"
+        "jsCode": "\nconst ctx = $('Extraer2').first().json;\nreturn [{ json: { ...ctx, texto: $('Render2').first().json.texto, narrado: true } }];\n"
       },
       "id": "TextoOK2",
       "name": "TextoOK2",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2860,
+        3300,
         480
       ]
     },
     {
       "parameters": {
-        "jsCode": "\nconst ctx = $('Extraer2').first().json;\nconst h = ctx.hallazgos;\nconst l = [];\nl.push('Informe (versión sin narración: no se pudo verificar el texto del modelo).');\nif (h.resumen) l.push(`Productos: ${h.resumen.productos}. Margen promedio: ${h.resumen.margen_promedio_pct ?? 'n/d'}%.`);\nfor (const m of (h.margen_bajo||[])) l.push(`Margen bajo: ${m.producto} (${m.margen_pct}%).`);\nfor (const d of (h.deriva_costo||[])) l.push(`Costo subió: ${d.producto} (${d.deriva_pct}%).`);\nfor (const c of (h.baja_cobertura||[])) l.push(`Se agota pronto: ${c.producto} (~${c.dias_cobertura} días).`);\nfor (const p of (h.pareto||[])) l.push(`Concentra ganancia: ${p.producto} (${p.pct_utilidad}%).`);\nreturn [{ json: { ...ctx, texto: l.join('\\n'), narrado: false } }];\n"
-      },
-      "id": "InformeSeco",
-      "name": "InformeSeco",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2860,
-        720
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst c = $input.first().json;\nlet cuerpoHtml = (c.texto||'').split(/\\n+/).map(s=>`<p>${s.replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</p>`).join('');\nconst tpl = c.plantilla_pdf;\nlet html = tpl ? tpl.html : '<html><body>{{cuerpo_html}}</body></html>';\nlet css  = tpl ? (tpl.css||'') : '';\nhtml = html.replace('{{css}}', css)\n           .replace('{{cuerpo_html}}', cuerpoHtml)\n           .replace('{{negocio_nombre}}', c.negocio_nombre||'')\n           .replace('{{fecha}}', new Date().toISOString().slice(0,10));\nreturn [{ json: { ...c, html } }];\n"
-      },
-      "id": "ArmarPDF",
-      "name": "ArmarPDF",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3300,
-        460
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://gotenberg:3000/forms/chromium/convert/html",
-        "sendBody": true,
-        "contentType": "multipart-form-data",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "parameterType": "formBinaryData",
-              "name": "files",
-              "inputDataFieldName": "index.html"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file"
-            }
-          }
-        }
-      },
-      "id": "PDF",
-      "name": "PDF",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3520,
-        460
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst c = $input.first().json;\nconst buf = Buffer.from(c.html, 'utf8');\nreturn [{ json: c, binary: { 'index.html': {\n  data: buf.toString('base64'), mimeType: 'text/html', fileName: 'index.html' } } }];\n"
-      },
-      "id": "HtmlABinario",
-      "name": "HtmlABinario",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3410,
-        460
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{ json: { pdf_b64: buf.toString('base64') }, binary: $input.first().binary }];\n"
-      },
-      "id": "PdfB64",
-      "name": "PdfB64",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3630,
-        460
-      ]
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT ejecucion_cerrar( ({{ $('ArmarPDF').first().json.ejecucion_id }})::bigint, 'completada', jsonb_build_object(  'texto', '{{ String($('ArmarPDF').first().json.texto).replaceAll(\"'\",\"''\") }}',  'tokens_prompt', {{ $('ArmarPDF').first().json.tokens_prompt || 0 }},  'tokens_salida', {{ $('ArmarPDF').first().json.tokens_salida || 0 }},  'pdf_base64', '{{ $json.pdf_b64 }}') ) AS cierre;",
+        "query": "SELECT informe_estructura_seca( '{{ JSON.stringify($('Extraer2').first().json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb, (SELECT servicio_codigo FROM ejecuciones    WHERE id = ({{ $('Extraer2').first().json.ejecucion_id }})::bigint) ) AS estructura;",
         "options": {}
       },
-      "id": "Cerrar",
-      "name": "Cerrar",
+      "id": "SecaSQL",
+      "name": "SecaSQL",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3740,
-        460
+        3300,
+        760
       ],
       "credentials": {
         "postgres": {
@@ -440,20 +469,141 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst c = $('ArmarPDF').first().json;\nconst bin = $('PDF').first().binary;\nreturn [{ json: { respuestas: [{\n  plantilla: 'ejecucion.entregada',\n  vars: { servicio: c.servicio_codigo || 'ventas_compras' },\n  documento: 'informe.pdf'\n}], narrado: c.narrado },\n  binary: { 'informe.pdf': { ...bin.data, fileName: 'informe.pdf', mimeType: 'application/pdf' } } }];\n"
+        "jsCode": "\nconst ctx = $('Extraer2').first().json;\nreturn [{ json: { ...ctx, estructura: $input.first().json.estructura } }];\n"
+      },
+      "id": "EstructuraSeca",
+      "name": "EstructuraSeca",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT informe_render( '{{ JSON.stringify($json.estructura).replaceAll(\"'\",\"''\") }}'::jsonb, '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb, (SELECT servicio_codigo FROM ejecuciones    WHERE id = ({{ $json.ejecucion_id }})::bigint) ) AS texto;",
+        "options": {}
+      },
+      "id": "RenderSeco",
+      "name": "RenderSeco",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3740,
+        760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ctx = $('EstructuraSeca').first().json;\nreturn [{ json: { ...ctx, texto: $('RenderSeco').first().json.texto, narrado: false } }];\n"
+      },
+      "id": "TextoSeco",
+      "name": "TextoSeco",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst c = $input.first().json;\nreturn [{ json: { ...c, texto: String(c.texto || '').trim() } }];\n"
+      },
+      "id": "Consolidar",
+      "name": "Consolidar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ejecucion_cerrar( ({{ $json.ejecucion_id }})::bigint, 'completada', jsonb_build_object(  'texto', '{{ String($json.texto).replaceAll(\"'\",\"''\") }}',  'tokens_prompt', {{ $json.tokens_prompt || 0 }},  'tokens_salida', {{ $json.tokens_salida || 0 }}) ) AS cierre;",
+        "options": {}
+      },
+      "id": "Cerrar",
+      "name": "Cerrar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4180,
+        480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst c = $('Consolidar').first().json;\n// El chat_id venía sin definir y wf_enviar terminaba corriendo\n// `SELECT (undefined)::bigint`: el informe se generaba y no se entregaba.\n// ejecucion_cerrar lo resuelve desde la base (ejecución -> sesión -> usuario);\n// el input del sub-workflow es el respaldo cuando sí vino de un chat.\nconst cierre = $('Cerrar').first().json.cierre || {};\nlet chat_id = cierre.chat_id ?? null;\nif (chat_id == null) { try { chat_id = $('Inicio').first().json.chat_id ?? null; } catch (e) {} }\n\n// Las dos plantillas de entrega son solo {{texto}}, así que no hay encabezado\n// que descontar. El margen sobre los 4096 de Telegram cubre los emojis y las\n// etiquetas HTML, que cuentan más de un carácter en bytes.\nconst LIM = 3800;\n\nfunction partir(texto, limite) {\n  const partes = [];\n  let actual = '';\n  // Corta por bloque (informe_render los separa con línea en blanco); si un\n  // bloque solo ya excede el límite, corta por línea; si una línea sola excede,\n  // corta a lo bruto. Nunca pierde texto.\n  //\n  // Ninguna etiqueta HTML del informe abarca más de una línea (informe_render se\n  // encarga: los <b> van en títulos y métricas, y el cuerpo de cada viñeta va\n  // sin marcar). Por eso ningún corte puede dejar un <b> sin su cierre, que es\n  // lo que Telegram rechaza con 400.\n  const bloques = [];\n  for (const bloque of texto.split(/\\n{2,}/)) {\n    if (bloque.length <= limite) { bloques.push(bloque); continue; }\n    for (const linea of bloque.split('\\n')) {\n      if (linea.length <= limite) { bloques.push(linea); continue; }\n      for (let i = 0; i < linea.length; i += limite) bloques.push(linea.slice(i, i + limite));\n    }\n  }\n  for (const b of bloques) {\n    const cand = actual ? actual + '\\n\\n' + b : b;\n    if (cand.length > limite && actual) { partes.push(actual); actual = b; }\n    else { actual = cand; }\n  }\n  if (actual) partes.push(actual);\n  return partes.length ? partes : [''];\n}\n\nconst partes = partir(c.texto || '', LIM);\n// El teclado vive en la fila de la plantilla de entrega, así que esa plantilla\n// se reserva para el ÚLTIMO mensaje: los botones tienen que quedar al final del\n// informe, no en la mitad. CUÁL es esa plantilla lo decide ejecucion_cerrar\n// (migración 032): después de una respuesta de la base de conocimiento, ofrecer\n// \"analizar otra vez\" no tiene sentido, y esa es una decisión del servicio.\nconst entrega = cierre.plantilla_entrega || 'ejecucion.entregada';\nconst respuestas = partes.map((texto, i) => ({\n  plantilla: i === partes.length - 1 ? entrega : 'ejecucion.informe_parte',\n  vars: { texto } }));\n\nreturn [{ json: { chat_id, respuestas, narrado: c.narrado, partes: partes.length } }];\n"
       },
       "id": "RespFinal",
       "name": "RespFinal",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3960,
-        460
+        4400,
+        480
       ]
     }
   ],
   "connections": {
     "Inicio": {
+      "main": [
+        [
+          {
+            "node": "CanalChat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CanalChat": {
+      "main": [
+        [
+          {
+            "node": "EsTelegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EsTelegram?": {
+      "main": [
+        [
+          {
+            "node": "Escribiendo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escribiendo": {
       "main": [
         [
           {
@@ -519,6 +669,17 @@
       "main": [
         [
           {
+            "node": "Render1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render1": {
+      "main": [
+        [
+          {
             "node": "Validar1",
             "type": "main",
             "index": 0
@@ -581,6 +742,17 @@
       "main": [
         [
           {
+            "node": "Render2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render2": {
+      "main": [
+        [
+          {
             "node": "Validar2",
             "type": "main",
             "index": 0
@@ -610,7 +782,40 @@
         ],
         [
           {
-            "node": "InformeSeco",
+            "node": "SecaSQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SecaSQL": {
+      "main": [
+        [
+          {
+            "node": "EstructuraSeca",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EstructuraSeca": {
+      "main": [
+        [
+          {
+            "node": "RenderSeco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RenderSeco": {
+      "main": [
+        [
+          {
+            "node": "TextoSeco",
             "type": "main",
             "index": 0
           }
@@ -621,7 +826,7 @@
       "main": [
         [
           {
-            "node": "ArmarPDF",
+            "node": "Consolidar",
             "type": "main",
             "index": 0
           }
@@ -632,58 +837,25 @@
       "main": [
         [
           {
-            "node": "ArmarPDF",
+            "node": "Consolidar",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "InformeSeco": {
+    "TextoSeco": {
       "main": [
         [
           {
-            "node": "ArmarPDF",
+            "node": "Consolidar",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ArmarPDF": {
-      "main": [
-        [
-          {
-            "node": "HtmlABinario",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HtmlABinario": {
-      "main": [
-        [
-          {
-            "node": "PDF",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "PDF": {
-      "main": [
-        [
-          {
-            "node": "PdfB64",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "PdfB64": {
+    "Consolidar": {
       "main": [
         [
           {
@@ -707,15 +879,16 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "errorWorkflow": "wfError0000000000001"
   },
   "staticData": null,
   "meta": null,
   "nodeGroups": [],
   "pinData": null,
-  "versionId": "85392f0c-d3a9-41ec-a302-758e072e4f27",
-  "activeVersionId": null,
-  "versionCounter": 5,
+  "versionId": "359358e1-c74f-43e8-ba1e-3f4bf17e6f3e",
+  "activeVersionId": "359358e1-c74f-43e8-ba1e-3f4bf17e6f3e",
+  "versionCounter": 14,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
@@ -727,10 +900,10 @@
       "workflowId": "wfEjecutar000000001",
       "projectId": "ARxLsftxtA8Uahtb",
       "project": {
-        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "updatedAt": "2026-07-24T21:19:59.774Z",
         "createdAt": "2026-07-24T19:13:33.081Z",
         "id": "ARxLsftxtA8Uahtb",
-        "name": "Unnamed Project",
+        "name": "leonardo cortes <drleocortex@gmail.com>",
         "type": "personal",
         "icon": null,
         "description": null,
