@@ -131,6 +131,11 @@ nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
 <main>
   <!-- 1. Perfil -->
   <section id="p-perfil">
+    <!-- Lo que Chasqui sabe del negocio (061). Se muestra también para que el
+         dueño detecte que algo está mal cargado: si dice que su proveedor
+         principal es uno que casi no usa, hay un problema en los datos. -->
+    <h2>Lo que sé de tu negocio</h2>
+    <div class="tarjeta lista" id="perfil"></div>
     <h2>Este mes</h2>
     <div class="cifras" id="consumo"></div>
     <h2>Tu base de conocimiento</h2>
@@ -382,7 +387,50 @@ async function cargarTodo() {
                      cargarCotizaciones(), cargarInformes()]);
 }
 
+// El perfil consolidado (061): lo estable del negocio, no un diagnóstico.
+async function cargarPerfilNegocio() {
+  const f = await rpc('portal_perfil');
+  const filas = [];
+  const linea = (k, v) => {
+    const d = el('div', undefined, 'fila');
+    d.append(el('span', k), el('span', v));
+    filas.push(d);
+  };
+
+  const per = f.periodo || {}, pro = f.productos || {}, prv = f.proveedores || {};
+  linea('Tipo de negocio', f.tipo || 'sin definir');
+  if (per.desde) linea('Historia cargada',
+                       fecha(per.desde) + ' — ' + fecha(per.hasta)
+                       + ' (' + per.meses + ' meses)');
+  linea('Productos', (pro.total || 0) + ' · ' + (pro.con_precio || 0) + ' con precio');
+  if (pro.margen_mediano_pct !== null && pro.margen_mediano_pct !== undefined)
+    // Mediana y no promedio: un producto con el precio mal cargado corre el
+    // promedio y no la mediana.
+    linea('Margen típico', pro.margen_mediano_pct + '%'
+          + (pro.margen_min_pct !== null
+             ? ' (entre ' + pro.margen_min_pct + '% y ' + pro.margen_max_pct + '%)' : ''));
+  if (prv.principal)
+    linea('Le comprás sobre todo a', prv.principal + ' (' + prv.concentracion_pct + '%)');
+
+  const est = f.estacionalidad || {};
+  linea('Estacionalidad', est.suficiente
+        ? 'ya tengo un año completo, puedo comparar contra el año pasado'
+        : 'todavía no tengo un año entero; con más historia comparo temporadas');
+
+  const rec = f.problemas_recurrentes || [];
+  const abiertas = rec.reduce((n, r) => n + (r.abiertas || 0), 0);
+  if (rec.length) linea('Problemas abiertos', abiertas + ' de ' + rec.length + ' tipos');
+
+  const cal = f.calidad || {};
+  if (cal.movs_sin_producto > 0)
+    linea('Ojo', pesos(cal.dinero_sin_producto) + ' sin producto resuelto '
+                 + '(' + cal.pct_dinero_fuera + '% de lo que movés)');
+
+  $('#perfil').replaceChildren(...filas);
+}
+
 async function cargarPerfil() {
+  await cargarPerfilNegocio();
   const p = await rpc('portal_perfil');
   const n = p.negocio || {}, u = p.usuario || {}, c = p.consumo || {}, k = p.cobertura || {};
   $('#negocio').textContent = n.nombre || 'Tu negocio';

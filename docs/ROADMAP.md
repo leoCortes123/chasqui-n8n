@@ -17,8 +17,13 @@ registro histórico de las Fases 1-4 viejas.*
 | **B1** Snapshot del estado empresarial | ✅ **hecha y verificada** | `058_snapshot_negocio.sql` |
 | **B2** Recomendaciones persistentes | ✅ **hecha y verificada** | `059_recomendaciones_persistentes.sql` |
 | **B3** Reglas comparativas | ✅ **hecha y verificada** | `060_reglas_comparativas.sql` |
-| **B4** Perfil consolidado | ⏭️ **siguiente** | `061_perfil_negocio.sql` |
-| C, D, E, F | pendientes | — |
+| **B4** Perfil consolidado | ✅ **hecha y verificada** | `061_perfil_negocio.sql` |
+| **C1** Preguntar a los números | ⏭️ **siguiente** | `062_consulta_sobre_numeros.sql` |
+| C2, D, E, F | pendientes | — |
+
+**La Fase B está cerrada.** Chasqui tiene memoria: registra su estado (B1),
+recuerda lo que recomendó (B2), compara contra su propia historia (B3) y sabe
+consolidar todo eso en un perfil (B4).
 
 **La Fase A está cerrada.** Las cuatro restricciones globales se sostienen, los
 cinco hallazgos que ordenaban el roadmap (H1-H5) están resueltos, y C3 —el
@@ -298,6 +303,35 @@ resta, y `validar_cifras` rechazaría el resultado por no estar en los hallazgos
 **Sin modelo de estacionalidad ni de tendencia**: cuatro reglas explícitas con
 umbrales en `parametros`, del mismo tipo que las seis que ya había. Nada de
 regresiones ni de predicción.
+
+### Lo que dejó B4
+
+`v_perfil_negocio` + `perfil_negocio(id)`: lo **estable** de un negocio en un
+objeto —qué vende, a quién le compra, qué margen suele dejar, cuándo vende más,
+qué problemas le vuelven, qué se hizo al respecto y qué tan confiable es todo
+eso—. No es un informe ni un diagnóstico: no dice qué hacer. Es el material
+sobre el que otros deciden, y es la entrada única de la Fase C: sin un objeto
+consolidado, cada intención tendría que rearmarlo, y ahí es donde se cuela
+lógica de cálculo en un prompt.
+
+Tres decisiones que vale la pena registrar:
+
+- **El margen típico es la mediana, no el promedio.** Un solo producto con el
+  precio mal cargado corre el promedio y no la mediana, y de estos números se va
+  a fiar la Fase C para contestar preguntas.
+- **`estacionalidad.suficiente`** dice si hay al menos un año de historia. Sin
+  eso, "en diciembre vendés más" no es estacionalidad: es que diciembre fue el
+  único diciembre.
+- **`acciones.por_accion` va a dar 0 hasta que exista D1**, y está bien que se
+  vea: es la medida de si el ciclo detectar→ejecutar está cerrado.
+
+Los `problemas_recurrentes` no existían antes de B2 y son la mitad del valor del
+perfil: no es lo mismo un negocio al que le avisaron una vez de un margen bajo
+que uno al que se lo vienen diciendo desde hace seis meses.
+
+**Portal**: la pestaña "Mi negocio" abre con el perfil. Se muestra también
+porque es la mejor forma de que el dueño detecte un dato mal cargado — si dice
+que su proveedor principal es uno que casi no usa, hay un problema en la carga.
 
 ---
 
@@ -613,7 +647,7 @@ Cumple R-III. Tabla `recomendaciones(negocio_id, regla, clave_objeto, titulo, im
 **B3. Reglas comparativas (Nivel 1 completo)** — `060_reglas_comparativas.sql` ✅ **APLICADA 2026-08-15**
 `hallazgos_generar` recibe el snapshot anterior. Reglas contra el propio historial: producto que dejó de venderse, proveedor que subió tres veces en el año, margen deteriorado dos periodos seguidos, mes por debajo del mismo mes del año anterior. **Depende de A1**: sin historia no hay comparativo.
 
-**B4. Perfil consolidado** — `061_perfil_negocio.sql`
+**B4. Perfil consolidado** — `061_perfil_negocio.sql` ✅ **APLICADA 2026-08-15**
 Vista `v_perfil_negocio`: productos, proveedores, estacionalidad, márgenes típicos, problemas recurrentes (desde `recomendaciones`), acciones tomadas. Es el objeto que consumen la Fase C y el portal. Casi todo el dato existe; falta la consolidación.
 
 ### Fase C — Preguntar a los números
