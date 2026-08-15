@@ -79,6 +79,43 @@
         300
       ],
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ejecs = $('Mantenimiento').first().json.r?.ejecuciones || [];\nreturn ejecs.map(e => ({ json: e }));\n"
+      },
+      "id": "FanoutEjec",
+      "name": "FanoutEjec",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEjecutar000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "Analizar",
+      "name": "Analizar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        480
+      ],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -100,6 +137,11 @@
             "node": "Fanout",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "FanoutEjec",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -109,6 +151,17 @@
         [
           {
             "node": "Avisar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FanoutEjec": {
+      "main": [
+        [
+          {
+            "node": "Analizar",
             "type": "main",
             "index": 0
           }

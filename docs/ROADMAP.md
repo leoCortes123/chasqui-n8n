@@ -24,8 +24,12 @@ registro histórico de las Fases 1-4 viejas.*
 | **D2** Lista de pedido | ✅ **hecha y verificada** | `065_pedido.sql` |
 | **D3** El resultado se mide | ✅ **hecha y verificada** | `066_resultado.sql` |
 | **E1** Motor de alertas | ✅ **hecha y verificada** | `067_alertas.sql` |
-| **E2** Informe periódico automático | ⏭️ **siguiente** | `068_informe_periodico.sql` |
-| F | pendientes | — |
+| **E2** Informe periódico automático | ✅ **hecha y verificada** | `068_informe_periodico.sql` |
+| **F1** Cartera como señal de liquidez | ⏭️ **siguiente** | `069_cartera_liquidez.sql` |
+| F2 | pendiente | — |
+
+**La Fase E está cerrada.** Chasqui avisa cuando encuentra algo urgente y manda
+el informe solo cuando pasa el mes.
 
 **La Fase D está cerrada.** El ciclo detectar → explicar → cuantificar →
 recomendar → **ejecutar** → **medir** funciona de punta a punta.
@@ -558,6 +562,41 @@ notificaciones salen igual.
 aviso con el hallazgo de mayor impacto; la segunda corrida no repite nada; fuera
 de horario ni siquiera se evalúa.
 
+### Lo que dejó E2
+
+El informe que nadie pide y todos necesitan: el negocio que viene cargando datos
+todos los meses y nunca vuelve a tocar "Analizar" porque ya vio uno y le pareció
+suficiente. Ese es el que más se beneficia del comparativo, y el que nunca lo va
+a pedir.
+
+**Recién ahora tiene sentido.** Un informe periódico antes de B1/B3 habría sido
+el mismo informe otra vez. Con la memoria puesta, el informe automático **es** el
+comparativo: `hallazgos_comparativo` ya viaja en los hallazgos y las cuatro
+reglas comparativas ya disparan.
+
+**Nunca al que nunca vio un informe.** El primero lo pide el dueño, y así aprende
+qué es; mandarle uno automático a quien no vio ninguno es empezar por el final. Y
+solo si cargó datos desde entonces: repetirle lo que ya le dijeron sobre los
+mismos números es exactamente el ruido que E1 evita.
+
+**Un aviso corto va antes del informe.** Un informe que aparece sin explicación
+se lee como spam por bueno que sea, y encima el dueño no sabe por qué le llegó.
+
+**Un nodo nuevo en `wf_cron`, y es inevitable.** E1 pudo hacerse con cero nodos
+porque una alerta es un mensaje y `wf_cron` ya sabía mandarlos; un informe es una
+**ejecución** y hay que llamar a `wf_ejecutar`. `mantenimiento_ciclo` pasa a
+devolver dos listas —`notificaciones` y `ejecuciones`— y el nodo nuevo solo
+reparte lo que Postgres ya decidió. El contrato viejo no cambia: quien solo lea
+`notificaciones` sigue funcionando.
+
+**Verificado**: con el último análisis a 40 días y 36 movimientos nuevos, dispara
+el aviso y la ejecución; la segunda corrida no dispara nada porque ya hay un
+análisis en curso. El workflow quedó importado y activo con sus seis nodos.
+
+*Nota operativa*: `wf_cron` no se puede correr con `n8n execute --id` porque su
+disparador es de agenda y no de sub-workflow. Se prueba llamando a
+`mantenimiento_ciclo()` directamente, que es donde está toda la lógica.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -785,7 +824,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 | `wf_router` / `wf_wa_router` | **HABILITADOR** | Una sola llamada SQL cada uno. `wf_wa_router` sin desplegar |
 | `wf_enviar` | **HABILITADOR** | Único punto de salida |
 | `wf_error` | **HABILITADOR** | Contiene el **único INSERT directo** del sistema |
-| `wf_cron` | **HABILITADOR → CORE latente** | Hoy solo reaper. Vehículo de la proactividad (E) |
+| `wf_cron` | **CORE** | Reaper, expiración, alertas (`067`) e informes periódicos (`068`). `mantenimiento_ciclo` decide todo en Postgres y devuelve dos listas: `notificaciones` → `wf_enviar`, `ejecuciones` → `wf_ejecutar` |
 
 **Lógica de negocio que quedó en nodos** (contradice `docs/GUIA_TECNICA.md:226` y estorba al roadmap): INSERT directo a `fallas` y clasificación transitoria por regex (`bin/gen_wf_error.py:12-36`); aviso al admin concatenado en SQL sin pasar por `plantillas` (`:40-49`); regla "¿pregunto si son todos?" como SQL ad-hoc (`bin/gen_wf_ingesta.py:267-272`); debounce de 8 s literal (`:261-262`); tamaño de muestra del LLM `slice(0,5)` fijo en el nodo y no en `prompts_tecnicos` (`:155-163`); política "un reintento y luego seco" como topología (`bin/gen_wf_ejecutar.py:228-242`); troceado `LIM = 3800` y elección de plantilla en JS (`:312-366`); `MAX_FILAS = 6` duplicado con `parametros.teclado_max_filas` (`bin/gen_wf_enviar.py:57`); copy de usuario hard-codeado (`bin/gen_wf_ingesta.py:216,292,303,311,323`).
 
@@ -936,7 +975,7 @@ Consolida las recomendaciones R4 en una lista de compra (producto, unidades, pro
 **E1. Motor de alertas en `wf_cron`** — `067_alertas.sql` ✅ **APLICADA 2026-08-15**
 `alertas_evaluar()` recorre negocios activos con umbral de relevancia y cooldown por regla+objeto, devolviendo notificaciones con el mismo contrato que ya usa `mantenimiento_ciclo` (`016`). **Cero nodos nuevos**: `wf_cron` ya hace fanout a `wf_enviar`. Tabla `alertas_enviadas` para el cooldown — sin ella, Chasqui se vuelve ruido y lo silencian.
 
-**E2. Informe periódico automático**, apoyado en B1 y B3.
+**E2. Informe periódico automático** — `068_informe_periodico.sql` ✅ **APLICADA 2026-08-15**, apoyado en B1 y B3.
 
 ### Fase F — Cartera como señal de liquidez
 

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-28T17:32:28.609Z",
+  "updatedAt": "2026-08-15T18:54:53.468Z",
   "createdAt": "2026-07-24T20:05:26.368Z",
   "id": "wfCron00000000000001",
   "name": "wf_cron",
@@ -84,6 +84,43 @@
         300
       ],
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ejecs = $('Mantenimiento').first().json.r?.ejecuciones || [];\nreturn ejecs.map(e => ({ json: e }));\n"
+      },
+      "id": "FanoutEjec",
+      "name": "FanoutEjec",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEjecutar000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "Analizar",
+      "name": "Analizar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        480
+      ],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -105,6 +142,11 @@
             "node": "Fanout",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "FanoutEjec",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -114,6 +156,17 @@
         [
           {
             "node": "Avisar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FanoutEjec": {
+      "main": [
+        [
+          {
+            "node": "Analizar",
             "type": "main",
             "index": 0
           }
@@ -138,9 +191,9 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": null,
-  "versionId": "b1b1f9ac-ac01-4c71-90e9-42daa25e1fa9",
-  "activeVersionId": "b1b1f9ac-ac01-4c71-90e9-42daa25e1fa9",
-  "versionCounter": 3,
+  "versionId": "93d5f7c9-8c81-471c-8590-954e45df5976",
+  "activeVersionId": "93d5f7c9-8c81-471c-8590-954e45df5976",
+  "versionCounter": 4,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],

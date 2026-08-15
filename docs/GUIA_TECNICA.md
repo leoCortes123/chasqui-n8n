@@ -314,6 +314,8 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `recomendaciones_registrar(negocio_id, ejecucion_id) → jsonb` | Persiste lo detectado, cierra lo que ya no está y marca lo que llegó al informe. Devuelve el conteo de cada cosa. |
 | `recomendacion_objeto_evaluable(negocio_id, clave) → boolean` | ¿El objeto sigue teniendo movimientos visibles? Es lo que separa "se resolvió" de "lo perdí de vista". |
 | `recomendaciones_vigentes(negocio_id, limite) → jsonb` | Las abiertas, con `dias_abierta` y `veces_vista`. La entrada de C1 y D1. |
+| `informes_periodicos_disparar() → jsonb` | **El informe que nadie pidió** (`068`): crea sesión y ejecución para los negocios que ya vieron un informe, cargaron datos desde entonces y hace 30 días que no analizan. Devuelve el aviso previo y la ejecución a correr. |
+| `v_negocios_informe_periodico` | A quién le toca. Nunca al que nunca vio un informe: el primero lo pide el dueño. |
 | `alertas_evaluar() → jsonb` | **La proactividad** (`067`). Recorre `v_negocios_alertables`, evalúa las reglas y devuelve notificaciones con el contrato de siempre. Cero nodos nuevos: `mantenimiento_ciclo` las concatena y `wf_cron` las despacha. |
 | `v_negocios_alertables` | Quién está en condiciones de recibir un aviso: hay a quién avisarle, autorizó (051), y **entraron datos después del último análisis**. |
 | `recomendaciones_medir(negocio_id) → jsonb` | Llena el eje `resultado` (`066`): compara la magnitud de cada regla contra la foto tomada al cerrar. Solo mide si **llegaron** datos después del cierre (`creado_en`, no `fecha`). |
