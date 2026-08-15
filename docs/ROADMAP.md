@@ -1038,20 +1038,37 @@ A1 y A2 son los únicos verdaderamente bloqueantes. **Cada día sin A1 es histor
 
 ## 7. Pruebas de aceptación
 
+> **Automatizadas en `db/pruebas/aceptacion.sql`** — 23 comprobaciones, en una
+> transacción que se descarta. Corre contra producción sin dejar rastro:
+>
+> ```bash
+> set -a; . ./.env; set +a
+> docker compose exec -T -e PGPASSWORD="$CHASQUI_DB_PASSWORD" postgres \
+>   psql -U "$CHASQUI_DB_USER" -d "$CHASQUI_DB" < db/pruebas/aceptacion.sql
+> ```
+>
+> Lo que NO cubre, porque cuesta tokens y depende del proveedor: que la respuesta
+> narrada no caiga al informe seco. Eso se prueba con `wf_ejecutar`.
+>
+> Los otros dos bancos: `db/pruebas/router_casos.sql` (67 casos del router) y
+> `db/pruebas/reglas_comparativas.sql` (las cuatro reglas de B3).
+
 **Permanentes** (toda fase las conserva):
 1. Las **ocho preguntas** de la definición de producto se responden en el chat.
-2. Toda cifra entregada pasa `validar_cifras`.
-3. El segundo periodo puede citar resultados del primero.
+   ✅ Las seis puntuales resuelven su intención; las dos abiertas las contesta el
+   contexto de C1 —`intencion_detectar` devuelve NULL a propósito—.
+2. Toda cifra entregada pasa `validar_cifras`. ✅ Y una inventada se rechaza.
+3. El segundo periodo puede citar resultados del primero. ✅ B3.
 
 **Cuatro pruebas explícitas:**
 
-**Historia** — Cargar 12 meses de datos bajo plan Free y verificar: (a) los 12 meses siguen **almacenados** en `movimientos`; (b) la lectura Free respeta su ventana (el informe solo usa los últimos 3 meses); (c) al pasar a un plan con histórico, los datos antiguos están disponibles **sin volver a cargarlos**.
+**Historia** — ✅ **Automatizada** (R-II/1-3): un movimiento de hace 400 días se guarda igual bajo plan free, no se analiza, y al ampliar el plan entra solo sin volver a cargar nada. Enunciado original: cargar 12 meses de datos bajo plan Free y verificar: (a) los 12 meses siguen **almacenados** en `movimientos`; (b) la lectura Free respeta su ventana (el informe solo usa los últimos 3 meses); (c) al pasar a un plan con histórico, los datos antiguos están disponibles **sin volver a cargarlos**.
 
 **Inventario** — Registrar un conteo inicial, luego compras y ventas, y comprobar que el stock calculado coincide con el esperado. Además: sin conteo, el sistema identifica el resultado como **estimado** y así lo dice el informe.
 
-**Memoria** — Ejecutar Mes 1 → recomendación, Mes 2 → acción, Mes 3 → resultado, y comprobar que Chasqui reconstruye la secuencia completa.
+**Memoria** — Ejecutar Mes 1 → recomendación, Mes 2 → acción, Mes 3 → resultado, y comprobar que Chasqui reconstruye la secuencia completa. ✅ **Automatizada**: se detecta el margen bajo, el dueño aplica el precio (queda en `conocimiento` y `cerrada_por='accion_usuario'`), entran datos nuevos y el resultado se mide como `positivo`. El perfil cuenta la acción y el resultado.
 
-**Verdad** — Introducir deliberadamente una respuesta incorrecta del LLM (una cifra que no está en los hallazgos) y verificar que `validar_cifras` la detecta y la rechaza, cayendo al informe seco.
+**Verdad** — Introducir deliberadamente una respuesta incorrecta del LLM (una cifra que no está en los hallazgos) y verificar que `validar_cifras` la detecta y la rechaza, cayendo al informe seco. ✅ **Automatizada**, en los dos sentidos: una cifra inventada se rechaza y una real se acepta.
 
 ---
 
