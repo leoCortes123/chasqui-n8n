@@ -22,8 +22,12 @@ registro histórico de las Fases 1-4 viejas.*
 | **C2** Intenciones como contrato | ✅ **hecha y verificada** | `063_intenciones_consulta.sql` |
 | **D1** Acciones sobre la recomendación | ✅ **hecha y verificada** | `064_acciones.sql` |
 | **D2** Lista de pedido | ✅ **hecha y verificada** | `065_pedido.sql` |
-| **D3** El resultado se mide | ⏭️ **siguiente** | `066_resultado.sql` |
-| E, F | pendientes | — |
+| **D3** El resultado se mide | ✅ **hecha y verificada** | `066_resultado.sql` |
+| **E1** Motor de alertas | ⏭️ **siguiente** | `067_alertas.sql` |
+| E2, F | pendientes | — |
+
+**La Fase D está cerrada.** El ciclo detectar → explicar → cuantificar →
+recomendar → **ejecutar** → **medir** funciona de punta a punta.
 
 **La Fase C está cerrada.** Las ocho preguntas se responden en el chat con los
 números del negocio.
@@ -483,6 +487,40 @@ Tres decisiones:
 
 En el desempate entre dos proveedores al mismo precio gana el más reciente.
 
+### Lo que dejó D3
+
+Se llena el eje `resultado` que B2 dejó creado y que nadie escribía. **Los dos
+ejes no son el mismo, y acá se ve por qué**: "aplicar el precio sugerido" puede
+quedar perfectamente ejecutada —`estado = resuelta`, `cerrada_por =
+accion_usuario`— y aun así dar resultado **negativo**: subió el precio y dejó de
+vender. Colapsarlos en una columna habría hecho imposible distinguir "me
+hicieron caso" de "les fue bien".
+
+**Se mide sin inventar un modelo.** Cada regla apunta a una magnitud y a una
+dirección —el costo debería bajar, el margen subir, el inventario quieto bajar—
+y eso es una tabla (`metricas_resultado`), no un algoritmo: medir una regla
+nueva es un INSERT. Al cerrarse, la recomendación guarda el valor de su magnitud;
+cuando entran datos nuevos se vuelve a leer y se compara. Un cambio menor que el
+umbral es `neutro`, porque decir "sirvió" por un 1% sería ruido disfrazado de
+señal.
+
+**Un defecto encontrado probando**: la compuerta "¿hay datos posteriores al
+cierre?" miraba `fecha` y no `creado_en`. Un archivo con ventas fechadas la
+semana que viene —que pasa, y los fixtures del repo lo prueban— ya estaba
+cargado cuando se cerró la recomendación, así que no dice nada sobre si la
+acción sirvió. Lo que importa es que haya **entrado** información nueva, no que
+haya filas con fecha posterior. Con el gate mal, todo se medía de inmediato
+contra sí mismo y daba `neutro`.
+
+**Verificado el ciclo completo**: el dueño cierra "plata quieta" con *ya lo hice*
+→ se guarda el stock del momento (42) → sin datos nuevos la medición devuelve
+`sin_datos` y `resultado` sigue en NULL → llega un archivo con ventas de ese
+producto → el stock baja a 12 y la recomendación queda `positivo` con −71,4%.
+
+**Lo que no se mide, se dice**: `sin_medir` se cuenta en el perfil y el portal
+muestra "sin medir todavía". Una recomendación cerrada ayer no tiene resultado
+hoy, y fingir que sí es peor que esperar.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -547,7 +585,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 | **Explicar** | ✅ Sólido | `informe_render` + prompt "TU TRABAJO ES REDACTAR, NO CALCULAR" (`047:993+`) |
 | **Cuantificar** | ✅ Corregido en A2 y A3 | `impacto_tipo` separa flujos de stocks con umbral propio (`055`); el stock declara su `origen_stock` (`054`) |
 | **Recomendar** | ✅ Sólido | Opciones condicionales por regla, prioridad relativa a `v_base_mes`, tope 2×regla / 8 total |
-| **Ejecutar** | 🟡 Existe (D1); falta medir | Tres acciones sobre cada recomendación, en chat y portal (`064`). Falta D2 (lista de pedido) y D3 (medir si sirvió) |
+| **Ejecutar** | ✅ Cerrado | Tres acciones (`064`), lista de pedido (`065`) y medición del resultado (`066`) | Tres acciones sobre cada recomendación, en chat y portal (`064`). Falta D2 (lista de pedido) y D3 (medir si sirvió) |
 | **Cerebro acumulativo** | 🟡 Tiene memoria (B1 y B2); falta usarla | `snapshots_negocio` (`058`) registra el estado en cada análisis. El plan free ya no borra el pasado (`053`). Falta comparar (B3) y recordar recomendaciones (B2) |
 | **IA no es fuente de verdad** | ✅ Excelente | `validar_cifras` (`026`) + informe seco (`047:894`). Es el activo más valioso del proyecto |
 | **Mensajería como interfaz** | ✅ Sólido | Router en SQL, dos canales, portal para lo que no cabe en el chat |
@@ -854,7 +892,7 @@ Botones en el informe: **✅ Ya lo hice** / **⏭️ No aplica** / **💲 Aplica
 **D2. Lista de pedido** — `065_pedido.sql` ✅ **APLICADA 2026-08-15**
 Consolida las recomendaciones R4 en una lista de compra (producto, unidades, proveedor más barato conocido, costo estimado), entregada en el portal. No se envía a nadie.
 
-**D3. El resultado se mide** — activa el eje de resultado previsto en B2: toda acción registrada se contrasta contra los datos del periodo siguiente. Alimenta "resultados de acciones anteriores" de la prioridad 3.
+**D3. El resultado se mide** — `066_resultado.sql` ✅ **APLICADA 2026-08-15** — activa el eje de resultado previsto en B2: toda acción registrada se contrasta contra los datos del periodo siguiente. Alimenta "resultados de acciones anteriores" de la prioridad 3.
 
 ### Fase E — Proactividad
 

@@ -314,6 +314,9 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `recomendaciones_registrar(negocio_id, ejecucion_id) → jsonb` | Persiste lo detectado, cierra lo que ya no está y marca lo que llegó al informe. Devuelve el conteo de cada cosa. |
 | `recomendacion_objeto_evaluable(negocio_id, clave) → boolean` | ¿El objeto sigue teniendo movimientos visibles? Es lo que separa "se resolvió" de "lo perdí de vista". |
 | `recomendaciones_vigentes(negocio_id, limite) → jsonb` | Las abiertas, con `dias_abierta` y `veces_vista`. La entrada de C1 y D1. |
+| `recomendaciones_medir(negocio_id) → jsonb` | Llena el eje `resultado` (`066`): compara la magnitud de cada regla contra la foto tomada al cerrar. Solo mide si **llegaron** datos después del cierre (`creado_en`, no `fecha`). |
+| `metricas_resultado` | Qué magnitud mira cada regla y hacia dónde debería moverse. Una tabla, no un algoritmo: medir una regla nueva es un INSERT. |
+| `recomendacion_metrica_valor(...)` / `recomendacion_marcar_cierre(id)` | Leer una magnitud, y la foto que se guarda al cerrar. Sin esa foto no hay contra qué comparar. |
 | `pedido_sugerido(negocio_id) → jsonb` | Las recomendaciones abiertas de "se agota", consolidadas en lista de compra con el proveedor más barato **al que ya le compró** y el costo estimado (`065`). Las unidades no se recalculan: son las que se le mostraron al dueño. |
 | `v_proveedor_mas_barato` | El proveedor más barato conocido por producto. "Conocido" = de sus propias compras; Chasqui no tiene precios de mercado y no los inventa. |
 | `recomendacion_accion(reco_id, negocio_id, accion, usuario_id) → jsonb` | **El único punto de escritura de las acciones** (`064`), para chat y portal. `hice` → resuelta · `no_aplica` → ignorada · `precio` → escribe el precio sugerido en `conocimiento` y cierra. Valida negocio y que siga abierta: un botón de un informe viejo no cierra nada dos veces. |

@@ -861,12 +861,19 @@ async function cargarRecomendaciones() {
 
   for (const c of cerradas) {
     const f = el('div', undefined, 'fila');
-    f.append(el('span', c.titulo));
+    f.append(el('span', (c.icono ? c.icono + ' ' : '') + c.titulo));
     // Se distingue quién la cerró: que el dato diga que se arregló no es lo
     // mismo que el dueño diciendo que ya lo hizo.
     const como = { dato: 'se resolvió', accion_usuario: 'lo hiciste',
                    sin_datos: 'dejé de verlo' };
     f.append(el('span', como[c.cerrada_por] || c.estado, 'etiqueta'));
+    // Y si sirvió (066), que es otro eje: se puede haber hecho y haber salido
+    // mal. "sin medir" es honesto: todavía no entraron datos posteriores.
+    const salio = { positivo: '👍 sirvió', neutro: '≈ sin cambio',
+                    negativo: '👎 salió peor' };
+    f.append(el('span', c.resultado ? salio[c.resultado]
+                                    + (c.cambio_pct ? ' (' + c.cambio_pct + '%)' : '')
+                                    : 'sin medir todavía', 'etiqueta'));
     filas.push(f);
   }
 
