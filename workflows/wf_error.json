@@ -1,0 +1,169 @@
+{
+  "id": "wfError0000000000001",
+  "name": "wf_error",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "Error",
+      "name": "Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst e = $input.first().json;\nconst msg = (e.execution?.error?.message || e.error?.message || '').toString();\nconst transitoria = /timeout|ETIMEDOUT|ECONNRESET|429|rate.?limit|EAI_AGAIN|socket hang up/i.test(msg);\nreturn [{ json: {\n  workflow: e.workflow?.name || null,\n  tipo: transitoria ? 'transitoria' : 'permanente',\n  transitoria,\n  detalle: {\n    mensaje: msg.slice(0, 500),\n    nodo: e.execution?.lastNodeExecuted || null,\n    execution_id: e.execution?.id || null\n  }\n} }];\n"
+      },
+      "id": "Clasificar",
+      "name": "Clasificar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO fallas (workflow, tipo, transitoria, detalle) VALUES ('{{ String($json.workflow).replaceAll(\"'\",\"''\") }}', '{{ $json.tipo }}', {{ $json.transitoria }}, '{{ JSON.stringify($json.detalle).replaceAll(\"'\",\"''\") }}'::jsonb) RETURNING id;",
+        "options": {}
+      },
+      "id": "Registrar",
+      "name": "Registrar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT jsonb_build_object(  'chat_id', telegram_chat_id,  'respuestas', jsonb_build_array(jsonb_build_object(    'plantilla', '⚠️ Falla en {{ $('Clasificar').first().json.workflow }} (' || '{{ $('Clasificar').first().json.tipo }}' || '): {{ String($('Clasificar').first().json.detalle.mensaje).replaceAll(\"'\",\"''\").slice(0,200) }}',    'vars', '{}'))) AS payload FROM usuarios WHERE rol='admin' AND telegram_chat_id IS NOT NULL;",
+        "options": {}
+      },
+      "id": "Admins",
+      "name": "Admins",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn $input.all().map(i => ({ json: i.json.payload }));\n"
+      },
+      "id": "FanoutAdmin",
+      "name": "FanoutAdmin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "AvisarAdmin",
+      "name": "AvisarAdmin",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Error": {
+      "main": [
+        [
+          {
+            "node": "Clasificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar": {
+      "main": [
+        [
+          {
+            "node": "Registrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar": {
+      "main": [
+        [
+          {
+            "node": "Admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admins": {
+      "main": [
+        [
+          {
+            "node": "FanoutAdmin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FanoutAdmin": {
+      "main": [
+        [
+          {
+            "node": "AvisarAdmin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

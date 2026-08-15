@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:ID>QL20260405001</cbc:ID>
+  <cbc:UUID schemeName="CUFE-SHA384">c9e5f3b7a1d4c62839015c6d7e8f90112233445566778899aabbccddeeff00112233445566778899003c</cbc:UUID>
+  <cbc:IssueDate>2026-04-05</cbc:IssueDate>
+  <cbc:IssueTime>08:45:00-05:00</cbc:IssueTime>
+  <cbc:DueDate>2026-05-05</cbc:DueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>QUALA SA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="31">860000222</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>TIENDA DOÑA ROSA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="13">43555111</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">39200.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">261400.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">300600.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">300600.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">20.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">76000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>GASEOSA POSTOBON 1.5L</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702006060606</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">3800.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">24.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">100800.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>GASEOSA COCACOLA 1.5L</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702015151515</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">4200.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>3</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">18.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">45000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>JUGO HIT 1L</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702016161616</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">2500.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>4</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">36.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">39600.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>AGUA CIELO 600ML</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702017171717</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">1100.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

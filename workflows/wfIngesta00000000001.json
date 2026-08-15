@@ -1,0 +1,436 @@
+{
+  "updatedAt": "2026-07-24T20:07:46.372Z",
+  "createdAt": "2026-07-24T20:07:46.372Z",
+  "id": "wfIngesta00000000001",
+  "name": "wf_ingesta",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "Inicio",
+      "name": "Inicio",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.evento.file_id }}",
+        "additionalFields": {}
+      },
+      "id": "BajarArchivo",
+      "name": "BajarArchivo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ev = $('Inicio').first().json.evento;\nconst sesion_id = $('Inicio').first().json.sesion_id ?? ev.sesion_id;\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{ json: {\n  sesion_id,\n  nombre: ev.file_name || 'archivo',\n  mime: ev.mime || 'application/octet-stream',\n  b64: buf.toString('base64'),\n  chat_id: $('Inicio').first().json.chat_id\n}, binary: $input.first().binary }];\n"
+      },
+      "id": "Empaquetar",
+      "name": "Empaquetar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_registrar_documento(({{ $json.sesion_id }})::bigint, (SELECT negocio_id FROM sesiones WHERE id=({{ $json.sesion_id }})::bigint), '{{ String($json.nombre).replaceAll(\"'\",\"''\") }}', '{{ $json.mime }}', decode('{{ $json.b64 }}','base64')) AS reg;",
+        "options": {}
+      },
+      "id": "Registrar",
+      "name": "Registrar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_procesar_documento( ({{ $json.reg.documento_id }})::bigint ) AS res, ({{ $json.reg.documento_id }})::bigint AS documento_id;",
+        "options": {}
+      },
+      "id": "Procesar",
+      "name": "Procesar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        880,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.res.requiere_filas === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "RequiereFilas?",
+      "name": "RequiereFilas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "csv",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "ExtraerCSV",
+      "name": "ExtraerCSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst filas = $input.all().map(i => i.json);\nconst docId = $('Procesar').first().json.documento_id;\nreturn [{ json: { documento_id: docId, filas } }];\n"
+      },
+      "id": "AgruparFilas",
+      "name": "AgruparFilas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_cargar_tabular( ({{ $json.documento_id }})::bigint, '{{ JSON.stringify($json.filas).replaceAll(\"'\",\"''\") }}'::jsonb ) AS res, ({{ $json.documento_id }})::bigint AS documento_id;",
+        "options": {}
+      },
+      "id": "CargarTabular",
+      "name": "CargarTabular",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1760,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT match_resolver_documento( ({{ $json.documento_id }})::bigint ) AS m, (SELECT estado FROM documentos WHERE id=({{ $json.documento_id }})::bigint) AS estado, (SELECT nombre_archivo FROM documentos WHERE id=({{ $json.documento_id }})::bigint) AS nombre, (SELECT count(*) FROM documentos d JOIN sesiones s ON s.id=d.sesion_id   WHERE d.sesion_id=(SELECT sesion_id FROM documentos WHERE id=({{ $json.documento_id }})::bigint)) AS total;",
+        "options": {}
+      },
+      "id": "Resolver",
+      "name": "Resolver",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1980,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst j = $input.first().json;\nconst chat_id = $('Empaquetar').first().json.chat_id;\nconst nombre = j.nombre || 'archivo';\nlet respuestas;\nif (j.estado === 'error') {\n  respuestas = [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: nombre, motivo:'no se pudo leer' } }];\n} else {\n  respuestas = [{ plantilla:'ingesta.ok',\n    vars:{ nombre_archivo: nombre, total: String(j.total ?? 1) } }];\n}\nreturn [{ json: { chat_id, respuestas } }];\n"
+      },
+      "id": "Respuesta",
+      "name": "Respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: { chat_id: $('Inicio').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || 'archivo',\n           motivo:'no se pudo descargar' } }] } }];\n"
+      },
+      "id": "ErrorDescarga",
+      "name": "ErrorDescarga",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "Enviar",
+      "name": "Enviar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2420,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "BajarArchivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BajarArchivo": {
+      "main": [
+        [
+          {
+            "node": "Empaquetar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ErrorDescarga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empaquetar": {
+      "main": [
+        [
+          {
+            "node": "Registrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar": {
+      "main": [
+        [
+          {
+            "node": "Procesar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar": {
+      "main": [
+        [
+          {
+            "node": "RequiereFilas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RequiereFilas?": {
+      "main": [
+        [
+          {
+            "node": "ExtraerCSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtraerCSV": {
+      "main": [
+        [
+          {
+            "node": "AgruparFilas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AgruparFilas": {
+      "main": [
+        [
+          {
+            "node": "CargarTabular",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CargarTabular": {
+      "main": [
+        [
+          {
+            "node": "Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver": {
+      "main": [
+        [
+          {
+            "node": "Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ErrorDescarga": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "740c821c-7063-4328-9869-83327d8c8875",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T20:07:46.372Z",
+      "createdAt": "2026-07-24T20:07:46.372Z",
+      "role": "workflow:owner",
+      "workflowId": "wfIngesta00000000001",
+      "projectId": "ARxLsftxtA8Uahtb",
+      "project": {
+        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "createdAt": "2026-07-24T19:13:33.081Z",
+        "id": "ARxLsftxtA8Uahtb",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "82e8043f-230d-4511-8dd5-60fbab9be9d2"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

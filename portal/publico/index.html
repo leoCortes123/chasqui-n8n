@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<title>Chasqui — mi negocio</title>
+<style>
+/* Sin framework y sin build: el portal se abre en el teléfono del dueño, casi
+   siempre con datos móviles. Todo el CSS cabe acá. */
+:root {
+  --bg: #f6f7f9; --panel: #fff; --texto: #16191d; --suave: #626b75;
+  --linea: #e2e6ea; --acento: #1f6f4a; --acento-txt: #fff;
+  --alerta: #a4401c; --radio: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171a; --panel: #1c2024; --texto: #e8eaed; --suave: #98a2ac;
+    --linea: #2b3136; --acento: #3f9d6e; --acento-txt: #06120c;
+    --alerta: #e2865f;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--texto);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+header {
+  background: var(--panel); border-bottom: 1px solid var(--linea);
+  padding: 14px 16px calc(14px) 16px; position: sticky; top: 0; z-index: 5;
+}
+header h1 { margin: 0; font-size: 17px; }
+header p { margin: 2px 0 0; font-size: 13px; color: var(--suave); }
+main { padding: 16px; max-width: 720px; margin: 0 auto; }
+section[hidden] { display: none; }
+h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em;
+     color: var(--suave); margin: 24px 0 8px; }
+h2:first-child { margin-top: 0; }
+
+.tarjeta {
+  background: var(--panel); border: 1px solid var(--linea);
+  border-radius: var(--radio); padding: 14px; margin-bottom: 10px;
+}
+.tarjeta h3 { margin: 0 0 4px; font-size: 16px; }
+.tarjeta p { margin: 0; color: var(--suave); font-size: 14px;
+             overflow-wrap: anywhere; }
+.fila { display: flex; gap: 10px; align-items: baseline;
+        justify-content: space-between; }
+.etiqueta {
+  display: inline-block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--suave); border: 1px solid var(--linea);
+  border-radius: 999px; padding: 1px 8px; white-space: nowrap;
+}
+.cifras { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.cifra { background: var(--panel); border: 1px solid var(--linea);
+         border-radius: var(--radio); padding: 12px; }
+.cifra b { display: block; font-size: 22px; }
+.cifra span { font-size: 12px; color: var(--suave); }
+
+button {
+  font: inherit; border-radius: 10px; border: 1px solid var(--linea);
+  background: var(--panel); color: var(--texto); padding: 9px 14px;
+  cursor: pointer; min-height: 42px;
+}
+button.primario { background: var(--acento); color: var(--acento-txt);
+                  border-color: transparent; font-weight: 600; }
+button.riesgo { color: var(--alerta); }
+.acciones { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+label { display: block; font-size: 13px; color: var(--suave); margin: 10px 0 4px; }
+input, select, textarea {
+  font: inherit; width: 100%; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--linea); background: var(--bg); color: var(--texto);
+}
+textarea { min-height: 96px; resize: vertical; }
+dialog {
+  border: none; border-radius: 16px 16px 0 0; padding: 16px;
+  background: var(--panel); color: var(--texto);
+  width: 100%; max-width: 720px; margin: auto auto 0;
+}
+dialog::backdrop { background: #0008; }
+@media (min-width: 640px) { dialog { border-radius: 16px; margin: auto; } }
+
+nav {
+  position: fixed; bottom: 0; left: 0; right: 0; display: flex;
+  background: var(--panel); border-top: 1px solid var(--linea);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+nav button {
+  flex: 1; border: none; border-radius: 0; background: none; padding: 10px 4px;
+  font-size: 11px; color: var(--suave); display: grid; gap: 2px;
+  min-height: 60px;
+}
+nav button b { font-size: 19px; font-weight: 400; }
+nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
+
+.vacio { color: var(--suave); font-size: 14px; text-align: center;
+         padding: 28px 12px; }
+/* Listas densas (movimientos, meses): filas dentro de una sola tarjeta. */
+.lista .fila { padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.lista .fila:last-child { border-bottom: none; padding-bottom: 0; }
+.lista .fila:first-child { padding-top: 0; }
+.sub { font-size: 12.5px; color: var(--suave); margin: 0; }
+.monto { white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Filas del armado de cotización: checkbox + nombre + cantidad. */
+.cot-item { align-items: center; }
+.cot-item label { display: flex; gap: 8px; align-items: center; margin: 0;
+                  font-size: 15px; color: var(--texto); flex: 1; min-width: 0; }
+.cot-item input[type="checkbox"] { width: auto; }
+.cot-item input[type="number"] { width: 76px; padding: 6px 8px; }
+.informe { white-space: pre-wrap; overflow-wrap: anywhere; }
+#aviso { margin: 0; padding: 10px 16px; background: var(--alerta);
+         color: #fff; font-size: 14px; }
+#aviso[hidden] { display: none; }
+</style>
+</head>
+<body>
+
+<p id="aviso" hidden></p>
+
+<header>
+  <h1 id="negocio">Cargando…</h1>
+  <p id="subtitulo">Portal de tu negocio</p>
+</header>
+
+<main>
+  <!-- 1. Perfil -->
+  <section id="p-perfil">
+    <h2>Este mes</h2>
+    <div class="cifras" id="consumo"></div>
+    <h2>Tu base de conocimiento</h2>
+    <div class="cifras" id="cobertura"></div>
+    <h2>Datos</h2>
+    <div class="tarjeta" id="datos"></div>
+  </section>
+
+  <!-- 2. Ventas y compras: lo que la ingesta ya normalizó en movimientos.
+       Nada de PDF: la información se muestra acá. -->
+  <section id="p-ventas" hidden>
+    <h2>Este mes</h2>
+    <div class="cifras" id="v-mes"></div>
+    <h2>Cartera</h2>
+    <div class="cifras" id="c-resumen"></div>
+    <div id="c-facturas"></div>
+    <h2>Mes a mes</h2>
+    <div id="v-meses"></div>
+    <h2>Lo que más se vende</h2>
+    <div id="v-top"></div>
+    <h2>Inventario</h2>
+    <p class="vacio" id="v-inv-nota"></p>
+    <div id="v-inv"></div>
+    <h2>Últimos movimientos</h2>
+    <div id="v-movs"></div>
+    <h2>Archivos subidos</h2>
+    <div id="v-docs"></div>
+  </section>
+
+  <!-- 3. Precios -->
+  <section id="p-precios" hidden>
+    <h2>Cotizaciones</h2>
+    <div id="cotizaciones"></div>
+    <div class="acciones">
+      <button class="primario" id="btn-nueva-cot">+ Nueva cotización</button>
+    </div>
+    <h2>Lista de precios</h2>
+    <div id="precios"></div>
+    <div class="acciones">
+      <button class="primario" data-nuevo="precio">+ Agregar producto</button>
+    </div>
+  </section>
+
+  <!-- 3. Conocimiento -->
+  <section id="p-saber" hidden>
+    <h2>Preguntas sin responder</h2>
+    <div id="pendientes"></div>
+    <h2>Lo que sabe el bot</h2>
+    <div id="hechos"></div>
+    <div class="acciones">
+      <button class="primario" data-nuevo="faq">+ Agregar dato</button>
+    </div>
+  </section>
+
+  <!-- 4. Informes -->
+  <section id="p-informes" hidden>
+    <h2>Informes</h2>
+    <div id="informes"></div>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="perfil"   aria-current="true"><b>🏪</b>Mi negocio</button>
+  <button data-tab="ventas"><b>📈</b>Ventas</button>
+  <button data-tab="precios"><b>🏷️</b>Precios</button>
+  <button data-tab="saber"><b>💡</b>Conocimiento</button>
+  <button data-tab="informes"><b>📊</b>Informes</button>
+</nav>
+
+<dialog id="cotizador">
+  <form method="dialog" id="form-cot">
+    <h2 style="margin-top:0">Nueva cotización</h2>
+    <label for="c-cliente">Cliente (opcional)</label>
+    <input name="cliente" id="c-cliente" maxlength="120"
+           placeholder="Ferretería El Tornillo">
+    <label>Productos (marcá y poné cantidad)</label>
+    <div id="c-items" class="tarjeta lista"></div>
+    <label for="c-vigencia">Válida hasta (opcional)</label>
+    <input type="date" name="vigencia" id="c-vigencia">
+    <label for="c-notas">Notas (opcional)</label>
+    <textarea name="notas" id="c-notas"
+      placeholder="Condiciones de pago, entrega, descuentos…"></textarea>
+    <div class="acciones">
+      <button class="primario" value="guardar" id="btn-cotizar">Crear y copiar enlace</button>
+      <button value="cancelar" formnovalidate>Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="editor">
+  <form method="dialog" id="form">
+    <h2 id="form-titulo" style="margin-top:0">Nuevo</h2>
+    <input type="hidden" name="id">
+    <input type="hidden" name="pendiente_id">
+    <div id="campo-tipo">
+      <label for="f-tipo">Tipo</label>
+      <select name="tipo" id="f-tipo">
+        <option value="faq">Pregunta frecuente</option>
+        <option value="politica">Política</option>
+        <option value="horario">Horario</option>
+        <option value="condicion">Condición de venta</option>
+        <option value="precio">Precio</option>
+      </select>
+    </div>
+    <label for="f-titulo">Título</label>
+    <input name="titulo" id="f-titulo" required maxlength="200"
+           placeholder="Bulto de cemento gris 50 kg">
+    <div id="campo-precio" hidden>
+      <label for="f-valor">Precio (pesos)</label>
+      <input name="valor" id="f-valor" inputmode="numeric" placeholder="32000">
+      <label for="f-unidad">Unidad</label>
+      <input name="unidad" id="f-unidad" placeholder="bulto">
+      <label for="f-clave">Código interno (opcional)</label>
+      <input name="clave" id="f-clave" placeholder="CEM50">
+    </div>
+    <label for="f-contenido">Detalle</label>
+    <textarea name="contenido" id="f-contenido"
+      placeholder="Escribilo como se lo dirías a un cliente. El bot responde con esto."></textarea>
+    <div class="acciones">
+      <button class="primario" value="guardar" id="btn-guardar">Guardar</button>
+      <button value="cancelar" formnovalidate>Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+
+// --- Sesión -----------------------------------------------------------------
+// El enlace de Telegram trae el token en el fragmento (#t=...): así no viaja en
+// la URL que ve el proxy ni queda en el Referer. Se canjea una vez por un JWT
+// de 12 horas y se borra del historial.
+const API = '/api';
+let jwt = sessionStorage.getItem('chasqui_jwt') || '';
+
+async function rpc(fn, args = {}) {
+  const r = await fetch(`${API}/rpc/${fn}`, {
+    method: 'POST',
+    headers: Object.assign({ 'Content-Type': 'application/json' },
+                           jwt ? { Authorization: 'Bearer ' + jwt } : {}),
+    body: JSON.stringify(args)
+  });
+  if (r.status === 401 || r.status === 403) { caducar(); throw new Error('sesion'); }
+  const cuerpo = await r.json().catch(() => null);
+  if (!r.ok) throw new Error((cuerpo && cuerpo.message) || 'error ' + r.status);
+  return cuerpo;
+}
+
+function caducar() {
+  sessionStorage.removeItem('chasqui_jwt');
+  jwt = '';
+  avisar('Tu sesión venció. Pedile otro enlace al bot con /portal.');
+}
+
+function avisar(txt) {
+  const a = document.getElementById('aviso');
+  a.textContent = txt;
+  a.hidden = !txt;
+}
+
+async function arrancar() {
+  const frag = new URLSearchParams(location.hash.slice(1));
+  const token = frag.get('t');
+  if (token) {
+    history.replaceState(null, '', location.pathname);
+    try {
+      const r = await fetch(`${API}/rpc/portal_sesion_abrir`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_token: token })
+      }).then(x => x.json());
+      if (r && r.ok) { jwt = r.jwt; sessionStorage.setItem('chasqui_jwt', jwt); }
+    } catch (e) { /* cae en el aviso de abajo */ }
+  }
+  if (!jwt) {
+    avisar('Este enlace ya se usó o venció. Pedile otro al bot con /portal.');
+    document.getElementById('negocio').textContent = 'Sin sesión';
+    return;
+  }
+  avisar('');
+  cargarTodo();
+}
+
+// --- Utilidades -------------------------------------------------------------
+const $ = s => document.querySelector(s);
+const num = n => (n === null || n === undefined) ? '—'
+  : Number(n).toLocaleString('es-CO');
+const fecha = f => f ? new Date(f).toLocaleDateString('es-CO',
+  { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const pesos = n => (n === null || n === undefined) ? '—'
+  : '$ ' + Math.round(Number(n)).toLocaleString('es-CO');
+// 'YYYY-MM' -> 'jul 2026' sin pasar por Date (evita el corrimiento de zona).
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const mesLindo = m => {
+  const [a, n] = String(m || '').split('-');
+  return n ? MESES[Number(n) - 1] + ' ' + a : String(m || '');
+};
+
+// Todo lo que escribió una persona entra como texto, nunca como HTML.
+function el(tag, texto, clase) {
+  const e = document.createElement(tag);
+  if (texto !== undefined) e.textContent = texto;
+  if (clase) e.className = clase;
+  return e;
+}
+function vacio(txt) { return el('p', txt, 'vacio'); }
+
+// El informe SÍ es HTML, pero uno que armó informe_render en Postgres con todo
+// lo del modelo ya escapado. Aun así se pasa por una lista blanca: es HTML que
+// nació de un LLM y no cuesta nada desconfiar.
+const PERMITIDAS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'CODE', 'BR', 'PRE']);
+function limpiarHtml(html) {
+  const doc = new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html');
+  (function limpiar(nodo) {
+    for (const hijo of Array.from(nodo.childNodes)) {
+      if (hijo.nodeType === 1) {
+        if (!PERMITIDAS.has(hijo.tagName)) {
+          hijo.replaceWith(...Array.from(hijo.childNodes));
+          continue;
+        }
+        for (const at of Array.from(hijo.attributes)) hijo.removeAttribute(at.name);
+        limpiar(hijo);
+      }
+    }
+  })(doc.body.firstChild);
+  return doc.body.firstChild.innerHTML;
+}
+
+// --- Pantallas --------------------------------------------------------------
+async function cargarTodo() {
+  await Promise.all([cargarPerfil(), cargarVentas(), cargarConocimiento(),
+                     cargarCotizaciones(), cargarInformes()]);
+}
+
+async function cargarPerfil() {
+  const p = await rpc('portal_perfil');
+  const n = p.negocio || {}, u = p.usuario || {}, c = p.consumo || {}, k = p.cobertura || {};
+  $('#negocio').textContent = n.nombre || 'Tu negocio';
+  $('#subtitulo').textContent = (u.nombre ? u.nombre + ' · ' : '') + (n.tipo || '');
+
+  $('#consumo').replaceChildren(
+    cifra(num(c.ejecuciones_mes), 'Informes generados'),
+    cifra(num(c.tokens_mes), 'Palabras procesadas'));
+  $('#cobertura').replaceChildren(
+    cifra(num(k.hechos), 'Datos cargados'),
+    cifra(num(k.pendientes), 'Preguntas sin responder'));
+
+  const d = $('#datos');
+  d.replaceChildren();
+  for (const [et, val] of [['Negocio', n.nombre], ['NIT', n.nit || '—'],
+                           ['Plan', n.plan], ['Tu rol', u.rol],
+                           ['Telegram', u.telegram ? '@' + u.telegram : '—']]) {
+    const f = el('div', undefined, 'fila');
+    f.append(el('span', et, 'etiqueta'), el('span', String(val ?? '—')));
+    // El NIT se edita acá y no por chat: con él la cartera sabe qué facturas
+    // son emitidas por el negocio (te deben) y cuáles recibidas (debés).
+    if (et === 'NIT') {
+      const b = el('button', n.nit ? 'Cambiar' : 'Agregar');
+      b.onclick = async () => {
+        const v = prompt('NIT del negocio, con o sin dígito de verificación ' +
+                         '(ej: 900123456-7). Dejalo vacío para borrarlo.', n.nit || '');
+        if (v === null) return;
+        try {
+          const r = await rpc('portal_negocio_guardar', { p_nit: v });
+          if (!r.ok) { avisar(r.error); return; }
+          avisar('');
+          cargarPerfil();
+        } catch (e) { avisar('No pude guardar el NIT: ' + e.message); }
+      };
+      f.append(b);
+    }
+    d.append(f);
+  }
+}
+
+function cifra(valor, etiqueta) {
+  const d = el('div', undefined, 'cifra');
+  d.append(el('b', valor), el('span', etiqueta));
+  return d;
+}
+
+// --- Ventas y compras --------------------------------------------------------
+function tarjetaLista(filas) {
+  const t = el('div', undefined, 'tarjeta lista');
+  t.append(...filas);
+  return t;
+}
+
+// Inventario: sin un conteo, el stock que muestra Chasqui es lo comprado menos
+// lo vendido. Se dice, no se disimula — y de ahí sale el botón para arreglarlo.
+async function cargarInventario() {
+  const prods = await rpc('portal_productos');
+  const estimados = prods.filter(p => p.origen_stock === 'estimado').length;
+  $('#v-inv-nota').textContent = prods.length === 0
+    ? ''
+    : (estimados === 0
+        ? 'Todo tu stock sale de conteos tuyos.'
+        : 'De ' + prods.length + ' productos, ' + estimados + ' tienen stock estimado '
+          + '(lo comprado menos lo vendido). Contá la bodega y las alertas de '
+          + '"se agota" y "plata quieta" pasan a calcularse sobre tu stock real.');
+
+  const cont = $('#v-inv');
+  if (!prods.length) { cont.replaceChildren(vacio('Todavía no hay productos.')); return; }
+
+  cont.replaceChildren(tarjetaLista(prods.map(p => {
+    const fila = el('div', undefined, 'fila');
+    fila.append(el('span', p.nombre));
+    const marca = { conteo: 'contado', calculado: 'desde tu conteo', estimado: 'estimado' };
+    fila.append(el('span', (p.stock ?? 0) + ' ' + (p.unidad || 'und')
+                          + ' · ' + (marca[p.origen_stock] || '')));
+    const b = el('button', 'Contar');
+    b.onclick = async () => {
+      const v = prompt('¿Cuántas unidades hay de ' + p.nombre + ' hoy?',
+                       p.stock ?? 0);
+      if (v === null) return;
+      const n = Number(String(v).replace(',', '.'));
+      if (!isFinite(n) || n < 0) { alert('Poné un número de unidades.'); return; }
+      const r = await rpc('portal_conteo_guardar',
+                          { p_producto_id: p.id, p_unidades: n });
+      if (r && r.ok === false) { alert('No se pudo guardar el conteo.'); return; }
+      await cargarInventario();
+    };
+    fila.append(b);
+    return fila;
+  })));
+}
+
+async function cargarVentas() {
+  const [r, movs, docs] = await Promise.all([
+    rpc('portal_movimientos_resumen'),
+    rpc('portal_movimientos', { p_limite: 30 }),
+    rpc('portal_documentos', { p_limite: 15 })]);
+  await cargarCartera();
+  await cargarInventario();
+
+  const m = r.mes_actual || {};
+  $('#v-mes').replaceChildren(
+    cifra(pesos(m.ventas), 'Ventas'),
+    cifra(pesos(m.compras), 'Compras'));
+
+  $('#v-meses').replaceChildren((r.meses || []).length
+    ? tarjetaLista(r.meses.map(x => {
+        const f = el('div', undefined, 'fila');
+        const izq = el('div');
+        izq.append(el('div', mesLindo(x.mes)),
+                   el('p', (x.movimientos === 1 ? '1 movimiento'
+                            : x.movimientos + ' movimientos'), 'sub'));
+        const der = el('div', undefined, 'monto');
+        der.style.textAlign = 'right';
+        der.append(el('div', pesos(x.ventas)),
+                   el('p', 'compras ' + pesos(x.compras), 'sub'));
+        f.append(izq, der);
+        return f;
+      }))
+    : vacio('Sin datos todavía. Mandale al bot tus facturas o el archivo del POS.'));
+
+  $('#v-top').replaceChildren((r.top_productos || []).length
+    ? tarjetaLista(r.top_productos.map(x => {
+        const f = el('div', undefined, 'fila');
+        const izq = el('div');
+        izq.append(el('div', x.nombre),
+                   el('p', x.cantidad !== null && x.cantidad !== undefined
+                        ? num(x.cantidad) + ' unidades' : '', 'sub'));
+        f.append(izq, el('span', pesos(x.total), 'monto'));
+        return f;
+      }))
+    : vacio('Cuando haya ventas cargadas, acá aparece lo que más se vende.'));
+
+  $('#v-movs').replaceChildren(movs.length
+    ? tarjetaLista(movs.map(x => {
+        const f = el('div', undefined, 'fila');
+        const izq = el('div');
+        izq.append(el('div', x.nombre || '(sin detalle)'));
+        const partes = [x.tipo, fecha(x.fecha)];
+        if (x.cantidad !== null && x.cantidad !== undefined) {
+          partes.push(num(x.cantidad) + (x.valor_unitario
+            ? ' × ' + pesos(x.valor_unitario) : ''));
+        }
+        if (x.tercero) partes.push(x.tercero);
+        izq.append(el('p', partes.filter(Boolean).join(' · '), 'sub'));
+        f.append(izq, el('span', pesos(x.valor_total), 'monto'));
+        return f;
+      }))
+    : vacio('Todavía no hay movimientos registrados.'));
+
+  $('#v-docs').replaceChildren(docs.length
+    ? tarjetaLista(docs.map(d => {
+        const f = el('div', undefined, 'fila');
+        const izq = el('div');
+        izq.append(el('div', d.nombre || '(sin nombre)'));
+        const sub = d.estado === 'error'
+          ? 'falló: ' + (d.error || 'sin detalle')
+          : d.formato + ' · ' + (d.movimientos === 1 ? '1 movimiento'
+                                 : d.movimientos + ' movimientos');
+        izq.append(el('p', sub + ' · ' + fecha(d.fecha), 'sub'));
+        f.append(izq, el('span', d.estado === 'parseado' ? '✓'
+                          : d.estado === 'error' ? '✕' : '…', 'etiqueta'));
+        return f;
+      }))
+    : vacio('Ningún archivo subido todavía.'));
+}
+
+// --- Cartera -----------------------------------------------------------------
+// Reporta al dueño; no persigue deudores. El único botón de acción es
+// "Registrar pago", que descuenta del saldo de la factura.
+async function cargarCartera() {
+  const c = await rpc('portal_cartera');
+  const res = c.resumen || {};
+
+  const cobrar = cifra(pesos(res.por_cobrar), 'Te deben');
+  if (Number(res.vencido_cobrar) > 0) {
+    cobrar.append(el('span', 'vencido: ' + pesos(res.vencido_cobrar), 'sub'));
+  }
+  const pagar = cifra(pesos(res.por_pagar), 'Debés');
+  if (Number(res.vencido_pagar) > 0) {
+    pagar.append(el('span', 'vencido: ' + pesos(res.vencido_pagar), 'sub'));
+  }
+  $('#c-resumen').replaceChildren(cobrar, pagar);
+
+  $('#c-facturas').replaceChildren((c.facturas || []).length
+    ? tarjetaLista(c.facturas.map(f => {
+        const fila = el('div', undefined, 'fila');
+        const izq = el('div');
+        izq.append(el('div', (f.tercero || '(sin tercero)') +
+                            (f.numero ? ' · ' + f.numero : '')));
+        const partes = [f.tipo === 'venta' ? 'te debe' : 'le debés'];
+        if (f.dias_mora) partes.push('vencida hace ' + f.dias_mora + ' días');
+        else if (f.vencimiento) partes.push('vence ' + fecha(f.vencimiento));
+        else partes.push('sin fecha de vencimiento');
+        izq.append(el('p', partes.join(' · '), 'sub'));
+        const der = el('div');
+        der.style.textAlign = 'right';
+        der.append(el('div', pesos(f.saldo), 'monto'));
+        const abonar = el('button', 'Registrar pago');
+        abonar.style.marginTop = '6px';
+        abonar.onclick = async () => {
+          const v = prompt('¿Cuánto se pagó de ' + pesos(f.saldo) + '?');
+          const valor = Number(String(v || '').replace(/[^\d]/g, ''));
+          if (!valor) return;
+          try {
+            await rpc('portal_pago_registrar', { p_factura_id: f.id, p_valor: valor });
+            cargarCartera();
+          } catch (e) { avisar('No pude registrar el pago: ' + e.message); }
+        };
+        der.append(abonar);
+        fila.append(izq, der);
+        return fila;
+      }))
+    : vacio('Sin cartera abierta. Cuando entren facturas con saldo, aparecen acá.'));
+}
+
+async function cargarConocimiento() {
+  const [hechos, pendientes] = await Promise.all([
+    rpc('portal_conocimiento'), rpc('portal_pendientes')]);
+
+  // --- precios ---
+  const precios = hechos.filter(h => h.tipo === 'precio');
+  $('#precios').replaceChildren(...(precios.length
+    ? precios.map(h => tarjetaHecho(h, true))
+    : [vacio('Todavía no cargaste ningún precio. El bot no puede responder por precios que no conoce.')]));
+
+  // --- otros hechos ---
+  const otros = hechos.filter(h => h.tipo !== 'precio');
+  $('#hechos').replaceChildren(...(otros.length
+    ? otros.map(h => tarjetaHecho(h, false))
+    : [vacio('Nada cargado todavía. Agregá horarios, políticas o respuestas frecuentes.')]));
+
+  // --- pendientes: el motor del producto ---
+  $('#pendientes').replaceChildren(...(pendientes.length
+    ? pendientes.map(tarjetaPendiente)
+    : [vacio('Ninguna. Cuando alguien le pregunte algo que no sabe, aparece acá.')]));
+}
+
+function tarjetaHecho(h, esPrecio) {
+  const t = el('div', undefined, 'tarjeta');
+  const cab = el('div', undefined, 'fila');
+  cab.append(el('h3', h.titulo));
+  if (esPrecio && h.datos && h.datos.valor !== undefined) {
+    cab.append(el('span', '$ ' + num(h.datos.valor) +
+      (h.datos.unidad ? ' / ' + h.datos.unidad : '')));
+  } else {
+    cab.append(el('span', h.tipo, 'etiqueta'));
+  }
+  t.append(cab);
+  if (h.contenido) t.append(el('p', h.contenido));
+
+  const acc = el('div', undefined, 'acciones');
+  const editar = el('button', 'Editar');
+  editar.onclick = () => abrirEditor(h);
+  const borrar = el('button', 'Borrar', 'riesgo');
+  borrar.onclick = async () => {
+    if (!confirm('¿Borrar "' + h.titulo + '"?')) return;
+    await rpc('portal_conocimiento_borrar', { p_id: h.id });
+    cargarConocimiento(); cargarPerfil();
+  };
+  acc.append(editar, borrar);
+  t.append(acc);
+  return t;
+}
+
+function tarjetaPendiente(p) {
+  const t = el('div', undefined, 'tarjeta');
+  const cab = el('div', undefined, 'fila');
+  cab.append(el('h3', p.pregunta));
+  cab.append(el('span', p.veces === 1 ? '1 vez' : p.veces + ' veces', 'etiqueta'));
+  t.append(cab);
+  if (p.candidato) {
+    t.append(el('p', 'Quizás ya la responde: ' + p.candidato));
+  }
+  const acc = el('div', undefined, 'acciones');
+  const responder = el('button', 'Responder', 'primario');
+  responder.onclick = () => abrirEditor(
+    { tipo: 'faq', titulo: p.pregunta, contenido: '' }, p.id);
+  acc.append(responder);
+  t.append(acc);
+  return t;
+}
+
+async function cargarInformes() {
+  const lista = await rpc('portal_informes', { p_limite: 30 });
+  $('#informes').replaceChildren(...(lista.length
+    ? lista.map(i => {
+        const t = el('div', undefined, 'tarjeta');
+        const cab = el('div', undefined, 'fila');
+        cab.append(el('h3', i.servicio || i.servicio_codigo));
+        cab.append(el('span', fecha(i.fecha), 'etiqueta'));
+        t.append(cab, el('p', i.resumen || ''));
+        const acc = el('div', undefined, 'acciones');
+        const ver = el('button', 'Ver completo');
+        ver.onclick = async () => {
+          const inf = await rpc('portal_informe', { p_id: i.id });
+          const cuerpo = el('div', undefined, 'informe');
+          cuerpo.innerHTML = limpiarHtml(inf.texto || '');
+          t.replaceChildren(cab, cuerpo);
+        };
+        acc.append(ver);
+        t.append(acc);
+        return t;
+      })
+    : [vacio('Todavía no hay informes. Mandale tus archivos al bot y tocá Analizar.')]));
+}
+
+// --- Cotizador ---------------------------------------------------------------
+// El dueño marca productos de su lista de precios; el enlace resultante es lo
+// que le manda a su cliente. La cotización es un snapshot: revocar y rehacer,
+// nunca editar por debajo.
+function enlaceCotizacion(token) {
+  return new URL('cotizacion.html#t=' + token, location.href).href;
+}
+
+async function copiarEnlace(token) {
+  const url = enlaceCotizacion(token);
+  try {
+    await navigator.clipboard.writeText(url);
+    avisar('');
+    return true;
+  } catch (e) {
+    // Sin permiso de portapapeles: mostrarlo para copiar a mano.
+    prompt('Copiá el enlace:', url);
+    return false;
+  }
+}
+
+async function cargarCotizaciones() {
+  const lista = await rpc('portal_cotizaciones', { p_limite: 30 });
+  $('#cotizaciones').replaceChildren(lista.length
+    ? tarjetaLista(lista.map(c => {
+        const f = el('div', undefined, 'fila');
+        const izq = el('div');
+        izq.append(el('div', (c.cliente || 'Sin cliente') +
+                            (c.estado === 'revocada' ? ' · revocada' : '')));
+        izq.append(el('p', fecha(c.creado_en) + ' · ' +
+          (c.items === 1 ? '1 producto' : c.items + ' productos') +
+          (c.vigente_hasta ? ' · hasta ' + fecha(c.vigente_hasta) : ''), 'sub'));
+        const der = el('div');
+        der.style.textAlign = 'right';
+        der.append(el('div', pesos(c.total), 'monto'));
+        if (c.estado === 'abierta') {
+          const acc = el('div', undefined, 'acciones');
+          const cop = el('button', 'Copiar enlace');
+          cop.onclick = async () => {
+            if (await copiarEnlace(c.token)) {
+              cop.textContent = '¡Copiado!';
+              setTimeout(() => { cop.textContent = 'Copiar enlace'; }, 1500);
+            }
+          };
+          const rev = el('button', 'Revocar', 'riesgo');
+          rev.onclick = async () => {
+            if (!confirm('¿Revocar esta cotización? El enlace deja de servir.')) return;
+            await rpc('portal_cotizacion_revocar', { p_id: c.id });
+            cargarCotizaciones();
+          };
+          acc.append(cop, rev);
+          izq.append(acc);
+        }
+        f.append(izq, der);
+        return f;
+      }))
+    : vacio('Ninguna todavía. Armá una con los productos de tu lista de precios.'));
+}
+
+const dlgCot = $('#cotizador'), formCot = $('#form-cot');
+
+$('#btn-nueva-cot').onclick = async () => {
+  const precios = await rpc('portal_conocimiento', { p_tipo: 'precio' });
+  if (!precios.length) {
+    avisar('Primero cargá productos en tu lista de precios.');
+    return;
+  }
+  avisar('');
+  formCot.reset();
+  $('#c-items').replaceChildren(...precios.map(h => {
+    const f = el('div', undefined, 'fila cot-item');
+    const lab = el('label');
+    const chk = el('input');
+    chk.type = 'checkbox';
+    chk.dataset.titulo = h.titulo;
+    chk.dataset.unidad = (h.datos && h.datos.unidad) || '';
+    chk.dataset.valor = (h.datos && h.datos.valor) || 0;
+    const nom = el('span', h.titulo + ' — ' + pesos(h.datos && h.datos.valor));
+    lab.append(chk, nom);
+    const cant = el('input');
+    cant.type = 'number'; cant.min = '1'; cant.step = 'any'; cant.value = '1';
+    cant.onfocus = () => { chk.checked = true; };
+    f.append(lab, cant);
+    return f;
+  }));
+  dlgCot.showModal();
+};
+
+formCot.addEventListener('submit', async ev => {
+  if (ev.submitter && ev.submitter.value !== 'guardar') return;
+  ev.preventDefault();
+
+  const items = [];
+  for (const f of document.querySelectorAll('#c-items .cot-item')) {
+    const chk = f.querySelector('input[type="checkbox"]');
+    const cant = Number(f.querySelector('input[type="number"]').value);
+    if (chk.checked && cant > 0) {
+      items.push({ titulo: chk.dataset.titulo, unidad: chk.dataset.unidad || null,
+                   cantidad: cant, valor_unitario: Number(chk.dataset.valor) });
+    }
+  }
+  if (!items.length) { avisar('Marcá al menos un producto.'); return; }
+
+  const btn = $('#btn-cotizar');
+  btn.disabled = true;
+  try {
+    const r = await rpc('portal_cotizacion_guardar', {
+      p_items: items,
+      p_cliente: formCot.cliente.value.trim() || null,
+      p_notas: formCot.notas.value.trim() || null,
+      p_vigente_hasta: formCot.vigencia.value || null
+    });
+    dlgCot.close();
+    await copiarEnlace(r.token);
+    cargarCotizaciones();
+  } catch (e) {
+    avisar('No pude crear la cotización: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// --- Editor -----------------------------------------------------------------
+const dlg = $('#editor'), form = $('#form');
+
+function abrirEditor(h, pendienteId) {
+  form.reset();
+  form.id.value = h.id || '';
+  form.pendiente_id.value = pendienteId || '';
+  form.tipo.value = h.tipo || 'faq';
+  form.titulo.value = h.titulo || '';
+  form.contenido.value = h.contenido || '';
+  form.clave.value = h.clave || '';
+  form.valor.value = (h.datos && h.datos.valor !== undefined) ? h.datos.valor : '';
+  form.unidad.value = (h.datos && h.datos.unidad) || '';
+  $('#form-titulo').textContent = h.id ? 'Editar' : 'Nuevo';
+  alternarPrecio();
+  dlg.showModal();
+}
+
+function alternarPrecio() {
+  $('#campo-precio').hidden = form.tipo.value !== 'precio';
+}
+form.tipo.addEventListener('change', alternarPrecio);
+
+document.querySelectorAll('[data-nuevo]').forEach(b => {
+  b.onclick = () => abrirEditor({ tipo: b.dataset.nuevo });
+});
+
+form.addEventListener('submit', async ev => {
+  // El botón Cancelar cierra el diálogo sin más.
+  if (ev.submitter && ev.submitter.value !== 'guardar') return;
+  ev.preventDefault();
+
+  const datos = {};
+  if (form.tipo.value === 'precio') {
+    const v = form.valor.value.replace(/[^\d]/g, '');
+    if (v) datos.valor = Number(v);
+    if (form.unidad.value) datos.unidad = form.unidad.value.trim();
+  }
+  const args = {
+    p_titulo: form.titulo.value.trim(),
+    p_tipo: form.tipo.value,
+    p_contenido: form.contenido.value.trim() || null,
+    p_clave: (form.tipo.value === 'precio' && form.clave.value.trim()) || null,
+    p_datos: datos
+  };
+  if (form.id.value) args.p_id = Number(form.id.value);
+  if (form.pendiente_id.value) args.p_pendiente_id = Number(form.pendiente_id.value);
+
+  const btn = $('#btn-guardar');
+  btn.disabled = true;
+  try {
+    await rpc('portal_conocimiento_guardar', args);
+    dlg.close();
+    await Promise.all([cargarConocimiento(), cargarPerfil()]);
+  } catch (e) {
+    avisar('No pude guardar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// --- Navegación -------------------------------------------------------------
+document.querySelectorAll('nav button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(o =>
+      o.setAttribute('aria-current', String(o === b)));
+    for (const s of document.querySelectorAll('main section')) {
+      s.hidden = s.id !== 'p-' + b.dataset.tab;
+    }
+    window.scrollTo(0, 0);
+  };
+});
+
+arrancar().catch(e => avisar('No pude cargar el portal: ' + e.message));
+</script>
+</body>
+</html>

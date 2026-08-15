@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:ID>MK20260312001</cbc:ID>
+  <cbc:UUID schemeName="CUFE-SHA384">b8d4e2a6f0c3b51728904b5c6d7e8f90112233445566778899aabbccddeeff00112233445566778899002b</cbc:UUID>
+  <cbc:IssueDate>2026-03-12</cbc:IssueDate>
+  <cbc:IssueTime>11:30:00-05:00</cbc:IssueTime>
+  <cbc:DueDate>2026-04-11</cbc:DueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>MAKRO SUPERMAYORISTA SA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="31">830000111</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>TIENDA DOÑA ROSA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="13">43555111</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">32600.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">326200.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">358800.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">358800.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">24.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">72000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>LECHE ALQUERIA 1L</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702007070707</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">3000.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">15.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">42000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>AZUCAR MANUELITA 1KG</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702008080808</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">2800.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>3</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">24.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">43200.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>CERVEZA AGUILA 330ML</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702009090909</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">1800.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>4</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">8.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">12800.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>JABON REY 300G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702010101010</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">1600.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>5</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">6.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">43200.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>PAPEL HIGIENICO FAMILIA x6</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702011111111</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">7200.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>6</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">10.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">36000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>ATUN VAN CAMPS 170G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702012121212</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">3600.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>7</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">5.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">29000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>SALCHICHAS ZENU 250G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702013131313</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">5800.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>8</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">8.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">48000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>YOGURT ALPINA 1L</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702014141414</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">6000.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

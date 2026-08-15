@@ -1,0 +1,1149 @@
+{
+  "id": "wfEnviar00000000001",
+  "name": "wf_enviar",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "Inicio",
+      "name": "Inicio",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst inp = $input.first().json;\nconst chat = inp.chat_id;\nconst out = [];\nfor (const r of (inp.respuestas || [])) {\n  if (r.plantilla) out.push({ json: {\n    chat_id: chat, plantilla: r.plantilla, vars: r.vars || {},\n    // null explícito: la plantilla se queda con el teclado de su fila.\n    teclado: r.teclado ?? null } });\n}\nreturn out;\n"
+      },
+      "id": "Expandir",
+      "name": "Expandir",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.chat_id, c.canal, res ->> 'texto'  AS texto, res -> 'teclado' AS teclado, CASE WHEN c.canal = 'whatsapp' THEN wa_payload(c.chat_id::text, wa_texto(res ->> 'texto'), res -> 'teclado') END AS wa FROM resolver_plantilla('{{ $json.plantilla }}', '{{ JSON.stringify($json.vars).replaceAll(\"'\",\"''\") }}'::jsonb, '{{ JSON.stringify($json.teclado ?? null).replaceAll(\"'\",\"''\") }}'::jsonb) AS t(res), LATERAL (SELECT ({{ $json.chat_id }})::bigint AS chat_id, canal_de_chat(({{ $json.chat_id }})::bigint) AS canal) c;",
+        "options": {}
+      },
+      "id": "Resolver",
+      "name": "Resolver",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        440,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.canal === 'whatsapp' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "EsWa?",
+      "name": "EsWa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst out = [];\nfor (const item of $input.all())\n  for (const body of (item.json.wa || []))\n    out.push({ json: { chat_id: item.json.chat_id, body } });\nreturn out;\n"
+      },
+      "id": "PartirWa",
+      "name": "PartirWa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0//messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "EnviarWa",
+      "name": "EnviarWa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        460
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiWa0000000001",
+          "name": "Chasqui WhatsApp"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst j = $input.first().json;\nconst MAX = 6;\nconst btns = [];\nfor (const fila of (j.teclado?.inline_keyboard || []))\n  for (const b of (fila || []))\n    if (b && b.text && b.callback_data) btns.push({ text: b.text, dato: b.callback_data });\nconst usados = btns.slice(0, MAX);\nconst relleno = Array.from({ length: MAX - usados.length }, () => ({ text: '', dato: '' }));\nreturn [{ json: { ...j, n: usados.length, b: usados.concat(relleno) } }];\n"
+      },
+      "id": "Filas",
+      "name": "Filas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 4,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas4"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas5"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 6,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas6"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "CuantasFilas",
+      "name": "CuantasFilas",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "EnviarTexto0",
+      "name": "EnviarTexto0",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        40
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EnviarTexto1",
+      "name": "EnviarTexto1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        150
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EnviarTexto2",
+      "name": "EnviarTexto2",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        260
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EnviarTexto3",
+      "name": "EnviarTexto3",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        370
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[3].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[3].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EnviarTexto4",
+      "name": "EnviarTexto4",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        480
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[3].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[3].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[4].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[4].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EnviarTexto5",
+      "name": "EnviarTexto5",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        590
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[3].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[3].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[4].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[4].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[5].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[5].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EnviarTexto6",
+      "name": "EnviarTexto6",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        700
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ ($json.respuestas || []).some(r => r.documento) && $binary && Object.keys($binary).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "HayDoc?",
+      "name": "HayDoc?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT canal_de_chat(({{ $json.chat_id }})::bigint) AS canal;",
+        "options": {}
+      },
+      "id": "CanalDoc",
+      "name": "CanalDoc",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        860
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst inp = $('Inicio').first().json;\nconst canal = $input.first().json.canal || 'telegram';\nconst r = (inp.respuestas || []).find(x => x.documento);\nconst binKey = Object.keys($('Inicio').first().binary || {})[0];\nreturn [{ json: { chat_id: inp.chat_id, canal, fileName: r?.documento || 'informe.pdf' },\n          binary: { data: $('Inicio').first().binary[binKey] } }];\n"
+      },
+      "id": "PrepDoc",
+      "name": "PrepDoc",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.canal === 'whatsapp' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "DocWa?",
+      "name": "DocWa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $json.chat_id }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "EnviarDoc",
+      "name": "EnviarDoc",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        920
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0//media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "name": "file",
+              "parameterType": "formBinaryData",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "WaSubirDoc",
+      "name": "WaSubirDoc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        800
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiWa0000000001",
+          "name": "Chasqui WhatsApp"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0//messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: String($('PrepDoc').first().json.chat_id), type: 'document', document: { id: $json.id, filename: $('PrepDoc').first().json.fileName } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "WaMandarDoc",
+      "name": "WaMandarDoc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        800
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiWa0000000001",
+          "name": "Chasqui WhatsApp"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "Expandir",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HayDoc?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir": {
+      "main": [
+        [
+          {
+            "node": "Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver": {
+      "main": [
+        [
+          {
+            "node": "EsWa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EsWa?": {
+      "main": [
+        [
+          {
+            "node": "PartirWa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Filas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PartirWa": {
+      "main": [
+        [
+          {
+            "node": "EnviarWa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filas": {
+      "main": [
+        [
+          {
+            "node": "CuantasFilas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CuantasFilas": {
+      "main": [
+        [
+          {
+            "node": "EnviarTexto0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarTexto1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarTexto2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarTexto3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarTexto4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarTexto5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarTexto6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HayDoc?": {
+      "main": [
+        [
+          {
+            "node": "CanalDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CanalDoc": {
+      "main": [
+        [
+          {
+            "node": "PrepDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PrepDoc": {
+      "main": [
+        [
+          {
+            "node": "DocWa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DocWa?": {
+      "main": [
+        [
+          {
+            "node": "WaSubirDoc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EnviarDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaSubirDoc": {
+      "main": [
+        [
+          {
+            "node": "WaMandarDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "wfError0000000000001"
+  },
+  "active": false
+}

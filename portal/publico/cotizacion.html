@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<title>Cotización</title>
+<style>
+/* La ve el cliente DEL tendero, casi siempre en un teléfono, desde un enlace
+   de WhatsApp. Sin sesión, sin botones: solo la cotización, presentable. */
+:root {
+  --bg: #f6f7f9; --panel: #fff; --texto: #16191d; --suave: #626b75;
+  --linea: #e2e6ea; --acento: #1f6f4a; --alerta: #a4401c; --radio: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171a; --panel: #1c2024; --texto: #e8eaed; --suave: #98a2ac;
+    --linea: #2b3136; --acento: #3f9d6e; --alerta: #e2865f;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--texto);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 640px; margin: 0 auto; padding: 16px; }
+.hoja {
+  background: var(--panel); border: 1px solid var(--linea);
+  border-radius: var(--radio); padding: 20px;
+}
+h1 { margin: 0; font-size: 20px; }
+.sub { color: var(--suave); font-size: 13.5px; margin: 2px 0 0; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em;
+     color: var(--suave); margin: 20px 0 6px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--linea);
+         vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+     color: var(--suave); font-weight: 600; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+.det { color: var(--suave); font-size: 13px; }
+.total td { border-bottom: none; font-weight: 700; font-size: 18px; padding-top: 12px; }
+.aviso { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px;
+         background: var(--alerta); color: #fff; font-size: 14px; }
+.notas { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 14.5px; }
+.pie { color: var(--suave); font-size: 12.5px; text-align: center; margin-top: 14px; }
+.vacio { text-align: center; color: var(--suave); padding: 48px 16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="hoja" id="hoja" hidden>
+    <h1 id="negocio"></h1>
+    <p class="sub" id="detalle-negocio"></p>
+    <p class="aviso" id="vencida" hidden></p>
+    <h2 id="para" hidden>Para</h2>
+    <p class="notas" id="cliente" hidden></p>
+    <h2>Cotización</h2>
+    <table>
+      <thead><tr><th>Producto</th><th class="n">Valor</th></tr></thead>
+      <tbody id="items"></tbody>
+      <tfoot><tr class="total"><td>Total</td><td class="n" id="total"></td></tr></tfoot>
+    </table>
+    <div id="bloque-notas" hidden>
+      <h2>Notas</h2>
+      <p class="notas" id="notas"></p>
+    </div>
+    <p class="pie" id="pie"></p>
+  </div>
+  <p class="vacio" id="nada" hidden>
+    Esta cotización no existe o fue retirada.<br>Pedile una nueva a quien te la envió.
+  </p>
+</main>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const num = n => Number(n).toLocaleString('es-CO');
+const pesos = n => '$ ' + num(Math.round(Number(n) || 0));
+const fecha = f => f ? new Date(f + (f.length === 10 ? 'T12:00:00' : ''))
+  .toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const el = (tag, texto, clase) => {
+  const e = document.createElement(tag);
+  if (texto !== undefined) e.textContent = texto;
+  if (clase) e.className = clase;
+  return e;
+};
+
+async function arrancar() {
+  const token = new URLSearchParams(location.hash.slice(1)).get('t');
+  let c = null;
+  try {
+    c = await fetch('/api/rpc/portal_cotizacion_publica', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_token: token || '' })
+    }).then(r => r.json());
+  } catch (e) { /* cae al vacío */ }
+
+  if (!c || !c.ok) { $('#nada').hidden = false; return; }
+
+  const n = c.negocio || {};
+  document.title = 'Cotización — ' + (n.nombre || '');
+  $('#negocio').textContent = n.nombre || '';
+  $('#detalle-negocio').textContent =
+    [n.tipo, n.nit ? 'NIT ' + n.nit : ''].filter(Boolean).join(' · ');
+
+  if (c.vencida) {
+    $('#vencida').textContent = 'Esta cotización venció el ' +
+      fecha(c.vigente_hasta) + '. Confirmá los precios antes de comprar.';
+    $('#vencida').hidden = false;
+  }
+  if (c.cliente) {
+    $('#para').hidden = false;
+    $('#cliente').textContent = c.cliente;
+    $('#cliente').hidden = false;
+  }
+
+  $('#items').replaceChildren(...(c.items || []).map(i => {
+    const tr = el('tr');
+    const izq = el('td');
+    izq.append(el('div', i.titulo));
+    izq.append(el('div', num(i.cantidad) + (i.unidad ? ' ' + i.unidad : '') +
+                         ' × ' + pesos(i.valor_unitario), 'det'));
+    const der = el('td', pesos(i.total), 'n');
+    tr.append(izq, der);
+    return tr;
+  }));
+  $('#total').textContent = pesos(c.total);
+
+  if (c.notas) {
+    $('#bloque-notas').hidden = false;
+    $('#notas').textContent = c.notas;
+  }
+  $('#pie').textContent = 'Cotización del ' + fecha(c.creado_en) +
+    (c.vigente_hasta && !c.vencida ? ' · válida hasta el ' + fecha(c.vigente_hasta) : '');
+  $('#hoja').hidden = false;
+}
+arrancar();
+</script>
+</body>
+</html>

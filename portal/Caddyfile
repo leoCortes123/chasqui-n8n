@@ -1,0 +1,39 @@
+# Un solo hostname público, tres destinos. Antes el túnel apuntaba directo a
+# n8n, lo que dejaba el EDITOR de n8n expuesto en internet: ahora solo pasa lo
+# que tiene que pasar y el editor queda únicamente en 127.0.0.1:5678.
+:80 {
+	log {
+		output stdout
+		format console
+	}
+
+	# Telegram -> n8n. La ruta la fija TELEGRAM_WEBHOOK_PATH; se deja todo
+	# /webhook/* para no tener que tocar esto al cambiarla.
+	handle /webhook/* {
+		reverse_proxy n8n:5678
+	}
+	handle /webhook-test/* {
+		reverse_proxy n8n:5678
+	}
+
+	# El portal -> PostgREST. Se le quita el /api: PostgREST espera /rpc/... en
+	# la raíz.
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy postgrest:3000
+	}
+
+	# El portal en sí: HTML plano, sin build ni framework. handle_path se come
+	# el prefijo, así que /portal/ sirve /srv/index.html.
+	redir /portal /portal/
+	handle_path /portal/* {
+		root * /srv
+		file_server
+	}
+
+	# Cualquier otra cosa: nada que ver acá. Un 404 seco no le dice al que
+	# escanea que detrás hay un n8n.
+	handle {
+		respond "no encontrado" 404
+	}
+}

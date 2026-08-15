@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:ID>CB20260615001</cbc:ID>
+  <cbc:UUID schemeName="CUFE-SHA384">e1b7a5c9d3f6e84051237e8f90112233445566778899aabbccddeeff00112233445566778899005e</cbc:UUID>
+  <cbc:IssueDate>2026-06-15</cbc:IssueDate>
+  <cbc:IssueTime>14:20:00-05:00</cbc:IssueTime>
+  <cbc:DueDate>2026-07-15</cbc:DueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>COLOMBINA SA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="31">891000333</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>TIENDA DOÑA ROSA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="13">43555111</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">36700.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">193300.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">230000.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">230000.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">20.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">14000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>CHOCOLATE JET 250G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702018181818</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">700.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">24.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">10800.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>GALLETAS FESTIVAL 150G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702019191919</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">450.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>3</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">12.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">38400.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>BOMBON BUM 48UN</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702020202020</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">3200.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>4</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">30.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">54000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>CHOCORRAMO 70G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702021212121</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">1800.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>5</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">16.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">33600.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>GALLETAS DUCALES 200G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702022222222</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">2100.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>6</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">5.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">42500.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>CARAMELOS COLOMBINA 1KG</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702023232323</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">8500.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

@@ -1,0 +1,625 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "92afe38a-4ad6-4e92-b8bf-377a40413a66",
+      "name": "Trigger",
+      "webhookId": "c6f8b8cf-dd25-4968-beaf-947ba931fa34",
+      "credentials": {
+        "telegramApi": {
+          "id": "mkgKBVx4PgpURCb7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1a1a111-0000-4000-8000-000000000001",
+              "leftValue": "={{ !!$json.message.document }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c1a1a111-0000-4000-8000-000000000002",
+      "name": "HasDocument"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1a1a111-0000-4000-8000-000000000003",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        200
+      ],
+      "id": "c1a1a111-0000-4000-8000-000000000004",
+      "name": "IsOption1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Trigger').first().json.message.chat.id }}",
+        "text": "=¡Hola! 👋 Soy tu asistente de ventas.\n\n¿Qué deseas hacer?\n\n1. Reporte de ventas\n\nEscribe el número de la opción que quieras.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        320
+      ],
+      "id": "c1a1a111-0000-4000-8000-000000000005",
+      "name": "SendGreeting",
+      "webhookId": "c1a1a111-a000-4000-8000-000000000005",
+      "credentials": {
+        "telegramApi": {
+          "id": "mkgKBVx4PgpURCb7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Trigger').first().json.message.chat.id }}",
+        "text": "=Perfecto. Adjunta el archivo plano (CSV) con la información de ventas para generar el reporte.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        80
+      ],
+      "id": "c1a1a111-0000-4000-8000-000000000006",
+      "name": "SendAskFile",
+      "webhookId": "c1a1a111-a000-4000-8000-000000000006",
+      "credentials": {
+        "telegramApi": {
+          "id": "mkgKBVx4PgpURCb7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.document.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        -200
+      ],
+      "id": "80a8226c-02f1-4225-91af-7860a4eae458",
+      "name": "GetFile",
+      "webhookId": "24255884-ae73-464e-bbe3-a74708ad5c3e",
+      "credentials": {
+        "telegramApi": {
+          "id": "mkgKBVx4PgpURCb7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        -200
+      ],
+      "id": "4b46849e-c72a-48e0-a40b-331630ec76e4",
+      "name": "Extract"
+    },
+    {
+      "parameters": {
+        "jsCode": "const trigger = $('Trigger').first().json.message;\nconst userId = trigger.from.id;\nconst username = trigger.from.username || null;\n\nreturn items.map(({ json }) => {\n  const cantidad = Number(json.cantidad ?? 0);\n  const precio   = Number(json.precio_unitario ?? 0);\n  const total    = json.total ? Number(json.total) : cantidad * precio;\n  return {\n    json: {\n      telegram_user_id: userId,\n      telegram_username: username,\n      fecha: json.fecha || null,\n      producto: json.producto || null,\n      categoria: json.categoria || null,\n      cantidad,\n      precio_unitario: precio,\n      total,\n      raw: json,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -200
+      ],
+      "id": "f0456bbd-c80c-47bc-8f00-9804a3810e04",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO usuarios (telegram_user_id, telegram_username)\nVALUES (\n  {{ $('Trigger').first().json.message.from.id }},\n  {{ $('Trigger').first().json.message.from.username ? \"'\" + $('Telegram Trigger').first().json.message.from.username + \"'\" : 'NULL' }}\n)\nON CONFLICT (telegram_user_id) DO NOTHING;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        -200
+      ],
+      "id": "8c0d4a8f-62d1-404d-bf17-d6bd42b3ec25",
+      "name": "ExecuteQuery",
+      "credentials": {
+        "postgres": {
+          "id": "W7YfdtZfnfdYaucW",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "cargas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telegram_user_id": "={{ $('Trigger').first().json.message.from.id }}",
+            "filas": "={{ $items().length }}",
+            "file_name": "={{ $('Trigger').first().json.message.document.file_name }}",
+            "formato": "csv"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "telegram_user_id",
+              "displayName": "telegram_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "file_name",
+              "displayName": "file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "formato",
+              "displayName": "formato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "filas",
+              "displayName": "filas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "uploaded_at",
+              "displayName": "uploaded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1248,
+        -200
+      ],
+      "id": "4054b027-18f7-422e-b0e6-f59f5085f486",
+      "name": "InsertRows",
+      "credentials": {
+        "postgres": {
+          "id": "W7YfdtZfnfdYaucW",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO ventas (carga_id, telegram_user_id, fecha, producto, categoria, cantidad, precio_unitario, total)\nVALUES\n{{\n  $('Code').all()\n    .map(i => `(\n      ${ $('InsertRows').first().json.id },\n      ${ i.json.telegram_user_id },\n      '${ i.json.fecha }',\n      '${ String(i.json.producto).replace(/'/g, \"''\") }',\n      '${ String(i.json.categoria).replace(/'/g, \"''\") }',\n      ${ i.json.cantidad },\n      ${ i.json.precio_unitario },\n      ${ i.json.total }\n    )`)\n    .join(',\\n')\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1456,
+        -200
+      ],
+      "id": "93e40e03-d4d8-40b7-a864-fbaaac4c5511",
+      "name": "QueryAllRows",
+      "credentials": {
+        "postgres": {
+          "id": "W7YfdtZfnfdYaucW",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT fecha, producto, categoria, cantidad, precio_unitario, total\nFROM ventas\nWHERE telegram_user_id = {{ $('Trigger').first().json.message.from.id }}\nORDER BY fecha;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1664,
+        -200
+      ],
+      "id": "a988c6ab-5320-41f7-8f9c-b0ab989aede6",
+      "name": "GetHistory",
+      "credentials": {
+        "postgres": {
+          "id": "W7YfdtZfnfdYaucW",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "datos",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        -200
+      ],
+      "id": "1ef91927-9e6d-4042-b96a-816728801865",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un analista de datos para minimercados. Con estos datos de ventas en JSON:\n\n{{ JSON.stringify($json.datos) }}\n\nGenera un REPORTE DE VENTAS en texto plano para Telegram, claro y breve, con:\n- Total vendido y número de transacciones.\n- Top 5 productos por monto.\n- Ventas por categoría.\n- Días de mayor venta.\n- 2 recomendaciones concretas para el negocio.\n\nResponde directamente, sin mostrar tu razonamiento.\nMáximo 3500 caracteres. No uses tablas ni bloques de código.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2080,
+        -200
+      ],
+      "id": "8b42757c-62c3-486f-a1a0-83c8460b9ac6",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "0a1d2d19-5654-4679-96eb-985036eca3b8",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "WqxtP6sEiggAxEmK",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Trigger').first().json.message.chat.id }}",
+        "text": "=✅ Aquí tienes tu reporte de ventas:",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2288,
+        -200
+      ],
+      "id": "c1a1a111-0000-4000-8000-000000000007",
+      "name": "DeliveryMessage",
+      "webhookId": "c1a1a111-a000-4000-8000-000000000007",
+      "credentials": {
+        "telegramApi": {
+          "id": "mkgKBVx4PgpURCb7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2496,
+        -200
+      ],
+      "id": "6c73c2d1-5c4c-4bea-b438-d2440ed8fbc9",
+      "name": "Send a text message",
+      "webhookId": "11a24669-f4f4-491c-a4d8-39b18461a64e",
+      "credentials": {
+        "telegramApi": {
+          "id": "mkgKBVx4PgpURCb7",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "HasDocument",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HasDocument": {
+      "main": [
+        [
+          {
+            "node": "GetFile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IsOption1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IsOption1": {
+      "main": [
+        [
+          {
+            "node": "SendAskFile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendGreeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetFile": {
+      "main": [
+        [
+          {
+            "node": "Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "ExecuteQuery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExecuteQuery": {
+      "main": [
+        [
+          {
+            "node": "InsertRows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsertRows": {
+      "main": [
+        [
+          {
+            "node": "QueryAllRows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QueryAllRows": {
+      "main": [
+        [
+          {
+            "node": "GetHistory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetHistory": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "DeliveryMessage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeliveryMessage": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7644bd001411854075b13b77e07fa96ccfc30ae061ce658f8c6caf498e943e3b"
+  }
+}

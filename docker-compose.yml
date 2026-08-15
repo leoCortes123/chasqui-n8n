@@ -1,0 +1,167 @@
+name: chasqui
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD}
+      POSTGRES_DB: postgres
+      TZ: ${TZ}
+      # Consumidas por db/init/00_bases.sh en el primer arranque.
+      CHASQUI_DB: ${CHASQUI_DB}
+      CHASQUI_DB_USER: ${CHASQUI_DB_USER}
+      CHASQUI_DB_PASSWORD: ${CHASQUI_DB_PASSWORD}
+      N8N_DB: ${N8N_DB}
+      N8N_DB_USER: ${N8N_DB_USER}
+      N8N_DB_PASSWORD: ${N8N_DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      # Solo loopback: nada de exponer la base al mundo.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER} -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    image: n8nio/n8n:2.31.5
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Runtime sobre Postgres, base separada de la de negocio.
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${N8N_DB}
+      DB_POSTGRESDB_USER: ${N8N_DB_USER}
+      DB_POSTGRESDB_PASSWORD: ${N8N_DB_PASSWORD}
+
+      # Fijada desde .env: sin esto n8n la genera dentro del volumen y las
+      # credenciales dejan de ser portables a otra máquina.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+
+      N8N_HOST: localhost
+      N8N_PORT: ${N8N_PORT:-5678}
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      N8N_EDITOR_BASE_URL: ${WEBHOOK_URL}
+      GENERIC_TIMEZONE: ${TZ}
+      TZ: ${TZ}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+
+      # Sin esto n8n se come el disco. Solo se guardan los fallos.
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
+      EXECUTIONS_DATA_SAVE_ON_ERROR: all
+      EXECUTIONS_DATA_SAVE_ON_PROGRESS: "false"
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: "false"
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168"
+
+      # Ninguna ejecución debe quedarse colgada más que el reaper de wf_cron.
+      EXECUTIONS_TIMEOUT: "300"
+      EXECUTIONS_TIMEOUT_MAX: "900"
+
+      # El modo en memoria fue removido en 2.0; los PDF no deben vivir en RAM.
+      N8N_DEFAULT_BINARY_DATA_MODE: filesystem
+      N8N_PAYLOAD_SIZE_MAX: "32"
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5678}:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+    # Sin puertos publicados: solo n8n le habla, por la red interna.
+
+  # --- El portal ------------------------------------------------------------
+  # PostgREST es la API: expone la base por HTTP sin una línea de backend. No
+  # puede leer ninguna tabla —el rol no tiene GRANTs— así que lo único visible
+  # son las funciones portal_* de la migración 033.
+  postgrest:
+    image: postgrest/postgrest:v12.2.12
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${PORTAL_DB_PASSWORD}@postgres:5432/${CHASQUI_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: portal_anon
+      PGRST_JWT_SECRET: ${PORTAL_JWT_SECRET}
+      # El mismo secreto, visible dentro de SQL como app.settings.jwt_secret:
+      # es con lo que portal_sesion_abrir firma. No se guarda en la base.
+      PGRST_APP_SETTINGS_JWT_SECRET: ${PORTAL_JWT_SECRET}
+      PGRST_OPENAPI_MODE: disabled
+      PGRST_DB_MAX_ROWS: "1000"
+      PGRST_LOG_LEVEL: error
+      TZ: ${TZ}
+    # Sin puertos publicados: se llega por el proxy y nada más.
+
+  # Un solo hostname público para tres cosas. Antes el túnel apuntaba directo a
+  # n8n y el editor quedaba expuesto; ahora solo pasa /webhook, /api y /portal.
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - n8n
+      - postgrest
+    volumes:
+      - ./portal/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./portal/publico:/srv:ro
+      - caddy_data:/data
+    ports:
+      - "127.0.0.1:${PROXY_PORT:-8080}:80"
+
+  # --- Solo local -----------------------------------------------------------
+  # En la nube estos dos se apagan (perfil `local`) y se fija WEBHOOK_URL
+  # al dominio real. Ningún otro archivo cambia.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["local"]
+    # Apunta al proxy, no a n8n: el editor de n8n no tiene por qué estar en
+    # internet, y el portal necesita salir por el mismo hostname que el webhook.
+    command: tunnel --no-autoupdate --metrics 0.0.0.0:2000 --url http://proxy:80
+    depends_on:
+      - proxy
+
+  registrador:
+    image: alpine:3.20
+    restart: unless-stopped
+    profiles: ["local"]
+    depends_on:
+      - cloudflared
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      TELEGRAM_WEBHOOK_PATH: ${TELEGRAM_WEBHOOK_PATH:-telegram}
+      # WhatsApp: vacías = el registrador no toca nada de Meta.
+      WA_APP_ID: ${WA_APP_ID:-}
+      WA_APP_SECRET: ${WA_APP_SECRET:-}
+      WA_VERIFY_TOKEN: ${WA_VERIFY_TOKEN:-}
+      WA_WEBHOOK_PATH: ${WA_WEBHOOK_PATH:-whatsapp}
+      WA_WABA_ID: ${WA_WABA_ID:-}
+      WA_ACCESS_TOKEN: ${WA_ACCESS_TOKEN:-}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      # El registrador es el único que sabe la URL pública del momento, así que
+      # también es el que se la escribe a la base para el enlace de /portal.
+      PGHOST: postgres
+      PGDATABASE: ${CHASQUI_DB}
+      PGUSER: ${CHASQUI_DB_USER}
+      PGPASSWORD: ${CHASQUI_DB_PASSWORD}
+    volumes:
+      - ./bin/registrar-webhook.sh:/registrar.sh:ro
+    entrypoint: ["/bin/sh", "/registrar.sh"]
+
+volumes:
+  postgres_data:
+  n8n_data:
+  caddy_data:

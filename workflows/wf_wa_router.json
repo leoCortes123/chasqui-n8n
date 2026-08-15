@@ -1,0 +1,454 @@
+{
+  "id": "wfWaRouter0000000001",
+  "name": "wf_wa_router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "whatsapp-e2908689",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "WebhookGet",
+      "name": "WebhookGet",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        100
+      ],
+      "webhookId": "wfWaRouterWebhookG01"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst q = $input.first().json.query || {};\nreturn [{ json: {\n  ok: q['hub.mode'] === 'subscribe' && q['hub.verify_token'] === '39ada60a745bc1329d518a2f1b99cf23d1f26d3d2e8e8af3',\n  challenge: q['hub.challenge'] || ''\n} }];\n"
+      },
+      "id": "Verificar",
+      "name": "Verificar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "TokenOk?",
+      "name": "TokenOk?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.challenge }}",
+        "options": {}
+      },
+      "id": "Challenge",
+      "name": "Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "no",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "Rechazar",
+      "name": "Rechazar",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-e2908689",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "Webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "wfWaRouterWebhookP01"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst PNID = '';\nconst body = $input.first().json.body || {};\nconst out = [];\nfor (const e of (body.entry || [])) for (const ch of (e.changes || [])) {\n  const v = ch.value || {};\n  if (PNID && v.metadata?.phone_number_id !== PNID) continue;\n  for (const m of (v.messages || [])) {\n    if (!m.from) continue;\n    const doc = m.document || null;\n    const img = m.image || null;\n    const texto = m.text?.body\n      || m.interactive?.button_reply?.id\n      || m.interactive?.list_reply?.id\n      || doc?.caption || img?.caption || '';\n    const nombre = (v.contacts || []).find(c => c.wa_id === m.from)?.profile?.name;\n    out.push({ json: { evento: {\n      canal: 'whatsapp',\n      from: { id: m.from, username: nombre || null },\n      chat: { id: m.from },\n      texto, tiene_documento: !!(doc || img),\n      callback_id: null,           // WhatsApp no exige answerCallbackQuery\n      file_id: doc?.id || img?.id || null,\n      file_name: doc?.filename || null,\n      mime: doc?.mime_type || img?.mime_type || null\n    } } });\n  }\n}\nreturn out;\n"
+      },
+      "id": "Normalizar",
+      "name": "Normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT router_procesar_mensaje('{{ JSON.stringify($json.evento).replaceAll(\"'\",\"''\") }}'::jsonb) AS r;",
+        "options": {}
+      },
+      "id": "Router",
+      "name": "Router",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        440,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst evs = $('Normalizar').all();\nconst out = [];\n$input.all().forEach((item, i) => {\n  const r = item.json.r || {};\n  const ev = evs[i]?.json.evento;\n  if ((r.respuestas || []).length)\n    out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });\n  for (const a of (r.acciones || []))\n    out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });\n});\nreturn out;\n"
+      },
+      "id": "Despachar",
+      "name": "Despachar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "enviar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "enviar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "ingerir",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "ingerir"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "ejecutar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "ejecutar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Switch",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "LlamarEnviar",
+      "name": "LlamarEnviar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        280
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfIngesta00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "LlamarIngesta",
+      "name": "LlamarIngesta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        400
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEjecutar000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "LlamarEjecutar",
+      "name": "LlamarEjecutar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        540
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "EnviarInforme",
+      "name": "EnviarInforme",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        540
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "WebhookGet": {
+      "main": [
+        [
+          {
+            "node": "Verificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar": {
+      "main": [
+        [
+          {
+            "node": "TokenOk?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TokenOk?": {
+      "main": [
+        [
+          {
+            "node": "Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Despachar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Despachar": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "LlamarEnviar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LlamarIngesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LlamarEjecutar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LlamarEjecutar": {
+      "main": [
+        [
+          {
+            "node": "EnviarInforme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "wfError0000000000001"
+  },
+  "active": false
+}

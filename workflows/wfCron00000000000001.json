@@ -1,0 +1,161 @@
+{
+  "updatedAt": "2026-07-24T20:05:26.368Z",
+  "createdAt": "2026-07-24T20:05:26.368Z",
+  "id": "wfCron00000000000001",
+  "name": "wf_cron",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "Cada5min",
+      "name": "Cada5min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT mantenimiento_ciclo() AS r;",
+        "options": {}
+      },
+      "id": "Mantenimiento",
+      "name": "Mantenimiento",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        220,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst notifs = $input.first().json.r?.notificaciones || [];\nreturn notifs.map(n => ({ json: n }));\n"
+      },
+      "id": "Fanout",
+      "name": "Fanout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "Avisar",
+      "name": "Avisar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cada5min": {
+      "main": [
+        [
+          {
+            "node": "Mantenimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mantenimiento": {
+      "main": [
+        [
+          {
+            "node": "Fanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fanout": {
+      "main": [
+        [
+          {
+            "node": "Avisar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "85afc2b8-7bd3-4c57-9054-0a514547a396",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T20:05:26.368Z",
+      "createdAt": "2026-07-24T20:05:26.368Z",
+      "role": "workflow:owner",
+      "workflowId": "wfCron00000000000001",
+      "projectId": "ARxLsftxtA8Uahtb",
+      "project": {
+        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "createdAt": "2026-07-24T19:13:33.081Z",
+        "id": "ARxLsftxtA8Uahtb",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "82e8043f-230d-4511-8dd5-60fbab9be9d2"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

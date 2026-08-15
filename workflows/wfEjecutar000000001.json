@@ -1,0 +1,746 @@
+{
+  "updatedAt": "2026-07-24T19:45:28.953Z",
+  "createdAt": "2026-07-24T19:40:03.299Z",
+  "id": "wfEjecutar000000001",
+  "name": "wf_ejecutar",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "Inicio",
+      "name": "Inicio",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ejecucion_preparar( COALESCE( NULLIF('{{ $json.ejecucion_id ?? \"\" }}','')::bigint, (SELECT id FROM ejecuciones WHERE estado='preparando' ORDER BY id DESC LIMIT 1) ) ) AS prep;",
+        "options": {}
+      },
+      "id": "Preparar",
+      "name": "Preparar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        220,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.prep.bloqueado }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.prep.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Bloqueado?",
+      "name": "Bloqueado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst prep = $input.first().json.prep;\nconst plantilla = prep.bloqueado ? 'ejecucion.bloqueada_cupo' : 'ejecucion.fallida';\nreturn [{ json: { respuestas: [{ plantilla, vars: {\n  limite: prep.limite ?? null } }] } }];\n"
+      },
+      "id": "RespBloqueo",
+      "name": "RespBloqueo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst prep = $input.first().json.prep;\nconst p = prep.prompt;\nconst usuario = p.usuario.replace('{{hallazgos}}', JSON.stringify(prep.hallazgos, null, 2));\nreturn [{ json: {\n  ejecucion_id: prep.ejecucion_id,\n  hallazgos: prep.hallazgos,\n  plantilla_pdf: prep.plantilla_pdf,\n  modelo: p.modelo, temperatura: p.temperatura, max_tokens: p.max_tokens,\n  body: { model: p.modelo, temperature: p.temperatura, max_tokens: p.max_tokens,\n    messages: [ {role:'system', content:p.sistema}, {role:'user', content:usuario} ] }\n} }];\n"
+      },
+      "id": "ArmarLLM",
+      "name": "ArmarLLM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "DeepSeek1",
+      "name": "DeepSeek1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        460
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiDs0000000001",
+          "name": "DeepSeek Header"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst src = $('ArmarLLM').first().json;\nconst r = $input.first().json;\nconst texto = r.choices?.[0]?.message?.content ?? '';\nconst u = r.usage ?? {};\nreturn [{ json: { ...src,\n  texto, tokens_prompt: u.prompt_tokens ?? 0, tokens_salida: u.completion_tokens ?? 0 } }];\n"
+      },
+      "id": "Extraer1",
+      "name": "Extraer1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT validar_cifras( '{{ String($json.texto).replaceAll(\"'\",\"''\") }}', '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb ) AS v;",
+        "options": {}
+      },
+      "id": "Validar1",
+      "name": "Validar1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1320,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.v.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Cifras1ok?",
+      "name": "Cifras1ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ctx = $('Extraer1').first().json;\nreturn [{ json: { ...ctx, narrado: true } }];\n"
+      },
+      "id": "TextoOK",
+      "name": "TextoOK",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ctx = $('Extraer1').first().json;\nreturn [{ json: { ...ctx, body: $('ArmarLLM').first().json.body } }];\n"
+      },
+      "id": "ArmarLLM2",
+      "name": "ArmarLLM2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "DeepSeek2",
+      "name": "DeepSeek2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        600
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiDs0000000001",
+          "name": "DeepSeek Header"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst src = $('ArmarLLM').first().json;\nconst r = $input.first().json;\nconst texto = r.choices?.[0]?.message?.content ?? '';\nconst u = r.usage ?? {};\nreturn [{ json: { ...src,\n  texto, tokens_prompt: u.prompt_tokens ?? 0, tokens_salida: u.completion_tokens ?? 0 } }];\n"
+      },
+      "id": "Extraer2",
+      "name": "Extraer2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT validar_cifras( '{{ String($json.texto).replaceAll(\"'\",\"''\") }}', '{{ JSON.stringify($json.hallazgos).replaceAll(\"'\",\"''\") }}'::jsonb ) AS v;",
+        "options": {}
+      },
+      "id": "Validar2",
+      "name": "Validar2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2420,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.v.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Cifras2ok?",
+      "name": "Cifras2ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2640,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ctx = $('Extraer2').first().json;\nreturn [{ json: { ...ctx, narrado: true } }];\n"
+      },
+      "id": "TextoOK2",
+      "name": "TextoOK2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ctx = $('Extraer2').first().json;\nconst h = ctx.hallazgos;\nconst l = [];\nl.push('Informe (versión sin narración: no se pudo verificar el texto del modelo).');\nif (h.resumen) l.push(`Productos: ${h.resumen.productos}. Margen promedio: ${h.resumen.margen_promedio_pct ?? 'n/d'}%.`);\nfor (const m of (h.margen_bajo||[])) l.push(`Margen bajo: ${m.producto} (${m.margen_pct}%).`);\nfor (const d of (h.deriva_costo||[])) l.push(`Costo subió: ${d.producto} (${d.deriva_pct}%).`);\nfor (const c of (h.baja_cobertura||[])) l.push(`Se agota pronto: ${c.producto} (~${c.dias_cobertura} días).`);\nfor (const p of (h.pareto||[])) l.push(`Concentra ganancia: ${p.producto} (${p.pct_utilidad}%).`);\nreturn [{ json: { ...ctx, texto: l.join('\\n'), narrado: false } }];\n"
+      },
+      "id": "InformeSeco",
+      "name": "InformeSeco",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst c = $input.first().json;\nlet cuerpoHtml = (c.texto||'').split(/\\n+/).map(s=>`<p>${s.replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</p>`).join('');\nconst tpl = c.plantilla_pdf;\nlet html = tpl ? tpl.html : '<html><body>{{cuerpo_html}}</body></html>';\nlet css  = tpl ? (tpl.css||'') : '';\nhtml = html.replace('{{css}}', css)\n           .replace('{{cuerpo_html}}', cuerpoHtml)\n           .replace('{{negocio_nombre}}', c.negocio_nombre||'')\n           .replace('{{fecha}}', new Date().toISOString().slice(0,10));\nreturn [{ json: { ...c, html } }];\n"
+      },
+      "id": "ArmarPDF",
+      "name": "ArmarPDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://gotenberg:3000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "index.html"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "PDF",
+      "name": "PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3520,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst c = $input.first().json;\nconst buf = Buffer.from(c.html, 'utf8');\nreturn [{ json: c, binary: { 'index.html': {\n  data: buf.toString('base64'), mimeType: 'text/html', fileName: 'index.html' } } }];\n"
+      },
+      "id": "HtmlABinario",
+      "name": "HtmlABinario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3410,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{ json: { pdf_b64: buf.toString('base64') }, binary: $input.first().binary }];\n"
+      },
+      "id": "PdfB64",
+      "name": "PdfB64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3630,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ejecucion_cerrar( ({{ $('ArmarPDF').first().json.ejecucion_id }})::bigint, 'completada', jsonb_build_object(  'texto', '{{ String($('ArmarPDF').first().json.texto).replaceAll(\"'\",\"''\") }}',  'tokens_prompt', {{ $('ArmarPDF').first().json.tokens_prompt || 0 }},  'tokens_salida', {{ $('ArmarPDF').first().json.tokens_salida || 0 }},  'pdf_base64', '{{ $json.pdf_b64 }}') ) AS cierre;",
+        "options": {}
+      },
+      "id": "Cerrar",
+      "name": "Cerrar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3740,
+        460
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst c = $('ArmarPDF').first().json;\nconst bin = $('PDF').first().binary;\nreturn [{ json: { respuestas: [{\n  plantilla: 'ejecucion.entregada',\n  vars: { servicio: c.servicio_codigo || 'ventas_compras' },\n  documento: 'informe.pdf'\n}], narrado: c.narrado },\n  binary: { 'informe.pdf': { ...bin.data, fileName: 'informe.pdf', mimeType: 'application/pdf' } } }];\n"
+      },
+      "id": "RespFinal",
+      "name": "RespFinal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar": {
+      "main": [
+        [
+          {
+            "node": "Bloqueado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bloqueado?": {
+      "main": [
+        [
+          {
+            "node": "RespBloqueo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ArmarLLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ArmarLLM": {
+      "main": [
+        [
+          {
+            "node": "DeepSeek1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek1": {
+      "main": [
+        [
+          {
+            "node": "Extraer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer1": {
+      "main": [
+        [
+          {
+            "node": "Validar1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar1": {
+      "main": [
+        [
+          {
+            "node": "Cifras1ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cifras1ok?": {
+      "main": [
+        [
+          {
+            "node": "TextoOK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ArmarLLM2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ArmarLLM2": {
+      "main": [
+        [
+          {
+            "node": "DeepSeek2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek2": {
+      "main": [
+        [
+          {
+            "node": "Extraer2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer2": {
+      "main": [
+        [
+          {
+            "node": "Validar2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar2": {
+      "main": [
+        [
+          {
+            "node": "Cifras2ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cifras2ok?": {
+      "main": [
+        [
+          {
+            "node": "TextoOK2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "InformeSeco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TextoOK": {
+      "main": [
+        [
+          {
+            "node": "ArmarPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TextoOK2": {
+      "main": [
+        [
+          {
+            "node": "ArmarPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InformeSeco": {
+      "main": [
+        [
+          {
+            "node": "ArmarPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ArmarPDF": {
+      "main": [
+        [
+          {
+            "node": "HtmlABinario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HtmlABinario": {
+      "main": [
+        [
+          {
+            "node": "PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF": {
+      "main": [
+        [
+          {
+            "node": "PdfB64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PdfB64": {
+      "main": [
+        [
+          {
+            "node": "Cerrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cerrar": {
+      "main": [
+        [
+          {
+            "node": "RespFinal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "85392f0c-d3a9-41ec-a302-758e072e4f27",
+  "activeVersionId": null,
+  "versionCounter": 5,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T19:40:03.299Z",
+      "createdAt": "2026-07-24T19:40:03.299Z",
+      "role": "workflow:owner",
+      "workflowId": "wfEjecutar000000001",
+      "projectId": "ARxLsftxtA8Uahtb",
+      "project": {
+        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "createdAt": "2026-07-24T19:13:33.081Z",
+        "id": "ARxLsftxtA8Uahtb",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "82e8043f-230d-4511-8dd5-60fbab9be9d2"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

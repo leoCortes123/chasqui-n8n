@@ -1,0 +1,21 @@
+date,item,category,qty,unit_price,amount
+2026-04-01,Gaseosa Cocacola 1.5L,Beverages,6,6000,36000
+2026-04-01,Jugo Hit 1L,Beverages,4,3800,15200
+2026-04-03,Arroz Diana 500g,Grains,3,2500,7500
+2026-04-05,Agua Cielo 600ml,Beverages,10,1800,18000
+2026-04-05,Leche Alqueria 1L,Dairy,5,4200,21000
+2026-04-07,Cerveza Aguila 330ml,Beverages,8,2500,20000
+2026-04-09,Aceite Premier 1L,Groceries,2,12500,25000
+2026-04-11,Gaseosa Postobon 1.5L,Beverages,4,5500,22000
+2026-04-13,Huevos AA x30,Dairy,1,18000,18000
+2026-04-15,Gaseosa Cocacola 1.5L,Beverages,8,6000,48000
+2026-04-15,Jugo Hit 1L,Beverages,3,3800,11400
+2026-04-17,Panela Cuadrada 500g,Sweeteners,6,2800,16800
+2026-04-19,Agua Cielo 600ml,Beverages,12,1800,21600
+2026-04-21,Arroz Diana 500g,Grains,4,2500,10000
+2026-04-23,Cafe Aguila Roja 250g,Groceries,1,15000,15000
+2026-04-25,Gaseosa Cocacola 1.5L,Beverages,5,6000,30000
+2026-04-25,Jugo Hit 1L,Beverages,6,3800,22800
+2026-04-27,Agua Cielo 600ml,Beverages,8,1800,14400
+2026-04-29,Cerveza Aguila 330ml,Beverages,15,2500,37500
+2026-04-30,Gaseosa Postobon 1.5L,Beverages,3,5500,16500

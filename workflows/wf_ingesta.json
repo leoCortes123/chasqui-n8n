@@ -1,0 +1,1141 @@
+{
+  "id": "wfIngesta00000000001",
+  "name": "wf_ingesta",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "Inicio",
+      "name": "Inicio",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.evento?.canal === 'whatsapp' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "DeWa?",
+      "name": "DeWa?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        140,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.evento.file_id }}",
+        "additionalFields": {}
+      },
+      "id": "BajarArchivo",
+      "name": "BajarArchivo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        280,
+        460
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://graph.facebook.com/v23.0/' + $json.evento.file_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "WaUrlArchivo",
+      "name": "WaUrlArchivo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        280
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiWa0000000001",
+          "name": "Chasqui WhatsApp"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "WaBajarArchivo",
+      "name": "WaBajarArchivo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        280
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiWa0000000001",
+          "name": "Chasqui WhatsApp"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ev = $('Inicio').first().json.evento;\nconst sesion_id = $('Inicio').first().json.sesion_id ?? ev.sesion_id;\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{ json: {\n  sesion_id,\n  nombre: ev.file_name || 'archivo',\n  mime: ev.mime || 'application/octet-stream',\n  b64: buf.toString('base64'),\n  chat_id: $('Inicio').first().json.chat_id\n}, binary: $input.first().binary }];\n"
+      },
+      "id": "Empaquetar",
+      "name": "Empaquetar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_registrar_documento(({{ $json.sesion_id }})::bigint, (SELECT negocio_id FROM sesiones WHERE id=({{ $json.sesion_id }})::bigint), '{{ String($json.nombre).replaceAll(\"'\",\"''\") }}', '{{ $json.mime }}', decode('{{ $json.b64 }}','base64')) AS reg;",
+        "options": {}
+      },
+      "id": "Registrar",
+      "name": "Registrar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        600,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.reg.reconocido === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Reconocido?",
+      "name": "Reconocido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.reg.requiere_tabla === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "RequiereTabla?",
+      "name": "RequiereTabla?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_procesar_documento( ({{ $json.reg.documento_id }})::bigint ) AS res, ({{ $json.reg.documento_id }})::bigint AS documento_id;",
+        "options": {}
+      },
+      "id": "Procesar",
+      "name": "Procesar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1200,
+        620
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: { ...$input.first().json,\n                  operacion: $('Registrar').first().json.reg.operacion },\n          binary: $('Empaquetar').first().binary }];\n"
+      },
+      "id": "RecuperarBinario",
+      "name": "RecuperarBinario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.operacion === 'csv' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "EsCSV?",
+      "name": "EsCSV?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.first();\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst linea = buf.toString('utf8').replace(/^\\uFEFF/, '').split(/\\r?\\n/)[0] ?? '';\nlet delim = ',', max = 0;\nfor (const c of [',', ';', '\\t', '|']) {\n  const n = linea.split(c).length - 1;\n  if (n > max) { max = n; delim = c; }\n}\nreturn [{ json: { ...item.json, delim }, binary: item.binary }];\n"
+      },
+      "id": "DetectarSeparador",
+      "name": "DetectarSeparador",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "csv",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true,
+          "enableBOM": true,
+          "delimiter": "={{ $json.delim }}",
+          "relaxQuotes": true,
+          "skipRecordsWithErrors": true
+        }
+      },
+      "id": "ExtraerCSV",
+      "name": "ExtraerCSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true,
+          "includeEmptyCells": false
+        }
+      },
+      "id": "ExtraerHoja",
+      "name": "ExtraerHoja",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst filas = $input.all().map(i => i.json).filter(f => f && Object.keys(f).length);\nconst docId = $('Registrar').first().json.reg.documento_id;\n// Las cabeceras son la unión de las claves: una fila suelta puede venir corta.\nconst cols = [];\nfor (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k)) cols.push(k);\nreturn [{ json: { documento_id: docId, columnas: cols, filas,\n                  muestra: filas.slice(0, 5) } }];\n"
+      },
+      "id": "AgruparFilas",
+      "name": "AgruparFilas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_identificar_tabular( ({{ $json.documento_id }})::bigint,   ARRAY(SELECT jsonb_array_elements_text(    '{{ JSON.stringify($json.columnas).replaceAll(\"'\",\"''\") }}'::jsonb))) AS ident, (SELECT to_jsonb(p) FROM prompts_tecnicos p   WHERE p.clave='ingesta.inferir_mapeo' AND p.activo) AS prompt;",
+        "options": {}
+      },
+      "id": "Identificar",
+      "name": "Identificar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2000,
+        180
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ident.requiere_inferencia === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Inferir?",
+      "name": "Inferir?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ident = $('Identificar').first().json;\nconst g = $('AgruparFilas').first().json;\nconst p = ident.prompt;\nconst usuario = p.usuario\n  .replace('{{columnas}}', JSON.stringify(g.columnas, null, 2))\n  .replace('{{muestra}}', JSON.stringify(g.muestra, null, 2));\nreturn [{ json: { documento_id: g.documento_id, columnas: g.columnas,\n  body: { model: p.modelo, temperature: Number(p.temperatura),\n          max_tokens: p.max_tokens, response_format: { type: 'json_object' },\n          messages: [ {role:'system', content:p.sistema},\n                      {role:'user', content:usuario} ] } } }];\n"
+      },
+      "id": "ArmarMapeo",
+      "name": "ArmarMapeo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://opencode.ai/zen/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "InferirMapeo",
+      "name": "InferirMapeo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2600,
+        60
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "chasquiDs0000000001",
+          "name": "DeepSeek Header"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst src = $('ArmarMapeo').first().json;\nlet txt = $input.first().json?.choices?.[0]?.message?.content ?? '';\ntxt = String(txt).replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim();\nlet mapeo;\ntry { mapeo = JSON.parse(txt); }\ncatch (e) { mapeo = { error: 'el modelo no devolvió un JSON válido' }; }\nreturn [{ json: { documento_id: src.documento_id, columnas: src.columnas, mapeo } }];\n"
+      },
+      "id": "LeerMapeo",
+      "name": "LeerMapeo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_registrar_formato_inferido( ({{ $json.documento_id }})::bigint,   ARRAY(SELECT jsonb_array_elements_text(    '{{ JSON.stringify($json.columnas).replaceAll(\"'\",\"''\") }}'::jsonb)),   '{{ JSON.stringify($json.mapeo).replaceAll(\"'\",\"''\") }}'::jsonb ) AS inferido;",
+        "options": {}
+      },
+      "id": "RegistrarFormato",
+      "name": "RegistrarFormato",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3000,
+        60
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ingesta_cargar_tabular( ({{ $('AgruparFilas').first().json.documento_id }})::bigint, '{{ JSON.stringify($('AgruparFilas').first().json.filas).replaceAll(\"'\",\"''\") }}'::jsonb ) AS res, ({{ $('AgruparFilas').first().json.documento_id }})::bigint AS documento_id;",
+        "options": {}
+      },
+      "id": "CargarTabular",
+      "name": "CargarTabular",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3200,
+        180
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT match_resolver_documento( ({{ $json.documento_id }})::bigint ) AS m, ingesta_resumen_documento( ({{ $json.documento_id }})::bigint ) AS r, ({{ $json.documento_id }})::bigint AS documento_id;",
+        "options": {}
+      },
+      "id": "Resolver",
+      "name": "Resolver",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3400,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.r.estado === 'parseado' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "CargoBien?",
+      "name": "CargoBien?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 8,
+        "unit": "seconds"
+      },
+      "id": "Esperar",
+      "name": "Esperar",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (d.id = (SELECT max(x.id) FROM documentos x WHERE x.sesion_id = d.sesion_id)         AND s.estado = 'recibiendo' AND s.cerrada_en IS NULL) AS preguntar FROM documentos d JOIN sesiones s ON s.id = d.sesion_id WHERE d.id = ({{ $('Resolver').first().json.documento_id }})::bigint;",
+        "options": {}
+      },
+      "id": "SigueUltimo",
+      "name": "SigueUltimo",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4000,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.preguntar === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Preguntar?",
+      "name": "Preguntar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla: 'ingesta.todos_archivos', vars: {} }] } }];\n"
+      },
+      "id": "Pregunta",
+      "name": "Pregunta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst r = $('Resolver').first().json.r || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla: 'ingesta.error_archivo',\n    vars: { nombre_archivo: r.nombre_archivo || 'archivo',\n            motivo: r.error || 'no pude leerlo' } }] } }];\n"
+      },
+      "id": "RespuestaError",
+      "name": "RespuestaError",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst reg = $input.first().json.reg || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           motivo: reg.error || 'no reconocí el formato' } }] } }];\n"
+      },
+      "id": "NoSoportado",
+      "name": "NoSoportado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: { chat_id: $('Inicio').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || 'archivo',\n           motivo:'no pude descargarlo del chat' } }] } }];\n"
+      },
+      "id": "ErrorDescarga",
+      "name": "ErrorDescarga",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst e = $input.first().json.error;\nconst msg = (e?.message || e || '').toString();\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_archivo',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           motivo: 'se me cayó guardándolo (' + msg.slice(0, 120) + ')' } }] } }];\n"
+      },
+      "id": "ErrorRegistrar",
+      "name": "ErrorRegistrar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "Enviar",
+      "name": "Enviar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4600,
+        400
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "DeWa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeWa?": {
+      "main": [
+        [
+          {
+            "node": "WaUrlArchivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BajarArchivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaUrlArchivo": {
+      "main": [
+        [
+          {
+            "node": "WaBajarArchivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ErrorDescarga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BajarArchivo": {
+      "main": [
+        [
+          {
+            "node": "Empaquetar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ErrorDescarga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaBajarArchivo": {
+      "main": [
+        [
+          {
+            "node": "Empaquetar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ErrorDescarga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empaquetar": {
+      "main": [
+        [
+          {
+            "node": "Registrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar": {
+      "main": [
+        [
+          {
+            "node": "Reconocido?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ErrorRegistrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reconocido?": {
+      "main": [
+        [
+          {
+            "node": "RequiereTabla?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoSoportado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RequiereTabla?": {
+      "main": [
+        [
+          {
+            "node": "RecuperarBinario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Procesar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RecuperarBinario": {
+      "main": [
+        [
+          {
+            "node": "EsCSV?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EsCSV?": {
+      "main": [
+        [
+          {
+            "node": "DetectarSeparador",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ExtraerHoja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DetectarSeparador": {
+      "main": [
+        [
+          {
+            "node": "ExtraerCSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtraerCSV": {
+      "main": [
+        [
+          {
+            "node": "AgruparFilas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtraerHoja": {
+      "main": [
+        [
+          {
+            "node": "AgruparFilas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AgruparFilas": {
+      "main": [
+        [
+          {
+            "node": "Identificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identificar": {
+      "main": [
+        [
+          {
+            "node": "Inferir?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inferir?": {
+      "main": [
+        [
+          {
+            "node": "ArmarMapeo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CargarTabular",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ArmarMapeo": {
+      "main": [
+        [
+          {
+            "node": "InferirMapeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InferirMapeo": {
+      "main": [
+        [
+          {
+            "node": "LeerMapeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LeerMapeo": {
+      "main": [
+        [
+          {
+            "node": "RegistrarFormato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RegistrarFormato": {
+      "main": [
+        [
+          {
+            "node": "CargarTabular",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CargarTabular": {
+      "main": [
+        [
+          {
+            "node": "Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar": {
+      "main": [
+        [
+          {
+            "node": "Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver": {
+      "main": [
+        [
+          {
+            "node": "CargoBien?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CargoBien?": {
+      "main": [
+        [
+          {
+            "node": "Esperar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RespuestaError",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esperar": {
+      "main": [
+        [
+          {
+            "node": "SigueUltimo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SigueUltimo": {
+      "main": [
+        [
+          {
+            "node": "Preguntar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preguntar?": {
+      "main": [
+        [
+          {
+            "node": "Pregunta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pregunta": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RespuestaError": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NoSoportado": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ErrorDescarga": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ErrorRegistrar": {
+      "main": [
+        [
+          {
+            "node": "Enviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "wfError0000000000001"
+  },
+  "active": false
+}

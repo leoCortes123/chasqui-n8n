@@ -1,0 +1,8 @@
+.env
+respaldos/
+bin/gen_ventas_demo.py
+docs/ejemplos/ventas_demo_*.csv
+__pycache__/
+docs/prototipo/credenciales-*.json
+*.dump
+.fuse_hidden*

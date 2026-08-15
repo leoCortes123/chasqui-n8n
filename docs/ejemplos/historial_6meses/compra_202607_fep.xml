@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:ID>FEP20260718001</cbc:ID>
+  <cbc:UUID schemeName="CUFE-SHA384">f2c8b6d0a4e7f95162348f90112233445566778899aabbccddeeff00112233445566778899006f</cbc:UUID>
+  <cbc:IssueDate>2026-07-18</cbc:IssueDate>
+  <cbc:IssueTime>09:30:00-05:00</cbc:IssueTime>
+  <cbc:DueDate>2026-08-17</cbc:DueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>DISTRIBUIDORA EL PROVEEDOR SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="31">900123456</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>TIENDA DOÑA ROSA</cbc:RegistrationName>
+        <cbc:CompanyID schemeName="13">43555111</cbc:CompanyID>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">27950.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">242050.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">270000.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">270000.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">15.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">29250.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>ARROZ DIANA 500G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702001010101</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">1950.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">8.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">68000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>ACEITE PREMIER 1L</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702002020202</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">8500.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>3</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">12.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">25200.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>PANELA CUADRADA 500G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702003030303</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">2100.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>4</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">5.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">51000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>CAFE AGUILA ROJA 250G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702004040404</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">10200.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>5</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">8.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">25600.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>SALSA TOMATE FRUCO 400G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702024242424</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">3200.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>6</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">10.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">22000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>HARINA PAN 1KG</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702025252525</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">2200.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>7</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">6.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">21000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>FRIJOL CARGAMANTO 500G</cbc:Description>
+      <cac:StandardItemIdentification>
+        <cbc:ID schemeID="999">7702026262626</cbc:ID>
+      </cac:StandardItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">3500.00</cbc:PriceAmount>
+      <cbc:BaseQuantity unitCode="EA">1</cbc:BaseQuantity>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

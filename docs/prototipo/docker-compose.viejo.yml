@@ -1,0 +1,62 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=SwDak9ba7a4ak4mpVeIY
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - GENERIC_TIMEZONE=America/Bogota
+      - TZ=America/Bogota
+      - N8N_DIAGNOSTICS_ENABLED=false
+      # Para probar el bot de Telegram en local necesitas una URL pública (https).
+      # WEBHOOK_URL se llena a mano con la URL que da cloudflared (ver guía).
+      - N8N_WEBHOOK_URL=https://formal-coast-guidance-cotton.trycloudflare.com
+    volumes:
+      - n8n_data:/home/node/.n8n
+    # Permite que n8n (en Docker) alcance el Ollama nativo del host (Linux).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://n8n:5678
+    depends_on:
+      - n8n
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=botpymes
+      - POSTGRES_PASSWORD=8jE36v8Lau6gaE92ByuW
+      - POSTGRES_DB=botpymes
+      - TZ=America/Bogota
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U botpymes -d botpymes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Nota: Ollama NO se levanta como contenedor porque ya corre nativo en el host
+# (http://localhost:11434). Desde n8n se accede vía http://host.docker.internal:11434
+
+volumes:
+  n8n_data:
+  postgres_data:

@@ -1,0 +1,360 @@
+{
+  "updatedAt": "2026-07-24T20:06:47.893Z",
+  "createdAt": "2026-07-24T20:06:47.893Z",
+  "id": "wfRouter000000000001",
+  "name": "wf_router",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "Webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "wfRouterWebhook00001"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.first().json;\nconst secretOk = (item.headers?.['x-telegram-bot-api-secret-token'] || '') === 'ed5a7589ec01eaf170c3b5ce7527a4021392f1238c7a053b';\nif (!secretOk) return [];              // rechaza lo que no venga de Telegram\nconst b = item.body || item;\nconst msg = b.message || b.edited_message || b.callback_query?.message || {};\nconst from = b.message?.from || b.callback_query?.from || msg.from || {};\nconst texto = b.message?.text || b.callback_query?.data || msg.caption || '';\nconst tiene_documento = !!(msg.document || (msg.photo && msg.photo.length));\nif (!from.id) return [];\nreturn [{ json: { evento: {\n  from: { id: from.id, username: from.username },\n  chat: { id: msg.chat?.id || from.id },\n  texto, tiene_documento,\n  file_id: msg.document?.file_id || (msg.photo ? msg.photo[msg.photo.length-1].file_id : null),\n  file_name: msg.document?.file_name || null,\n  mime: msg.document?.mime_type || null\n} } }];\n"
+      },
+      "id": "Normalizar",
+      "name": "Normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT router_procesar_mensaje('{{ JSON.stringify($json.evento).replaceAll(\"'\",\"''\") }}'::jsonb) AS r;",
+        "options": {}
+      },
+      "id": "Router",
+      "name": "Router",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst r = $input.first().json.r || {};\nconst ev = $('Normalizar').first().json.evento;\nconst out = [];\nif ((r.respuestas||[]).length)\n  out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });\nfor (const a of (r.acciones||[]))\n  out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });\nreturn out;\n"
+      },
+      "id": "Despachar",
+      "name": "Despachar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "enviar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "enviar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "ingerir",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "ingerir"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "ejecutar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "ejecutar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Switch",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "LlamarEnviar",
+      "name": "LlamarEnviar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        180
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfIngesta00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "LlamarIngesta",
+      "name": "LlamarIngesta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEjecutar000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "LlamarEjecutar",
+      "name": "LlamarEjecutar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        440
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "EnviarInforme",
+      "name": "EnviarInforme",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        440
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Despachar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Despachar": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "LlamarEnviar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LlamarIngesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LlamarEjecutar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LlamarEjecutar": {
+      "main": [
+        [
+          {
+            "node": "EnviarInforme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "73461d03-d404-4ad5-854b-7d1ba5ff4d7b",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T20:06:47.893Z",
+      "createdAt": "2026-07-24T20:06:47.893Z",
+      "role": "workflow:owner",
+      "workflowId": "wfRouter000000000001",
+      "projectId": "ARxLsftxtA8Uahtb",
+      "project": {
+        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "createdAt": "2026-07-24T19:13:33.081Z",
+        "id": "ARxLsftxtA8Uahtb",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "82e8043f-230d-4511-8dd5-60fbab9be9d2"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

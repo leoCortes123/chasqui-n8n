@@ -1,0 +1,245 @@
+{
+  "updatedAt": "2026-07-24T20:04:23.964Z",
+  "createdAt": "2026-07-24T20:04:23.964Z",
+  "id": "wfEnviar00000000001",
+  "name": "wf_enviar",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "Inicio",
+      "name": "Inicio",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst inp = $input.first().json;\nconst chat = inp.chat_id;\nconst out = [];\nfor (const r of (inp.respuestas || [])) {\n  if (r.plantilla) out.push({ json: {\n    chat_id: chat, plantilla: r.plantilla, vars: r.vars || {} } });\n}\nreturn out;\n"
+      },
+      "id": "Expandir",
+      "name": "Expandir",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ({{ $json.chat_id }})::bigint AS chat_id, (resolver_plantilla('{{ $json.plantilla }}', '{{ JSON.stringify($json.vars).replaceAll(\"'\",\"''\") }}'::jsonb)) ->> 'texto' AS texto;",
+        "options": {}
+      },
+      "id": "Resolver",
+      "name": "Resolver",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        440,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {}
+      },
+      "id": "EnviarTexto",
+      "name": "EnviarTexto",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ ($json.respuestas || []).some(r => r.documento) && $binary && Object.keys($binary).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "HayDoc?",
+      "name": "HayDoc?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst inp = $input.first().json;\nconst r = (inp.respuestas || []).find(x => x.documento);\nconst binKey = Object.keys($input.first().binary || {})[0];\nreturn [{ json: { chat_id: inp.chat_id, fileName: r?.documento || 'informe.pdf' },\n          binary: { data: $input.first().binary[binKey] } }];\n"
+      },
+      "id": "PrepDoc",
+      "name": "PrepDoc",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $json.chat_id }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {}
+      },
+      "id": "EnviarDoc",
+      "name": "EnviarDoc",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        420
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "Expandir",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HayDoc?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir": {
+      "main": [
+        [
+          {
+            "node": "Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver": {
+      "main": [
+        [
+          {
+            "node": "EnviarTexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HayDoc?": {
+      "main": [
+        [
+          {
+            "node": "PrepDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PrepDoc": {
+      "main": [
+        [
+          {
+            "node": "EnviarDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "228a7b4e-ecc2-4776-964b-d2077b38abf9",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T20:04:23.964Z",
+      "createdAt": "2026-07-24T20:04:23.964Z",
+      "role": "workflow:owner",
+      "workflowId": "wfEnviar00000000001",
+      "projectId": "ARxLsftxtA8Uahtb",
+      "project": {
+        "updatedAt": "2026-07-24T19:13:33.081Z",
+        "createdAt": "2026-07-24T19:13:33.081Z",
+        "id": "ARxLsftxtA8Uahtb",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "82e8043f-230d-4511-8dd5-60fbab9be9d2"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
