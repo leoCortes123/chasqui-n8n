@@ -824,8 +824,7 @@ async function cargarRecomendaciones() {
 
   for (const v of vigentes) {
     const f = el('div', undefined, 'fila');
-    const izq = el('span', v.titulo);
-    f.append(izq);
+    f.append(el('span', (v.icono ? v.icono + ' ' : '') + v.titulo));
     f.append(el('span', v.impacto || ''));
     // "Van 4 veces que te lo digo" es información que antes no existía.
     if (v.veces_vista > 1)
@@ -833,6 +832,25 @@ async function cargarRecomendaciones() {
     else if (v.dias_abierta > 0)
       f.append(el('span', 'hace ' + v.dias_abierta + ' días', 'etiqueta'));
     f.append(el('span', v.prioridad, 'etiqueta'));
+
+    // Las tres acciones (064). Mismas que en el chat y mismo punto de
+    // escritura: la RPC delega en recomendacion_accion.
+    const acc = el('div', undefined, 'acciones');
+    const boton = (txt, accion, clase) => {
+      const b = el('button', txt, clase);
+      b.onclick = async () => {
+        const r = await rpc('portal_recomendacion_accion',
+                            { p_id: v.id, p_accion: accion });
+        if (!r || r.ok === false) { alert('Ya no estaba pendiente.'); }
+        await cargarRecomendaciones();
+      };
+      acc.append(b);
+    };
+    boton('✅ Ya lo hice', 'hice', 'primario');
+    boton('⏭️ No aplica', 'no_aplica');
+    const precio = v.datos && v.datos.precio_sugerido;
+    if (precio) boton('💲 Aplicar ' + pesos(precio), 'precio');
+    f.append(acc);
     filas.push(f);
   }
 

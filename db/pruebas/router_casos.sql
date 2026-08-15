@@ -148,6 +148,14 @@ SELECT _t('F5 /pendientes',       _ev('/pendientes'));
 -- El admin NO debe refrescar ultima_actividad de la sesión abierta.
 UPDATE usuarios SET rol = 'dueno' WHERE telegram_user_id = 777001;
 
+SELECT '--- BLOQUE I: acciones sobre recomendaciones (064) ---';
+-- Se registran contra el negocio del fixture para que haya algo que tocar.
+SELECT recomendaciones_registrar((SELECT negocio_id FROM usuarios WHERE telegram_user_id = 777001));
+SELECT _t('I1 rec:list',        _ev('rec:list'));
+SELECT _t('I2 rec:ver inexistente', _ev('rec:ver:999999'));
+SELECT _t('I3 rec:hice inexistente', _ev('rec:hice:999999'));
+SELECT _t('I4 rec basura',      _ev('rec:loquesea'));
+
 SELECT '--- BLOQUE G: un solo servicio de archivos ---';
 UPDATE servicios SET activo = false WHERE codigo = 'mercado_compras';
 UPDATE sesiones SET estado = 'expirada', cerrada_en = now() WHERE cerrada_en IS NULL;

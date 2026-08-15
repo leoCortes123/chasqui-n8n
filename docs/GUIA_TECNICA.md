@@ -314,6 +314,8 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `recomendaciones_registrar(negocio_id, ejecucion_id) → jsonb` | Persiste lo detectado, cierra lo que ya no está y marca lo que llegó al informe. Devuelve el conteo de cada cosa. |
 | `recomendacion_objeto_evaluable(negocio_id, clave) → boolean` | ¿El objeto sigue teniendo movimientos visibles? Es lo que separa "se resolvió" de "lo perdí de vista". |
 | `recomendaciones_vigentes(negocio_id, limite) → jsonb` | Las abiertas, con `dias_abierta` y `veces_vista`. La entrada de C1 y D1. |
+| `recomendacion_accion(reco_id, negocio_id, accion, usuario_id) → jsonb` | **El único punto de escritura de las acciones** (`064`), para chat y portal. `hice` → resuelta · `no_aplica` → ignorada · `precio` → escribe el precio sugerido en `conocimiento` y cierra. Valida negocio y que siga abierta: un botón de un informe viejo no cierra nada dos veces. |
+| `teclado_recomendaciones(negocio_id)` / `teclado_recomendacion(id)` | Los dos niveles de botones. El de acciones solo ofrece "aplicar precio" si hay un precio en `datos`. |
 | `intencion_detectar(texto) → text` | Qué está preguntando el dueño, por patrones sobre `intenciones`. NULL si ninguna coincide, y eso no es un error: queda el contexto abierto de C1. |
 | `periodo_resolver(texto, defecto, hasta) → jsonb` | La ventana temporal, resuelta a fechas concretas. El texto manda sobre el defecto de la intención; el ancla es la fecha más reciente de los datos, no el reloj. |
 | `intencion_agregados(negocio_id, metrica, desde, hasta, producto, proveedor) → jsonb` | **Un** agregador para las siete métricas. Es lo que evita que `intenciones` sea un despachador de funciones. |

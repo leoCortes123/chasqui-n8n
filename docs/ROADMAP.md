@@ -20,8 +20,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **B4** Perfil consolidado | ✅ **hecha y verificada** | `061_perfil_negocio.sql` |
 | **C1** Preguntar a los números | ✅ **hecha y verificada** | `062_consulta_sobre_numeros.sql` |
 | **C2** Intenciones como contrato | ✅ **hecha y verificada** | `063_intenciones_consulta.sql` |
-| **D1** Acciones sobre la recomendación | ⏭️ **siguiente** | `064_acciones.sql` |
-| D2-D3, E, F | pendientes | — |
+| **D1** Acciones sobre la recomendación | ✅ **hecha y verificada** | `064_acciones.sql` |
+| **D2** Lista de pedido | ⏭️ **siguiente** | `065_pedido.sql` |
+| D3, E, F | pendientes | — |
 
 **La Fase C está cerrada.** Las ocho preguntas se responden en el chat con los
 números del negocio.
@@ -418,6 +419,45 @@ aparece si uno solo lee el código:
 cifra que no está en el contexto y `validar_cifras` la rechaza — el mismo
 mecanismo que A3 tuvo que arreglar del otro lado.
 
+### Lo que dejó D1
+
+**El ciclo se cerró.** *Ejecutar* era el único de los cinco eslabones en rojo, y
+se notaba en los datos: `v_perfil_negocio.acciones.por_accion` venía dando 0
+desde B4, que es precisamente la medida de si el ciclo está cerrado.
+
+Tres acciones sobre cada recomendación —**✅ Ya lo hice** / **⏭️ No aplica** /
+**💲 Aplicar el precio**— en el chat y en el portal, con **un solo punto de
+escritura** (`recomendacion_accion`): la RPC del portal valida el negocio de la
+sesión y delega en la misma función que usa el router. La distinción
+`cerrada_por = 'dato'` vs `'accion_usuario'`, que B2 dejó preparada sin poder
+usarla, empieza a llenarse hoy.
+
+**Los botones no viajan en el informe, y no es una limitación sino la única
+opción correcta.** El informe se arma en `ejecucion_preparar` y las filas de
+`recomendaciones` recién existen al cerrar (B2): en el momento del render no hay
+a qué apuntar. Además el teclado de un chat topa en 6 filas (027) y ocho
+recomendaciones por tres acciones son veinticuatro. Entonces el informe lleva
+**un** botón —"Ya hice algo"— y todo lo demás se resuelve al tocarlo, contra la
+tabla, que para entonces ya está escrita. De paso el mismo camino sirve para el
+portal y para WhatsApp sin cambiar nada.
+
+**El precio sugerido dejó de vivir dentro de una frase.** Hasta acá estaba solo
+en el texto *"Subilo a $12.500 y quedás en 20% de margen"*, y aplicarlo habría
+significado parsear esa frase — que se reescribe cualquier día. Ahora las diez
+CTEs publican `datos`: `precio_sugerido`, `unidades_pedir`, `proveedor_sugerido`.
+Eso deja además servida la cantidad a pedir que consume D2.
+
+**Verificado**: ver una recomendación muestra su icono, problema, impacto y desde
+cuándo; "ya lo hice" la cierra como `accion_usuario` y la saca de la lista;
+"aplicar precio" escribe en `conocimiento` tipo `precio` con trazabilidad al id
+de la recomendación; tocar dos veces el mismo botón responde "esa ya no está
+pendiente" en vez de cerrar dos veces; y una recomendación de otro negocio se
+rechaza. El banco del router pasó a **67 casos**, con cuatro nuevos para el
+prefijo `rec:`.
+
+**El botón de aplicar precio solo aparece si hay un precio que aplicar**: un
+botón que no puede funcionar es peor que no tener botón.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -482,7 +522,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 | **Explicar** | ✅ Sólido | `informe_render` + prompt "TU TRABAJO ES REDACTAR, NO CALCULAR" (`047:993+`) |
 | **Cuantificar** | ✅ Corregido en A2 y A3 | `impacto_tipo` separa flujos de stocks con umbral propio (`055`); el stock declara su `origen_stock` (`054`) |
 | **Recomendar** | ✅ Sólido | Opciones condicionales por regla, prioridad relativa a `v_base_mes`, tope 2×regla / 8 total |
-| **Ejecutar** | ❌ No existe | Ninguna recomendación tiene acción; nada se registra ni se mide después |
+| **Ejecutar** | 🟡 Existe (D1); falta medir | Tres acciones sobre cada recomendación, en chat y portal (`064`). Falta D2 (lista de pedido) y D3 (medir si sirvió) |
 | **Cerebro acumulativo** | 🟡 Tiene memoria (B1 y B2); falta usarla | `snapshots_negocio` (`058`) registra el estado en cada análisis. El plan free ya no borra el pasado (`053`). Falta comparar (B3) y recordar recomendaciones (B2) |
 | **IA no es fuente de verdad** | ✅ Excelente | `validar_cifras` (`026`) + informe seco (`047:894`). Es el activo más valioso del proyecto |
 | **Mensajería como interfaz** | ✅ Sólido | Router en SQL, dos canales, portal para lo que no cabe en el chat |
@@ -783,7 +823,7 @@ reconversión es la Fase F.
 
 *Sin canal saliente a terceros.*
 
-**D1. Acciones sobre la recomendación** — `064_acciones.sql`
+**D1. Acciones sobre la recomendación** — `064_acciones.sql` ✅ **APLICADA 2026-08-15**
 Botones en el informe: **✅ Ya lo hice** / **⏭️ No aplica** / **💲 Aplicar precio sugerido**. Aplicar precio escribe en `conocimiento` tipo `precio` (que ya existe y ya tiene pantalla) y registra la acción contra la recomendación de B2.
 
 **D2. Lista de pedido** — `065_pedido.sql`
