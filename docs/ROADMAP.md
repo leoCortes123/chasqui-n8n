@@ -16,8 +16,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **A5** Limpieza + interfaz de matching | ✅ **hecha y verificada** | `057_limpieza.sql` |
 | **B1** Snapshot del estado empresarial | ✅ **hecha y verificada** | `058_snapshot_negocio.sql` |
 | **B2** Recomendaciones persistentes | ✅ **hecha y verificada** | `059_recomendaciones_persistentes.sql` |
-| **B3** Reglas comparativas | ⏭️ **siguiente** | `060_reglas_comparativas.sql` |
-| B4, C, D, E, F | pendientes | — |
+| **B3** Reglas comparativas | ✅ **hecha y verificada** | `060_reglas_comparativas.sql` |
+| **B4** Perfil consolidado | ⏭️ **siguiente** | `061_perfil_negocio.sql` |
+| C, D, E, F | pendientes | — |
 
 **La Fase A está cerrada.** Las cuatro restricciones globales se sostienen, los
 cinco hallazgos que ordenaban el roadmap (H1-H5) están resueltos, y C3 —el
@@ -248,6 +249,55 @@ router: 63 casos sin cambios de comportamiento.
 **Portal**: la pestaña Informes muestra qué sigue abierto y desde cuándo ("van 4
 veces que te lo digo") y qué se cerró, distinguiendo quién lo cerró. Los botones
 para actuar son D1.
+
+### Lo que dejó B3
+
+**Chasqui dejó de mirar una foto y mira la película.** Cuatro reglas nuevas, que
+entran al mismo motor que las seis viejas y por lo tanto heredan gratis la
+priorización tipada (A3), la persistencia (B2) y el render del informe:
+
+| Regla | Dispara con |
+|---|---|
+| `sin_ventas` | Un producto que tenía ritmo y lleva > 45 días sin una venta |
+| `proveedor_sube` | El mismo proveedor subió el precio ≥ 3 veces en el último año |
+| `margen_cae` | Margen actual < snapshot anterior < el de antes, ≥ 3 puntos de caída |
+| `vs_ano_anterior` | El último mes completo cae ≥ 15% contra el mismo mes del año pasado |
+
+**Decisión de diseño: tres de las cuatro NO usan snapshots.** Se calculan
+directamente sobre `mov_visibles`. Un hecho que está en los movimientos —cuándo
+fue la última venta, qué precio pagó cada compra, cuánto se vendió en agosto— es
+más preciso ahí, y sobre todo no depende de cada cuánto se corrieron análisis: un
+negocio que no analizó en tres meses no tiene por qué perder la comparación
+anual. Solo `margen_cae` necesita snapshots, porque un margen no es un hecho
+registrado sino una medición, y ese momento hay que haberlo guardado. Es
+exactamente para lo que se hizo B1.
+
+**El "hoy" de una regla comparativa es `max(fecha)` de los datos, no
+`current_date`.** Un negocio que sube en agosto un archivo que termina en mayo no
+lleva tres meses sin vender: lleva tres meses sin cargar. Medir contra el reloj
+convertiría cada carga atrasada en una avalancha de alertas falsas, que es la
+clase de error que hace que el dueño deje de creerle al bot. Por la misma razón
+`vs_ano_anterior` compara el último mes **completo**: un agosto a medias contra
+un agosto entero siempre daría caída.
+
+**Verificado** con `db/pruebas/reglas_comparativas.sql`, un negocio sintético de
+15 meses donde cada producto está diseñado para disparar una sola regla. Las
+cuatro disparan con texto y cifras correctas — "van 120 días sin moverse",
+"Proveedor Caro te subió el precio 4 veces: de $1.000 a $1.800", "25%, después
+22%, y ahora 18%", "En julio vendiste $643.400 contra $1.000.000: 35,7% menos"—.
+El banco se ancla a `current_date`, así que no caduca. Sobre los datos reales del
+negocio 7 (73 días, sin historia para comparar) no dispara ninguna: las seis
+reglas viejas siguen dando exactamente las mismas 5 recomendaciones.
+
+**`hallazgos_comparativo`** lleva a los hallazgos cómo estaba el negocio la vez
+pasada: fecha, índice de salud anterior, actual y **el delta ya calculado**. El
+delta va calculado desde SQL a propósito: dejárselo al modelo sería moverle una
+resta, y `validar_cifras` rechazaría el resultado por no estar en los hallazgos
+(R-I). Devuelve NULL cuando no hay con qué comparar.
+
+**Sin modelo de estacionalidad ni de tendencia**: cuatro reglas explícitas con
+umbrales en `parametros`, del mismo tipo que las seis que ya había. Nada de
+regresiones ni de predicción.
 
 ---
 
@@ -560,7 +610,7 @@ Cumple R-III. Tabla `recomendaciones(negocio_id, regla, clave_objeto, titulo, im
 
 `recomendaciones_negocio` pasa de función pura a función + upsert. **La detección automática de resolución se mantiene**: si el costo bajó, si el margen subió, si el stock se repuso, la recomendación se cierra sola con `cerrada_por='dato'` — distinguible de `cerrada_por='accion_usuario'`.
 
-**B3. Reglas comparativas (Nivel 1 completo)** — `060_reglas_comparativas.sql`
+**B3. Reglas comparativas (Nivel 1 completo)** — `060_reglas_comparativas.sql` ✅ **APLICADA 2026-08-15**
 `hallazgos_generar` recibe el snapshot anterior. Reglas contra el propio historial: producto que dejó de venderse, proveedor que subió tres veces en el año, margen deteriorado dos periodos seguidos, mes por debajo del mismo mes del año anterior. **Depende de A1**: sin historia no hay comparativo.
 
 **B4. Perfil consolidado** — `061_perfil_negocio.sql`

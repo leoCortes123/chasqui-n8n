@@ -384,6 +384,23 @@ Las reglas de hoy (todas Nivel 1: solo el historial del propio negocio):
 | Se agota | `dias_cobertura < dias_cobertura_min` | Venta en riesgo y **cuántas unidades pedir**: `(dias_entrega_proveedor + dias_stock_seguridad) × unidades_por_día` | `unico` |
 | Plata quieta | `dias_cobertura > rotacion_lenta_dias` | Capital inmovilizado; si el margen es alto propone promocionar en vez de rematar | `capital` |
 | Dependencia | Un proveedor concentra ≥ `dependencia_proveedor_pct` del gasto | Riesgo, sin impacto en pesos | `mensual` (impacto 0) |
+| **Dejó de venderse** (`060`) | Un producto con ≥ `ventas_minimas_historicas` lleva > `dias_sin_venta_alerta` sin una venta | Lo que entraba por mes cuando se vendía | `mensual` |
+| **El proveedor viene subiendo** (`060`) | El mismo proveedor subió el precio ≥ `subidas_proveedor_alerta` veces en el último año | El sobrecosto mensual acumulado y con quién negociar | `mensual` |
+| **El margen se viene cayendo** (`060`) | Margen actual < snapshot anterior < el de antes, con caída ≥ `caida_margen_pp_alerta` puntos | La utilidad mensual perdida y el precio que la recupera | `mensual` |
+| **Vendés menos que el año pasado** (`060`) | El último mes completo cae ≥ `caida_anual_pct_alerta` contra el mismo mes del año anterior | La diferencia en pesos | `mensual` |
+
+Las cuatro últimas son **comparativas**: miran la película, no la foto. Tres se
+calculan sobre `mov_visibles` y no sobre snapshots, a propósito — un hecho que
+está en los movimientos (cuándo fue la última venta, qué precio pagó cada
+compra) es más preciso ahí y no depende de cada cuánto se corrieron análisis.
+Solo el margen necesita snapshots, porque un margen no es un hecho registrado
+sino una **medición**: sale de comparar costo y precio vigentes en un momento, y
+ese momento hay que haberlo guardado.
+
+**El "hoy" de una regla comparativa es la fecha más reciente de los datos, no
+`current_date`.** Un negocio que sube en agosto un archivo que termina en mayo
+no lleva tres meses sin vender: lleva tres meses sin cargar. Medir contra el
+reloj convertiría cada carga atrasada en una avalancha de alertas falsas.
 
 Dos topes que importan: cada regla aporta **como mucho 2** problemas (sin eso, un
 negocio con veinte productos por agotarse llenaba el informe con la misma regla y
