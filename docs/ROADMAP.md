@@ -19,8 +19,12 @@ registro histórico de las Fases 1-4 viejas.*
 | **B3** Reglas comparativas | ✅ **hecha y verificada** | `060_reglas_comparativas.sql` |
 | **B4** Perfil consolidado | ✅ **hecha y verificada** | `061_perfil_negocio.sql` |
 | **C1** Preguntar a los números | ✅ **hecha y verificada** | `062_consulta_sobre_numeros.sql` |
-| **C2** Intenciones como contrato | ⏭️ **siguiente** | `063_intenciones_consulta.sql` |
-| D, E, F | pendientes | — |
+| **C2** Intenciones como contrato | ✅ **hecha y verificada** | `063_intenciones_consulta.sql` |
+| **D1** Acciones sobre la recomendación | ⏭️ **siguiente** | `064_acciones.sql` |
+| D2-D3, E, F | pendientes | — |
+
+**La Fase C está cerrada.** Las ocho preguntas se responden en el chat con los
+números del negocio.
 
 **La Fase B está cerrada.** Chasqui tiene memoria: registra su estado (B1),
 recuerda lo que recomendó (B2), compara contra su propia historia (B3) y sabe
@@ -371,6 +375,49 @@ agregado puntual ("¿cuánto vendí en marzo?"). El agregado de marzo no está e
 contexto, y el prompt tiene prohibido calcularlo. Hoy contesta qué dato sí tiene;
 C2 es lo que hace que el agregado exista antes de preguntar.
 
+### Lo que dejó C2
+
+`intenciones` es un **contrato de datos, no un despachador de funciones**: cada
+fila declara qué se pide y sobre qué ventana, y **un solo** agregador genérico
+—siete métricas, una función— produce el resultado. Una pregunta nueva que el
+sistema pueda responder es un INSERT.
+
+**La detección es determinística, no una llamada al modelo.** Se podría pedirle
+al LLM que clasifique; no se hace porque cuesta una llamada más, mete
+variabilidad en un camino que hoy no la tiene, y sobre todo porque un patrón que
+falla se arregla con un UPDATE a un array mientras que un clasificador que falla
+se arregla peleando con un prompt. Si algún día los patrones no dan, el modelo
+puede entrar **solo como desempate** — nunca como el que decide qué se calcula.
+
+**Verificado contra el LLM real**, con `validar_cifras` en `ok` y sin caer al
+seco: *"Vendiste $214.200 en junio de 2026 (37 unidades, 4 movimientos). No hay
+datos del año pasado para comparar."* · *"A Mayorista Centro le compré $369.600
+el mes pasado."* · *"Tu producto más rentable es YOGURT ALPINA 1L: dejó $68.400
+de utilidad."*
+
+**Tres defectos encontrados probando, no razonando** — los tres del tipo que no
+aparece si uno solo lee el código:
+
+1. **`periodo_resolver` leía "mayo" dentro de "Mayorista Centro".** La pregunta
+   "¿cuánto le compré a Mayorista Centro?" se respondía **con las compras de
+   mayo**, con total seguridad y sin avisar de nada. Los nombres de mes ahora se
+   buscan como palabra completa (`\y`). Es la clase de error que hace que el
+   dueño deje de creerle al bot, y no lo atrapa ninguna prueba que no use
+   nombres reales.
+2. **`similarity` no servía para filtrar por producto.** La pregunta es larga y
+   el nombre corto, así que comparar las cadenas enteras castiga al producto por
+   el largo de la pregunta: "yogurt" contra "¿cuánto stock me queda de yogurt?"
+   daba 0,167. Con `word_similarity`, 0,412.
+3. **"No tengo datos de entonces" no es "vendiste $0".** El comparativo contra
+   el año pasado devolvía un total de 0 y el modelo contestaba *"el mismo mes del
+   año pasado fue $0"* — falso, y encima suena a que el negocio se hundió. Ahora
+   la ventana sin un solo movimiento se marca `sin_datos` con su nota.
+
+**Y una regla que se repite**: las cifras viajan también formateadas
+(`total_txt`, `utilidad_txt`). Si el modelo formatea por su cuenta, produce una
+cifra que no está en el contexto y `validar_cifras` la rechaza — el mismo
+mecanismo que A3 tuvo que arreglar del otro lado.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -704,7 +751,7 @@ intención → consulta/agregado determinístico (SQL) → contexto estructurado
 **C1. `conocimiento_recuperar` → `contexto_negocio_recuperar`** — `062_consulta_sobre_numeros.sql` ✅ **APLICADA 2026-08-15**
 La `funcion_hallazgos` de `consulta` compone: KB (`conocimiento_buscar`, se conserva) + último snapshot (B1) + recomendaciones vigentes (B2) + agregados precalculados según la intención. Cambia el `sistema` del prompt de `consulta` para redactar sobre ese contexto — **sin añadirle ninguna regla de cálculo**.
 
-**C2. Intenciones como contrato de datos** — `063_intenciones_consulta.sql`
+**C2. Intenciones como contrato de datos** — `063_intenciones_consulta.sql` ✅ **APLICADA 2026-08-15**
 `intenciones` **no es un despachador de funciones**: es un contrato que produce un contexto estructurado. Cada intención determina:
 
 | Campo | Qué declara |
@@ -717,6 +764,20 @@ La `funcion_hallazgos` de `consulta` compone: KB (`conocimiento_buscar`, se cons
 
 Una intención nueva es una fila — mismo patrón que `servicios.funcion_hallazgos`.
 **Las ocho preguntas de la definición de producto son las pruebas de aceptación de esta fase.**
+
+⚠️ **Las ocho preguntas no estaban escritas en ninguna parte del repo.** Se
+derivaron al ejecutar C2, de lo que el producto ya promete (el texto de ayuda
+del módulo y la introducción de `GUIA_FUNCIONAL`), y quedaron enumeradas en la
+cabecera de `063`. **Conviene revisarlas**: son el criterio de aceptación de toda
+la Fase C y las escribió la ejecución, no el producto.
+
+1. ¿Cómo está mi negocio? · 2. ¿Qué debería hacer primero? — las responde C1
+3. ¿Cuál es mi producto más rentable? · 4. ¿Qué producto me deja poco margen? ·
+5. ¿A qué producto le subió el costo? · 6. ¿Qué se me está quedando quieto? ·
+7. ¿Cuánto vendí en \<periodo\>? · 8. ¿Cuánto le compré a \<proveedor\>? — C2
+
+Queda fuera "¿quién me debe?": la cartera solo se llena desde XML DIAN y su
+reconversión es la Fase F.
 
 ### Fase D — Ejecutar (dentro de Chasqui)
 
