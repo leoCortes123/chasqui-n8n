@@ -193,6 +193,12 @@ nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
 
   <!-- 4. Informes -->
   <section id="p-informes" hidden>
+    <!-- La memoria del negocio (058). Cada análisis deja registrado cómo estaba
+         el negocio ese día; acá se ve la serie. Las comparaciones entre dos
+         estados son B3: por ahora esto solo muestra la historia. -->
+    <h2>Cómo viene tu negocio</h2>
+    <p class="vacio" id="h-nota"></p>
+    <div id="historia"></div>
     <h2>Informes</h2>
     <div id="informes"></div>
   </section>
@@ -709,7 +715,43 @@ function tarjetaPendiente(p) {
   return t;
 }
 
+// La serie de snapshots (058). Un snapshot es el estado del negocio en una
+// fecha, no una copia del informe: por eso sobrevive a cualquier rediseño y por
+// eso se puede poner uno al lado del otro.
+//
+// Los `parcial: true` son los reconstruidos desde ejecuciones viejas: se
+// muestran porque son historia real, pero se marcan, porque de ellos solo se
+// pudo recuperar parte y comparar contra un hueco no es comparar.
+async function cargarHistoria() {
+  const serie = await rpc('portal_snapshots', { p_limite: 24 });
+
+  $('#h-nota').textContent = serie.length < 2
+    ? 'Con un solo análisis todavía no hay con qué comparar. Del segundo en '
+      + 'adelante empiezo a decirte si vas mejor o peor.'
+    : 'Cada línea es cómo estaba tu negocio ese día. Se guarda solo lo medible, '
+      + 'así que sirve para comparar aunque el informe cambie de forma.';
+
+  const cont = $('#historia');
+  if (!serie.length) { cont.replaceChildren(); return; }
+
+  cont.replaceChildren(tarjetaLista(serie.map(s => {
+    const f = el('div', undefined, 'fila');
+    f.append(el('span', fecha(s.fecha)));
+
+    const nota = s.salud && s.salud.indice;
+    f.append(el('span', nota === undefined || nota === null
+                        ? 'sin nota' : 'Salud ' + nota + '/100'));
+
+    f.append(el('span', s.ventas === null || s.ventas === undefined
+                        ? '—' : pesos(s.ventas) + ' vendidos'));
+
+    if (s.parcial) f.append(el('span', 'parcial', 'etiqueta'));
+    return f;
+  })));
+}
+
 async function cargarInformes() {
+  await cargarHistoria();
   const lista = await rpc('portal_informes', { p_limite: 30 });
   $('#informes').replaceChildren(...(lista.length
     ? lista.map(i => {

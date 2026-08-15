@@ -14,8 +14,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **A3** Impacto tipado + fix de `validar_cifras` | ✅ **hecha y verificada** | `055_impacto_tipado.sql` |
 | **A4** Router modular | ✅ **hecha y verificada** | `056_router_modular.sql` |
 | **A5** Limpieza + interfaz de matching | ✅ **hecha y verificada** | `057_limpieza.sql` |
-| **B1** Snapshot del estado empresarial | ⏭️ **siguiente** | `058_snapshot_negocio.sql` |
-| B2-B4, C, D, E, F | pendientes | — |
+| **B1** Snapshot del estado empresarial | ✅ **hecha y verificada** | `058_snapshot_negocio.sql` |
+| **B2** Recomendaciones persistentes | ⏭️ **siguiente** | `059_recomendaciones_persistentes.sql` |
+| B3-B4, C, D, E, F | pendientes | — |
 
 **La Fase A está cerrada.** Las cuatro restricciones globales se sostienen, los
 cinco hallazgos que ordenaban el roadmap (H1-H5) están resueltos, y C3 —el
@@ -136,6 +137,60 @@ llevaba puestos los `wf_*.json` de los generadores, que son la fuente que lee
 de generar. Corregido: ahora borra únicamente las fotos con nombre de id. Las
 fotos versionadas estaban congeladas en el 24 de julio; quedaron al día.
 
+### Lo que dejó B1
+
+**Chasqui empezó a acordarse.** `snapshots_negocio` registra el estado
+empresarial en cada análisis que cierra bien: márgenes por producto —todos, no
+solo los que dispararon regla—, coberturas con su `origen_stock`, gasto por
+proveedor, precio por producto+proveedor, unidades vendidas, totales del
+periodo, las cinco notas de salud, la calidad del dato con que se midió y **los
+umbrales vigentes ese día**.
+
+Los dos últimos no estaban en el plan original y son necesarios: sin ellos, B3
+no puede distinguir un deterioro real de una nota que bajó porque alguien movió
+`margen_minimo_pct`, ni saber que un snapshot se midió con el 40% de la plata
+sin producto resuelto.
+
+**Se calcula desde las vistas, no desde `ejecuciones.hallazgos`** — la decisión
+central. Los hallazgos son lo que el informe necesitaba ese día; las vistas son
+lo que el negocio era. Guardar solo los productos con problema habría sido
+guardar el informe otra vez, y para ver un deterioro hace falta tener también
+los que hoy están bien.
+
+**Verificado**:
+
+- El backfill (C4) reconstruyó 2 snapshots parciales desde ejecuciones viejas,
+  marcados `parcial: true` con la lista de lo que falta. Lo reconstruible se
+  escribe con la forma del contrato v1; lo que no —el Pareto y los productos que
+  dispararon regla, que en los hallazgos vienen con nombre y no con
+  `producto_id`— va con nombre propio para que B3 no lo confunda con v1.
+- De punta a punta: `wf_ejecutar` cerró, el informe no cayó al seco, y el
+  snapshot real pisó al parcial del día (`origen` pasó de `backfill` a
+  `ejecucion`, con `ventas=642.600` y `base_mes=264.082`, el mismo denominador
+  que usa `recomendaciones_negocio`).
+- Las tres compuertas: una `consulta` completada **no** fotografía, una
+  ejecución fallida tampoco, un análisis completado sí.
+- El guardarraíl: con `snapshot_tomar` reventando a propósito, la ejecución se
+  cierra igual en `completada`, la entrega sale, y la falla queda en `fallas`.
+- Un negocio sin un solo movimiento fechado devuelve NULL en vez de un snapshot
+  de ceros, que le haría creer a B3 que hubo un periodo medido en el que todo
+  valía cero.
+- `snapshot_anterior` devuelve NULL sin historia previa: una regla comparativa
+  sin snapshot anterior no dispara, no inventa.
+
+**Portal**: la pestaña Informes —la más esbozada— ahora abre con la serie de
+estados. Las comparaciones son B3; esto solo muestra la historia.
+
+**Decisión de alcance**: el snapshot **no** guarda recomendaciones. Persistirlas
+y seguirlas es B2, con su propio modelo de estados; mezclarlas acá obligaría a
+remodelar después.
+
+**Incertidumbre abierta**: el tamaño. Un negocio con muchos productos genera un
+`metricas` proporcional al catálogo, y hay un snapshot por día de análisis. Con
+los volúmenes del segmento objetivo (pymes) no es problema y jsonb comprime,
+pero no está medido con un catálogo grande. Recortar los arrays no es opción:
+el producto que "dejó de venderse" sería justo el que se recorta.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -201,7 +256,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 | **Cuantificar** | ✅ Corregido en A2 y A3 | `impacto_tipo` separa flujos de stocks con umbral propio (`055`); el stock declara su `origen_stock` (`054`) |
 | **Recomendar** | ✅ Sólido | Opciones condicionales por regla, prioridad relativa a `v_base_mes`, tope 2×regla / 8 total |
 | **Ejecutar** | ❌ No existe | Ninguna recomendación tiene acción; nada se registra ni se mide después |
-| **Cerebro acumulativo** | ❌ No existe, y hay una fuga | `hallazgos_generar` mira solo el presente; el plan free borra el pasado |
+| **Cerebro acumulativo** | 🟡 Tiene memoria (B1); falta usarla | `snapshots_negocio` (`058`) registra el estado en cada análisis. El plan free ya no borra el pasado (`053`). Falta comparar (B3) y recordar recomendaciones (B2) |
 | **IA no es fuente de verdad** | ✅ Excelente | `validar_cifras` (`026`) + informe seco (`047:894`). Es el activo más valioso del proyecto |
 | **Mensajería como interfaz** | ✅ Sólido | Router en SQL, dos canales, portal para lo que no cabe en el chat |
 
@@ -278,7 +333,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 | `validar_cifras` + `cifra_norm`/`cifra_variantes` | 008→026 | **CORE** | La garantía de R-I. No tocar sin pruebas |
 | `informe_render` (v4) | 025→030→047 | **CORE** | Layout en SQL, whitelist de iconos, escape HTML |
 | `informe_estructura_seca` | 031→043→047 | **CORE** | El motor de reglas sin narrar: la prueba viva de R-I |
-| `ejecucion_preparar` / `ejecucion_cerrar` | 008→029 / 019→044 | **CORE** | Motor genérico + corte de cupo antes de gastar tokens |
+| `ejecucion_preparar` / `ejecucion_cerrar` | 008→029→`057` / 019→044→`058` | **CORE** | Motor genérico + corte de cupo antes de gastar tokens |
 | `servicios.funcion_hallazgos` | 029 | **CORE** | Un análisis nuevo = una fila. El mecanismo de extensión del roadmap |
 | Prompts de `ventas_compras` / `mercado_compras` | 047 | **CORE** | Contrato JSON estructurado |
 | `parametros` de umbrales | 003, 047 | **CORE** | Calibración por negocio |
@@ -309,7 +364,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 | `conocimiento` + `conocimiento_buscar` (trigram) | 029 | **HABILITADOR** | Correcto para <300 filas. Se conserva como una fuente más del contexto |
 | `conocimiento_pendiente` + `v_conocimiento_faltante` | 029 | **SECUNDARIA** | Buen mecanismo, pero apunta al bot público (congelado) |
 | `conocimiento.clave` / `.datos` / `origen='archivo'` | 029 | **ELIMINAR o completar** | El importador de listas de precios que motivó el índice único parcial nunca se escribió |
-| Snapshot de estado empresarial | — | **NO EXISTE** | Toda la prioridad 3 depende de esto |
+| `snapshots_negocio` + `snapshot_tomar`/`_anterior` | 058 | **CORE** | La memoria. Estado empresarial versionado, no una copia del informe |
 | Persistencia y seguimiento de recomendaciones | — | **NO EXISTE** | Viola R-III: hoy se recalculan y se tiran |
 
 ### 3.4 Interfaz: router, canales, plantillas
@@ -436,7 +491,7 @@ Dar de baja (por migración nueva, nunca editando el histórico): `servicios.pas
 
 *R-III y R-IV. Es lo que convierte a Chasqui de analizador de archivos en el sistema que conoce el negocio.*
 
-**B1. Snapshot del estado empresarial** — `058_snapshot_negocio.sql`
+**B1. Snapshot del estado empresarial** — `058_snapshot_negocio.sql` ✅ **APLICADA 2026-08-15**
 Tabla `snapshots_negocio(negocio_id, fecha, version, periodo daterange, salud jsonb, metricas jsonb, origen)`.
 **El snapshot es estado empresarial, no una copia del informe renderizado.** Contiene datos estructurados y versionados suficientes para comparar estados futuros **aunque cambie por completo el diseño del informe**: márgenes, coberturas, gasto por proveedor, notas de salud, totales por periodo. No contiene texto narrado, ni HTML, ni la estructura de secciones. `ejecuciones.hallazgos` (C4) sirve de material para un backfill parcial, pero **no es el snapshot**: su forma cambió cuatro veces y volverá a cambiar. De ahí la columna `version`.
 

@@ -146,6 +146,17 @@ sigue estimando como compradas − vendidas, y queda marcado como tal.
 texto, pdf bytea, tokens_prompt, tokens_salida, costo, error, inicio, fin`
 Índice parcial `idx_ejec_colgadas` sobre estados no terminales → lo usa el reaper.
 
+**`snapshots_negocio`** (058) — la memoria del negocio.
+`id, negocio_id, fecha, version, periodo daterange, salud jsonb, metricas jsonb,
+origen (ejecucion|backfill|manual), ejecucion_id, creado_en`
+`UNIQUE(negocio_id, fecha)`: dos análisis el mismo día no son dos estados del
+negocio, el segundo corrige al primero.
+Es **estado empresarial, no una copia del informe**: márgenes por producto,
+coberturas, gasto por proveedor, precio por producto y proveedor, unidades
+vendidas, notas de salud, totales del periodo y **con qué umbrales se midió**.
+Nada de texto narrado ni HTML — así dos snapshots siguen siendo comparables
+aunque el informe cambie de diseño por completo. Ver §5.4.
+
 **`fallas`** — lo que registra wf_error.
 `id, workflow, ejecucion_id, sesion_id, tipo, transitoria, intentos, detalle jsonb, creada_en`
 
@@ -284,6 +295,11 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `ejecucion_cerrar(ejecucion_id, estado, resultado jsonb) → jsonb` | Guarda texto, tokens, costo, PDF (base64→bytea) y libera la sesión. |
 | `validar_cifras(texto, hallazgos jsonb) → jsonb` | Extrae con regex todos los números del texto y verifica que existan en los hallazgos. Devuelve `{ok, inventadas[]}`. Ignora números de 1–2 dígitos; recorta separadores de miles y puntuación final. **Las dos puntas se leen igual** (`055`): tanto el texto del modelo como los hallazgos se expanden con `cifra_variantes`, porque los hallazgos traen texto ya redactado por SQL con coma decimal (`fmt_decimal`) y el extractor viejo partía "142,3" en `142` y `3`. |
 | `mantenimiento_ciclo() → jsonb` | Reaper (ver §7). Devuelve `{notificaciones:[{chat_id, respuestas}]}`. |
+| `snapshot_tomar(negocio_id, origen, ejecucion_id) → bigint` | Fotografía el estado del negocio y lo guarda (upsert por día). Calcula desde las **vistas**, no desde `ejecuciones.hallazgos`. Devuelve NULL si el negocio no tiene un solo movimiento fechado. |
+| `snapshot_anterior(negocio_id, antes_de) → jsonb` | El último estado registrado antes de esa fecha. Es la entrada de las reglas comparativas (B3). NULL si no hay historia. |
+| `snapshot_version() → int` | Versión del contrato de `metricas`. Subirla es un solo cambio. |
+| `snapshot_umbrales(negocio_id) → jsonb` | Todos los umbrales vigentes, con la fila del negocio ganándole a la global. |
+| `snapshots_backfill() → int` | Reconstruye snapshots parciales desde `ejecuciones.hallazgos`. |
 
 ### 4.5 Router y admin
 
@@ -427,6 +443,54 @@ Requisito verificado: este Postgres tiene libxml (`xpath()` y `XMLTABLE` funcion
 > **Riesgo abierto:** los fixtures de `docs/ejemplos/` son sintéticos (anexo técnico
 > 1.9 de la DIAN). Los totales cuadran contra los propios fixtures, **no contra un
 > XML real de cliente**. Re-verificar en cuanto haya facturas reales.
+
+---
+
+## 5.4 La memoria del negocio (snapshots)
+
+Chasqui miraba siempre el presente: `hallazgos_generar` calculaba sobre los
+movimientos de hoy, entregaba el informe y lo medido se perdía. Desde la `058`,
+**cada análisis que cierra bien deja registrado cómo estaba el negocio ese día**.
+
+Un snapshot es **estado empresarial, no una copia del informe**. La distinción
+es lo que lo hace útil dentro de un año: el informe va a cambiar de diseño
+varias veces, y los snapshots tienen que seguir siendo comparables entre sí.
+
+| Contiene | No contiene |
+|---|---|
+| Márgenes por producto (**todos**, no solo los que dispararon regla) | Texto narrado |
+| Coberturas, stock y su `origen_stock` | HTML, secciones, iconos |
+| Gasto por proveedor y precio por producto+proveedor | Recomendaciones (eso es B2) |
+| Unidades vendidas por producto | Comparaciones (eso es B3) |
+| Totales del periodo y `base_mes` | |
+| Las cinco notas de salud | |
+| Calidad del dato con que se midió (matching, stock estimado) | |
+| **Los umbrales vigentes ese día** | |
+
+Los dos últimos existen por la misma razón: un snapshot tiene que declarar bajo
+qué condiciones se midió. Una nota de salud que baja porque alguien cambió
+`margen_minimo_pct` no es un deterioro del negocio, y una medición hecha con el
+40% de la plata sin producto resuelto (`057`) no es comparable con una limpia.
+
+**Se calcula desde las vistas, no desde `ejecuciones.hallazgos`.** Esa columna
+ya persiste el JSON de cada corrida desde la `001` y sirve de material para el
+backfill, pero no sirve *como* snapshot: su forma cambió cuatro veces (025, 029,
+043, 047) porque es la entrada de un prompt, no un contrato; y guarda solo los
+productos que dispararon una regla, que es justo lo contrario de lo que hace
+falta para detectar un deterioro. De ahí la columna `version`.
+
+**Cuándo se toma**: en `ejecucion_cerrar`, si el estado es `completada` y el
+servicio es de `entrada='archivos'`. No para `consulta` —preguntar algo no
+cambia el estado del negocio— ni para ejecuciones fallidas. Si tomarlo falla,
+se registra en `fallas` y la ejecución se cierra igual: un informe entregado
+vale más que una foto perfecta.
+
+**Los snapshots del backfill son parciales y lo dicen** (`metricas.parcial` y
+la lista `faltan`). Lo que sí se puede reconstruir se escribe con la forma del
+contrato v1; lo que no —el Pareto y los productos que dispararon regla, que en
+los hallazgos vienen con nombre y no con `producto_id`— va con nombre propio
+(`pareto_parcial`, `margen_bajo_parcial`, …) para que nadie lo confunda con las
+claves de v1.
 
 ---
 
