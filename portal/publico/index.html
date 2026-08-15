@@ -152,6 +152,12 @@ nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
     <h2>Cartera</h2>
     <div class="cifras" id="c-resumen"></div>
     <div id="c-facturas"></div>
+    <!-- F2 (069): hasta acá las facturas solo entraban desde XML de la DIAN, así
+         que quien carga CSV veía la pestaña vacía para siempre — y con F1
+         tampoco recibía la recomendación de cobrar. -->
+    <div class="acciones">
+      <button id="btn-nueva-factura">+ Anotar que alguien me debe</button>
+    </div>
     <h2>Mes a mes</h2>
     <div id="v-meses"></div>
     <h2>Lo que más se vende</h2>
@@ -661,6 +667,28 @@ async function cargarVentas() {
 // --- Cartera -----------------------------------------------------------------
 // Reporta al dueño; no persigue deudores. El único botón de acción es
 // "Registrar pago", que descuenta del saldo de la factura.
+// F2 (069): alta manual de una factura por cobrar. El tercero se reusa por
+// nombre normalizado, así que "Panadería El Sol" y "panaderia el sol" son el
+// mismo deudor y su cartera no se ve partida en dos.
+function anotarDeuda() {
+  const quien = prompt('¿Quién te debe?');
+  if (!quien) return;
+  const monto = prompt('¿Cuánto te debe?');
+  if (!monto) return;
+  const n = Number(String(monto).replace(/[^\d]/g, ''));
+  if (!isFinite(n) || n <= 0) { alert('Poné un monto en pesos.'); return; }
+  const vence = prompt('¿Cuándo vence? (AAAA-MM-DD)',
+                       new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10));
+  if (!vence) return;
+
+  rpc('portal_factura_guardar',
+      { p_tercero: quien, p_total: n, p_vencimiento: vence })
+    .then(r => {
+      if (!r || r.ok === false) { alert('No se pudo guardar.'); return; }
+      cargarVentas();
+    });
+}
+
 async function cargarCartera() {
   const c = await rpc('portal_cartera');
   const res = c.resumen || {};
@@ -1119,6 +1147,8 @@ form.addEventListener('submit', async ev => {
 });
 
 // --- Navegación -------------------------------------------------------------
+$('#btn-nueva-factura')?.addEventListener('click', anotarDeuda);
+
 document.querySelectorAll('nav button').forEach(b => {
   b.onclick = () => {
     document.querySelectorAll('nav button').forEach(o =>

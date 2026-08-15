@@ -321,6 +321,7 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `recomendaciones_medir(negocio_id) → jsonb` | Llena el eje `resultado` (`066`): compara la magnitud de cada regla contra la foto tomada al cerrar. Solo mide si **llegaron** datos después del cierre (`creado_en`, no `fecha`). |
 | `metricas_resultado` | Qué magnitud mira cada regla y hacia dónde debería moverse. Una tabla, no un algoritmo: medir una regla nueva es un INSERT. |
 | `recomendacion_metrica_valor(...)` / `recomendacion_marcar_cierre(id)` | Leer una magnitud, y la foto que se guarda al cerrar. Sin esa foto no hay contra qué comparar. |
+| `portal_factura_guardar(...)` | Alta manual de una factura por cobrar (`069`, F2). Reusa el tercero por nombre normalizado: sin eso, "Panadería El Sol" y "panaderia el sol" serían dos deudores y cada cartera se vería la mitad de grande. |
 | `pedido_sugerido(negocio_id) → jsonb` | Las recomendaciones abiertas de "se agota", consolidadas en lista de compra con el proveedor más barato **al que ya le compró** y el costo estimado (`065`). Las unidades no se recalculan: son las que se le mostraron al dueño. |
 | `v_proveedor_mas_barato` | El proveedor más barato conocido por producto. "Conocido" = de sus propias compras; Chasqui no tiene precios de mercado y no los inventa. |
 | `recomendacion_accion(reco_id, negocio_id, accion, usuario_id) → jsonb` | **El único punto de escritura de las acciones** (`064`), para chat y portal. `hice` → resuelta · `no_aplica` → ignorada · `precio` → escribe el precio sugerido en `conocimiento` y cierra. Valida negocio y que siga abierta: un botón de un informe viejo no cierra nada dos veces. |
@@ -405,6 +406,7 @@ Las reglas de hoy (todas Nivel 1: solo el historial del propio negocio):
 | **El proveedor viene subiendo** (`060`) | El mismo proveedor subió el precio ≥ `subidas_proveedor_alerta` veces en el último año | El sobrecosto mensual acumulado y con quién negociar | `mensual` |
 | **El margen se viene cayendo** (`060`) | Margen actual < snapshot anterior < el de antes, con caída ≥ `caida_margen_pp_alerta` puntos | La utilidad mensual perdida y el precio que la recupera | `mensual` |
 | **Vendés menos que el año pasado** (`060`) | El último mes completo cae ≥ `caida_anual_pct_alerta` contra el mismo mes del año anterior | La diferencia en pesos | `mensual` |
+| **Te deben y ya venció** (`069`) | Un cliente con saldo vencido hace ≥ `cartera_mora_dias` | El **saldo vencido**, no el total que debe | `capital` |
 
 Las cuatro últimas son **comparativas**: miran la película, no la foto. Tres se
 calculan sobre `mov_visibles` y no sobre snapshots, a propósito — un hecho que

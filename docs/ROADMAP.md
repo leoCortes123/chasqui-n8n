@@ -25,8 +25,12 @@ registro histórico de las Fases 1-4 viejas.*
 | **D3** El resultado se mide | ✅ **hecha y verificada** | `066_resultado.sql` |
 | **E1** Motor de alertas | ✅ **hecha y verificada** | `067_alertas.sql` |
 | **E2** Informe periódico automático | ✅ **hecha y verificada** | `068_informe_periodico.sql` |
-| **F1** Cartera como señal de liquidez | ⏭️ **siguiente** | `069_cartera_liquidez.sql` |
-| F2 | pendiente | — |
+| **F1 + F2** Cartera como señal de liquidez | ✅ **hecha y verificada** | `069_cartera_liquidez.sql` |
+
+**El roadmap está completo.** Las seis fases —A, A', B, C, D, E, F— están
+aplicadas y verificadas. El ciclo **detectar → explicar → cuantificar →
+recomendar → ejecutar → medir** funciona de punta a punta, sobre un cerebro que
+recuerda y con proactividad que sabe callarse.
 
 **La Fase E está cerrada.** Chasqui avisa cuando encuentra algo urgente y manda
 el informe solo cuando pasa el mes.
@@ -597,6 +601,41 @@ análisis en curso. El workflow quedó importado y activo con sus seis nodos.
 disparador es de agenda y no de sub-workflow. Se prueba llamando a
 `mantenimiento_ciclo()` directamente, que es donde está toda la lógica.
 
+### Lo que dejó F
+
+La cartera dejó de ser una pestaña y pasó a ser una señal. Estaba clasificada
+como **ERP-DRIFT** y se justificaba **solo** si alimentaba
+`recomendaciones_negocio` como señal de liquidez; sin esto se quedaba congelada.
+
+**Es `capital`, no una fuga.** Una factura vencida no es plata que se pierde: es
+plata que es tuya y no está — el mismo caso que "plata quieta", solo que en la
+calle en vez de en la bodega. Comparte tipo de impacto y umbrales (055).
+Tratarla como fuga mensual la pondría siempre arriba de todo, que es el error que
+A3 vino a arreglar.
+
+**El impacto es el saldo VENCIDO, no el total que el cliente debe.** No es un
+detalle: se detectó probando, con un cliente que debe $9.200.000 de los cuales
+solo $200.000 están vencidos. Con el total, el impacto habría sido 46 veces mayor
+del real y habría encabezado el informe por encima de problemas que sí cuestan
+plata. `v_cartera_tercero` no separa las dos cosas, así que la cuenta se hace en
+la regla, y el texto menciona aparte lo que todavía no vence.
+
+**Liquidez es el sexto frente de `salud_negocio`**, y sigue la regla de las otras
+cinco: **NULL si no hay datos**. Un negocio que vende todo de contado no ve bajar
+su índice por una nota que no le aplica — verificado: sin facturas el índice
+queda en 71 y no aparece la nota; con una factura vencida de $200.000 sobre
+$9.200.000, liquidez da 98.
+
+**F2, el alta manual**, sin la cual la mitad del trabajo quedaba fuera de alcance:
+`facturas` solo se llenaba desde XML de la DIAN, así que quien carga CSV nunca
+tenía una factura y por lo tanto nunca recibía la recomendación. El tercero se
+reusa por nombre normalizado — "Panadería El Sol" y "panaderia el sol" son el
+mismo deudor, verificado— porque si no, cada cartera se vería partida en dos.
+
+La regla entra como CTE número once del UNION ALL y hereda gratis todo lo
+construido: priorización tipada (A3), persistencia (B2), botones (D1), medición
+del resultado (D3) y alertas (E1).
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -806,7 +845,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 
 | Pieza | Migración | Clase | Decisión |
 |---|---|---|---|
-| Cartera: `terceros`, `facturas`, `pagos`, `cartera_facturar_dian`, `v_cartera_*` | 036-038 | **ERP-DRIFT → CORE por reconversión** | Los datos ya existen y responden "¿dónde estoy perdiendo dinero?". Se justifica **solo** si alimenta `recomendaciones_negocio` como señal de liquidez (Fase F). Además está a medias: solo se llena desde XML DIAN — quien carga CSV ve la pestaña vacía para siempre |
+| Cartera: `terceros`, `facturas`, `pagos`, `cartera_facturar_dian`, `v_cartera_*` | 036-038 → `069` | ✅ **CORE, reconvertida** | Los datos ya existen y responden "¿dónde estoy perdiendo dinero?". Se justifica **solo** si alimenta `recomendaciones_negocio` como señal de liquidez (Fase F). Además está a medias: solo se llena desde XML DIAN — quien carga CSV ve la pestaña vacía para siempre |
 | Cotizador | 040 | **ERP-DRIFT** | **Congelado** |
 | Cobro Wompi (`router_plan`, `parametros.pago_enlace`) | 041 | **SECUNDARIA** | Monetización manual; está bien así. `/plan` puede terminar en un enlace inexistente si nadie insertó el parámetro |
 | `miles(numeric)` | 041 | **HABILITADOR** | Se usa en toda la base; sobrevive a la congelación |
@@ -980,7 +1019,7 @@ Consolida las recomendaciones R4 en una lista de compra (producto, unidades, pro
 ### Fase F — Cartera como señal de liquidez
 
 *Única forma en que la cartera ya construida responde la pregunta de prioridad.*
-**F1.** Regla nueva en `recomendaciones_negocio`: cartera vencida con impacto (`saldo_vencido`, tipo `capital`), más liquidez como sexto frente de `salud_negocio`. **F2.** Alta manual de factura en el portal, para que quien solo carga CSV no vea la pestaña vacía. Todo lo demás de cartera sigue congelado.
+✅ **APLICADA 2026-08-15** (`069_cartera_liquidez.sql`). **F1.** Regla nueva en `recomendaciones_negocio`: cartera vencida con impacto (`saldo_vencido`, tipo `capital`), más liquidez como sexto frente de `salud_negocio`. **F2.** Alta manual de factura en el portal, para que quien solo carga CSV no vea la pestaña vacía. Todo lo demás de cartera sigue congelado.
 
 ---
 
