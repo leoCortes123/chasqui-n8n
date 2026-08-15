@@ -283,7 +283,7 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `salud_negocio(negocio_id) → jsonb` | Cinco notas de 0 a 100 (ventas, márgenes, inventario, compras, riesgos) y el índice general. `NULL` si no hay datos para ninguna. |
 | `ejecucion_preparar(ejecucion_id) → jsonb` | Devuelve hallazgos + prompt + plantilla en **una** llamada. Verifica el cupo contra `v_consumo_negocio` **antes** de dar el prompt: si se pasó, `{bloqueado:true}` y no gasta tokens. Si no hay prompt activo, `{error:'sin_prompt'}`. |
 | `ejecucion_cerrar(ejecucion_id, estado, resultado jsonb) → jsonb` | Guarda texto, tokens, costo, PDF (base64→bytea) y libera la sesión. |
-| `validar_cifras(texto, hallazgos jsonb) → jsonb` | Extrae con regex todos los números del texto y verifica que existan en los hallazgos. Devuelve `{ok, inventadas[]}`. Ignora números de 1–2 dígitos; recorta separadores de miles y puntuación final. |
+| `validar_cifras(texto, hallazgos jsonb) → jsonb` | Extrae con regex todos los números del texto y verifica que existan en los hallazgos. Devuelve `{ok, inventadas[]}`. Ignora números de 1–2 dígitos; recorta separadores de miles y puntuación final. **Las dos puntas se leen igual** (`055`): tanto el texto del modelo como los hallazgos se expanden con `cifra_variantes`, porque los hallazgos traen texto ya redactado por SQL con coma decimal (`fmt_decimal`) y el extractor viejo partía "142,3" en `142` y `3`. |
 | `mantenimiento_ciclo() → jsonb` | Reaper (ver §7). Devuelve `{notificaciones:[{chat_id, respuestas}]}`. |
 
 ### 4.5 Router y admin
@@ -341,21 +341,43 @@ corrida.
 
 Las reglas de hoy (todas Nivel 1: solo el historial del propio negocio):
 
-| Regla | Dispara cuando | Qué calcula |
-|---|---|---|
-| Costo al alza | `deriva_pct ≥ deriva_costo_alerta_pct` | Sobrecosto mensual, margen resultante, precio de venta que recupera el margen mínimo, proveedor más barato si lo hay |
-| Proveedor más caro | Se le compró a varios y el promedio supera al mejor en 5% | Ahorro mensual y a quién comprarle |
-| Margen bajo | `margen_pct < margen_minimo_pct` | Utilidad no ganada por mes y precio que llega al mínimo |
-| Se agota | `dias_cobertura < dias_cobertura_min` | Venta en riesgo y **cuántas unidades pedir**: `(dias_entrega_proveedor + dias_stock_seguridad) × unidades_por_día` |
-| Plata quieta | `dias_cobertura > rotacion_lenta_dias` | Capital inmovilizado; si el margen es alto propone promocionar en vez de rematar |
-| Dependencia | Un proveedor concentra ≥ `dependencia_proveedor_pct` del gasto | Riesgo, sin impacto en pesos |
+| Regla | Dispara cuando | Qué calcula | `impacto_tipo` |
+|---|---|---|---|
+| Costo al alza | `deriva_pct ≥ deriva_costo_alerta_pct` | Sobrecosto mensual, margen resultante, precio de venta que recupera el margen mínimo, proveedor más barato si lo hay | `mensual` |
+| Proveedor más caro | Se le compró a varios y el promedio supera al mejor en 5% | Ahorro mensual y a quién comprarle | `mensual` |
+| Margen bajo | `margen_pct < margen_minimo_pct` | Utilidad no ganada por mes y precio que llega al mínimo | `mensual` |
+| Se agota | `dias_cobertura < dias_cobertura_min` | Venta en riesgo y **cuántas unidades pedir**: `(dias_entrega_proveedor + dias_stock_seguridad) × unidades_por_día` | `unico` |
+| Plata quieta | `dias_cobertura > rotacion_lenta_dias` | Capital inmovilizado; si el margen es alto propone promocionar en vez de rematar | `capital` |
+| Dependencia | Un proveedor concentra ≥ `dependencia_proveedor_pct` del gasto | Riesgo, sin impacto en pesos | `mensual` (impacto 0) |
 
 Dos topes que importan: cada regla aporta **como mucho 2** problemas (sin eso, un
 negocio con veinte productos por agotarse llenaba el informe con la misma regla y
 el dueño no se enteraba de que además pierde margen), y la lista entera se corta
-en 8. La **prioridad** es relativa: el impacto mensual medido contra lo que mueve
-el negocio en un mes, porque $80.000 es enorme para una tienda y ruido para una
+en 8. La **prioridad** es relativa: el impacto medido contra lo que mueve el
+negocio en un mes, porque $80.000 es enorme para una tienda y ruido para una
 distribuidora.
+
+**Los impactos no son todos la misma cosa** (`055`). Tres de las reglas dan pesos
+*por mes* que se van a seguir yendo; "se agota" da pesos *una sola vez* —el ciclo
+de entrega que se pierde si el producto falta—; y "plata quieta" no da una
+pérdida en absoluto, sino un **stock**: capital que sigue siendo del negocio,
+solo que inmóvil. Un acumulado casi siempre es el número más grande, así que
+mientras los tres compitieron en el mismo ranking, la plata quieta encabezaba el
+informe por aritmética y no por criterio.
+
+Por eso `recomendaciones_negocio` publica `impacto_tipo ∈ {mensual, unico,
+capital}` y cada tipo tiene su propia vara, siempre relativa a lo que el negocio
+mueve en un mes:
+
+| `impacto_tipo` | Alta | Media | Parámetros |
+|---|---|---|---|
+| `mensual` | ≥ 2% | ≥ 0.5% | `prioridad_alta_pct`, `prioridad_media_pct` |
+| `unico` | ≥ 10% | ≥ 3% | `prioridad_alta_unico_pct`, `prioridad_media_unico_pct` |
+| `capital` | ≥ 50% | ≥ 20% | `prioridad_alta_capital_pct`, `prioridad_media_capital_pct` |
+
+Dentro de una misma prioridad el orden **no** es por el monto crudo, sino por
+cuántas veces cada recomendación supera el umbral *media de su propio tipo*: es
+lo único comparable entre un flujo y un stock.
 
 El **índice de salud** (`salud_negocio`) va arriba del informe y no pasa por el
 modelo en ningún momento. Cada nota se calcula sobre lo que hay: si el negocio no

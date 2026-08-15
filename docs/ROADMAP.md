@@ -5,33 +5,55 @@ registro histórico de las Fases 1-4 viejas.*
 
 ---
 
-## ESTADO — última actualización 2026-08-14
+## ESTADO — última actualización 2026-08-15
 
 | Fase | Estado | Migración |
 |---|---|---|
 | **A1** Historia completa | ✅ **hecha y verificada** | `053_historia_completa.sql` |
 | **A2** Inventario declarado | ✅ **hecha y verificada** | `054_inventario_declarado.sql` |
-| **A3** Impacto tipado + fix de `validar_cifras` | ⏭️ **siguiente** | `055_impacto_tipado.sql` |
-| A4 Router modular | pendiente | `056_router_modular.sql` |
+| **A3** Impacto tipado + fix de `validar_cifras` | ✅ **hecha y verificada** | `055_impacto_tipado.sql` |
+| **A4** Router modular | ⏭️ **siguiente** | `056_router_modular.sql` |
 | A5 Limpieza + interfaz de matching | pendiente | `057_limpieza.sql` |
 | B, C, D, E, F | pendientes | — |
 
-### Lo primero que hay que hacer en A3
+### Lo que dejó A3
 
-Arrancar por el **fix de `validar_cifras`**, no por el tipado. Razón: está roto
-en producción hoy. Ver **C11** más abajo — las dos corridas reales del LLM
-terminaron cayendo al informe seco porque el modelo cita cifras con coma
-decimal que el propio SQL calculó (`142,3`, `0,295`) y `validar_cifras` las
-rechaza como inventadas. Toda la rama narrada está inutilizada para cualquier
-negocio cuyo informe incluya las reglas "se agota" o "plata quieta".
+**El informe narrado volvió a funcionar.** La prueba de aceptación de §7bis
+—`cayo_a_seco` en `f`— pasa: ejecución `3`, `tokens_salida=5244`,
+`validar_cifras(texto, hallazgos) = {"ok": true, "inventadas": []}`, con el
+modelo citando "142,3 días" y "0,295 unidades" sin ser castigado por copiar
+bien. Las ejecuciones `1` y `2`, anteriores al fix, siguen en `t`.
 
-El mecanismo exacto: el conjunto de cifras permitidas se extrae con
-`regexp_matches(hallazgos::text, '\d+(?:\.\d+)?')`, que parte `83,5` en `83` y
-`5`. `cifra_variantes` (026) ya resuelve el problema simétrico del lado del
-texto del modelo; falta aplicarlo del lado del extractor.
+El extractor de cifras permitidas ahora expande cada número de los hallazgos con
+la misma `cifra_variantes` (026) que ya se aplicaba al texto del modelo, y lo
+hace **por unión con la extracción vieja**, nunca reemplazándola: el conjunto
+permitido es un superconjunto estricto del anterior (verificado: 41 → 53 cifras,
+las 12 nuevas son lecturas alternativas de cifras que el propio SQL escribió), de
+modo que nada de lo que hoy se acepta puede empezar a rechazarse. Comprobado que
+una cifra realmente inventada se sigue rechazando (R-I intacta).
 
-Después, el tipado: `impacto_tipo ∈ {mensual, unico, capital}` en las **6 CTEs**
-del `UNION ALL` de `recomendaciones_negocio` (es posicional, ver C5).
+**H4 dejó de ser teórico.** Con los datos de prueba (`v_base_mes` = $264.082) el
+orden pasó de:
+
+| Antes | Ahora |
+|---|---|
+| 1. ACEITE — plata quieta $386.400 — **alta** | 1. ACEITE — `capital` $386.400 — **alta** |
+| 2. ARROZ — plata quieta $100.800 — **alta** | 2. YOGURT — `unico` $22.416 — **media** |
+| 3. YOGURT — se agota $22.416 — **alta** | 3. ARROZ — `capital` $100.800 — **media** |
+| 4. Dependencia — media | 4. Dependencia — `mensual` — media |
+
+O sea: $100.800 dormidos en arroz dejaron de ser "prioridad alta", y quedarse sin
+yogurt —que es lo accionable esta semana— le pasó por encima. Los umbrales por
+tipo (`mensual` 2/0.5%, `unico` 10/3%, `capital` 50/20% del movimiento mensual)
+quedaron en `parametros`, calibrables por negocio como todos los demás.
+
+**Sin scoring compuesto**, como estaba previsto: ni confianza, ni urgencia, ni
+recurrencia. Solo clasificación y priorización.
+
+**Incertidumbre que queda abierta**: los umbrales de `unico` y `capital` se
+eligieron por razonamiento sobre un solo negocio de prueba, no por evidencia. Son
+parámetros, así que se recalibran sin migración; pero hasta ver varios negocios
+reales no hay con qué defender los números exactos.
 
 ---
 
@@ -95,7 +117,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 |---|---|---|
 | **Detectar** | ✅ Sólido | 6 reglas en `recomendaciones_negocio` (`047`), 7 vistas de cálculo (`006`), `hallazgos_compras` (`043`) |
 | **Explicar** | ✅ Sólido | `informe_render` + prompt "TU TRABAJO ES REDACTAR, NO CALCULAR" (`047:993+`) |
-| **Cuantificar** | 🟡 Con defectos reales | `impacto_mes` mezcla flujos con stocks; el inventario es estimado y no se declara como tal |
+| **Cuantificar** | ✅ Corregido en A2 y A3 | `impacto_tipo` separa flujos de stocks con umbral propio (`055`); el stock declara su `origen_stock` (`054`) |
 | **Recomendar** | ✅ Sólido | Opciones condicionales por regla, prioridad relativa a `v_base_mes`, tope 2×regla / 8 total |
 | **Ejecutar** | ❌ No existe | Ninguna recomendación tiene acción; nada se registra ni se mide después |
 | **Cerebro acumulativo** | ❌ No existe, y hay una fuga | `hallazgos_generar` mira solo el presente; el plan free borra el pasado |
@@ -110,7 +132,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 
 **H3 — El inventario es una estimación no declarada.** `v_balance_unidades` (`006:55-63`) = comprado − vendido, sin stock inicial. Sobre ese número se calculan R4 (se agota), R5 (plata quieta) y la nota de Inventario de `salud_negocio` — o sea 2 de las 6 reglas y 1 de las 5 notas. `047:245` reconoce el síntoma (coberturas negativas) y lo parchea con un texto especial en vez de arreglar el dato.
 
-**H4 — `impacto_mes` mezcla flujos con stocks.** R1/R2/R3 son pesos por mes; R4 es lucro cesante del ciclo de entrega (evento único) y R5 es capital inmovilizado (un stock). Los cinco compiten en el mismo ranking `impacto_mes / v_base_mes` (`047:336-338`). R5 puede encabezar el informe por ser un acumulado: el orden de "¿qué debería hacer primero?" es incorrecto por construcción.
+**H4 — `impacto_mes` mezcla flujos con stocks.** *(Resuelto en `055`.)* R1/R2/R3 son pesos por mes; R4 es lucro cesante del ciclo de entrega (evento único) y R5 es capital inmovilizado (un stock). Los cinco compiten en el mismo ranking `impacto_mes / v_base_mes` (`047:336-338`). R5 puede encabezar el informe por ser un acumulado: el orden de "¿qué debería hacer primero?" es incorrecto por construcción.
 
 **H5 — `router_procesar_mensaje` va por su octava copia íntegra** (012, 015, 016, 024, 030, 033, 041, 042, 043, 045, 046, 051; ~300 líneas cada vez). Ya se perdió un fix por ese mecanismo: el `periodo` de `ingesta_resumen_sesion` que la 046 agregó con justificación explícita y la 051 borró sin mencionarlo.
 
@@ -142,11 +164,11 @@ Hoy cuenta filas **descartadas**. Con A1 pasa a contar filas **guardadas pero fu
 
 **C10 — H3 no era teórico: producía consejos de prioridad alta equivocados.** Con los datos de prueba y stock estimado, el informe traía dos recomendaciones de *"plata quieta / prioridad alta"* ("tenés $386.400 inmovilizados", "no vuelvas a comprarlo"). Al cargar un conteo real, **esas dos desaparecen** y la nota de Inventario del índice de salud pasa de **0 a 100**. O sea: sin conteo, Chasqui estaba recomendando con seguridad lo contrario de lo que convenía, y bajando la nota del negocio por un dato que se había inventado.
 
-**C11 — El LLM real confirma C8 en producción.** Dos corridas completas de `wf_ejecutar` contra el proveedor nuevo terminaron `completada` pero **ambas cayeron al informe seco**: el modelo cita "142,3 días" y "0,295 unidades" —cifras que calculó el propio SQL— y `validar_cifras` las rechaza. La rama narrada está rota hoy para cualquier negocio cuyo informe incluya R4 o R5, que es la mayoría. Refuerza que **A3 no puede postergarse**.
+**C11 — El LLM real confirma C8 en producción.** *(Resuelto en `055`.)* Dos corridas completas de `wf_ejecutar` contra el proveedor nuevo terminaron `completada` pero **ambas cayeron al informe seco**: el modelo cita "142,3 días" y "0,295 unidades" —cifras que calculó el propio SQL— y `validar_cifras` las rechaza. La rama narrada está rota hoy para cualquier negocio cuyo informe incluya R4 o R5, que es la mayoría. Refuerza que **A3 no puede postergarse**.
 
 ### Hallado durante la ejecución de A1
 
-**C8 — `validar_cifras` castiga al modelo por copiar bien.** `recomendaciones_negocio` formatea con `fmt_decimal`, que usa coma decimal ("te alcanza para 83,5 días", "vendés 0,287 por día"). El conjunto de cifras permitidas se extrae con `regexp_matches(hallazgos::text, '\d+(?:\.\d+)?')`, que **parte "83,5" en `83` y `5`**. Resultado: si el modelo cita fielmente una cifra que el propio SQL calculó, `validar_cifras` la marca como inventada, fuerza el reintento y termina cayendo al informe seco.
+**C8 — `validar_cifras` castiga al modelo por copiar bien.** *(Resuelto en `055`.)* `recomendaciones_negocio` formatea con `fmt_decimal`, que usa coma decimal ("te alcanza para 83,5 días", "vendés 0,287 por día"). El conjunto de cifras permitidas se extrae con `regexp_matches(hallazgos::text, '\d+(?:\.\d+)?')`, que **parte "83,5" en `83` y `5`**. Resultado: si el modelo cita fielmente una cifra que el propio SQL calculó, `validar_cifras` la marca como inventada, fuerza el reintento y termina cayendo al informe seco.
 Verificado como **anterior a A1 e independiente del plan**: con todos los datos dentro de la ventana gratuita (almacenado = visible = 10 filas, el filtro es un no-op) `validar_cifras` marca igual `["0,25"]`. En producción no rompe el informe seco —`wf_ejecutar` no valida esa rama— pero sí degrada la rama narrada, que es la normal.
 Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 por la regla de no hacer refactors ajenos a la fase.
 
@@ -310,7 +332,7 @@ Tabla `conteos_inventario(negocio_id, producto_id, fecha, unidades, origen)`. `v
 
 Todo resultado con `origen_stock='estimado'` se marca como tal y **no se presenta como stock conocido**: `v_rotacion_producto`, R4, R5 y la nota de Inventario propagan el marcador hasta el texto del informe (C7). Entrada del conteo por portal (pestaña Ventas) y por formato tabular de ingesta clase `inventario`, reutilizando el aprendizaje de mapeo de `017`. Sin modelo de inventario más complejo: nada de lotes, vencimientos ni valuación.
 
-**A3. Impacto tipado** — `055_impacto_tipado.sql`
+**A3. Impacto tipado** — `055_impacto_tipado.sql` ✅ **APLICADA 2026-08-15**
 *(Incorpora además el defecto C8 hallado al ejecutar A1: `validar_cifras` no reconoce las cifras con coma decimal que produce `recomendaciones_negocio`. Ver §2.)*
 `recomendaciones_negocio` devuelve `impacto_tipo ∈ {mensual, unico, capital}` — añadido a las **6 CTEs** del `UNION ALL` (C5). R1/R2/R3 → `mensual`; R4 → `unico`; R5 → `capital`; R6 → `mensual` con impacto 0. La prioridad solo compara `mensual` contra `v_base_mes`; `unico` y `capital` obtienen su propio umbral. **Sin scoring compuesto**: nada de confianza, urgencia ni recurrencia todavía. Solo clasificación y priorización correctas.
 
@@ -515,8 +537,8 @@ SELECT id, estado, tokens_salida, (texto LIKE '%no pude verificar%') AS cayo_a_s
 FROM ejecuciones ORDER BY id DESC LIMIT 3;
 ```
 
-Hoy esa columna da `t`. **Cuando A3 esté bien hecha, tiene que dar `f`.** Esa es
-la prueba de aceptación de A3, además de las suyas propias.
+Esa columna daba `t`. **Desde `055` da `f`** (ejecución `3`): es la prueba de
+aceptación de A3, y queda como prueba permanente para las fases siguientes.
 
 Si hace falta rehacer una migración durante su propia fase (todavía no cerrada,
 todavía sin salir de la máquina), el camino es borrar su fila y reaplicar:
