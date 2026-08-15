@@ -157,6 +157,16 @@ vendidas, notas de salud, totales del periodo y **con qué umbrales se midió**.
 Nada de texto narrado ni HTML — así dos snapshots siguen siendo comparables
 aunque el informe cambie de diseño por completo. Ver §5.4.
 
+**`recomendaciones`** (059) — lo que Chasqui le dijo al dueño y qué pasó (R-III).
+`id, negocio_id, regla, clave_objeto, titulo, problema, impacto, impacto_mes,
+impacto_tipo, prioridad, opciones, origen_stock, estado, cerrada_por, resultado,
+detectada_en, vista_en, revisada_en, cerrada_en, veces_vista, ejecucion_id`
+La identidad es `(negocio_id, regla, clave_objeto)` — `producto:<id>` o
+`proveedor:<nombre>`— y la garantiza un **índice único parcial sobre las
+abiertas**: un problema que vuelve tras cerrarse abre una fila nueva en vez de
+pisar la vieja, porque "te lo dije, lo arreglaste y volvió" es historia que hay
+que poder contar. Ver §5.5.
+
 **`fallas`** — lo que registra wf_error.
 `id, workflow, ejecucion_id, sesion_id, tipo, transitoria, intentos, detalle jsonb, creada_en`
 
@@ -300,6 +310,10 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `snapshot_version() → int` | Versión del contrato de `metricas`. Subirla es un solo cambio. |
 | `snapshot_umbrales(negocio_id) → jsonb` | Todos los umbrales vigentes, con la fila del negocio ganándole a la global. |
 | `snapshots_backfill() → int` | Reconstruye snapshots parciales desde `ejecuciones.hallazgos`. |
+| `recomendaciones_negocio(negocio_id, registro) → jsonb` | El motor de reglas. Con `registro=false` (el defecto) devuelve lo que va al informe, con los topes de siempre. Con `true` devuelve **todo lo detectado**, sin topes y con `regla`/`clave_objeto`/`en_informe`. |
+| `recomendaciones_registrar(negocio_id, ejecucion_id) → jsonb` | Persiste lo detectado, cierra lo que ya no está y marca lo que llegó al informe. Devuelve el conteo de cada cosa. |
+| `recomendacion_objeto_evaluable(negocio_id, clave) → boolean` | ¿El objeto sigue teniendo movimientos visibles? Es lo que separa "se resolvió" de "lo perdí de vista". |
+| `recomendaciones_vigentes(negocio_id, limite) → jsonb` | Las abiertas, con `dias_abierta` y `veces_vista`. La entrada de C1 y D1. |
 
 ### 4.5 Router y admin
 
@@ -491,6 +505,65 @@ contrato v1; lo que no —el Pareto y los productos que dispararon regla, que en
 los hallazgos vienen con nombre y no con `producto_id`— va con nombre propio
 (`pareto_parcial`, `margen_bajo_parcial`, …) para que nadie lo confunda con las
 claves de v1.
+
+---
+
+## 5.5 Las recomendaciones se acuerdan de sí mismas
+
+Hasta la `059`, `recomendaciones_negocio` calculaba, el informe mostraba, y se
+tiraba todo. Chasqui repetía el mismo consejo cada mes sin saber que ya lo había
+dado, no podía decir "esto te lo dije en marzo y sigue igual", y D1 (los botones
+*Ya lo hice* / *No aplica*) no tenía contra qué escribir.
+
+**La identidad de una recomendación es `(negocio, regla, objeto)`.** "El costo de
+ACEITE subió" es la misma recomendación en marzo y en abril. Por eso las seis
+CTEs publican `clave_objeto` (`producto:<id>` o `proveedor:<nombre>`): hasta acá
+lo único que la identificaba era el nombre del producto en `titulo`, que ni es
+estable ni es único.
+
+**Dos ejes, separados desde el diseño.** `estado` responde *¿qué pasó con la
+recomendación?* y nada más:
+
+| `estado` | Significa |
+|---|---|
+| `nueva` | Detectada, pero todavía no llegó a ningún informe |
+| `vigente` | Ya se mostró y se sigue detectando |
+| `resuelta` | El problema ya no está (`cerrada_por` dice si por dato o por acción del usuario) |
+| `ignorada` | El dueño dijo que no aplica |
+| `caducada` | Dejó de poder evaluarse: el objeto desapareció de los datos |
+
+El eje de **resultado** (¿sirvió?) es otro y lo llena D3. La columna `resultado`
+queda creada, en NULL y con su CHECK, precisamente para que a nadie se le ocurra
+meter `sirvio`/`no_sirvio` dentro de `estado`.
+
+**`resuelta` ≠ `caducada`.** Que una recomendación abierta no se detecte hoy
+puede deberse a dos cosas opuestas: el problema se arregló —el costo bajó, el
+stock se repuso: las reglas *sí* evaluaron el objeto y no dispararon— o dejó de
+poder verse, porque el producto no tiene un solo movimiento en la ventana
+visible. Lo segundo no es haberlo resuelto, y decirlo así sería mentirle al
+dueño. Los separa `recomendacion_objeto_evaluable`.
+
+**Por qué el registro pide `p_registro=true`.** Los topes del informe (2 por
+regla, 8 en total) esconden problemas reales. Si el registro usara la salida del
+informe, una recomendación empujada fuera del top 8 se cerraría como *resuelta*
+sin que nada se hubiera arreglado. En modo registro salen **todas** las
+detectadas, cada una con `en_informe` para saber cuál llegó de verdad al dueño —
+que es lo único que puede contar como "vista".
+
+**El modo informe no cambió.** Ese JSON es lo que ve el modelo y lo que audita
+`validar_cifras`; no tiene por qué enterarse de una clave interna como
+`producto:9`. `recomendaciones_negocio(negocio_id)` devuelve byte a byte lo
+mismo que antes de la `059`.
+
+**Y `recomendaciones_negocio` sigue siendo pura.** El roadmap decía "pasa de
+función pura a función + upsert"; se implementó como función pura +
+`recomendaciones_registrar` porque (1) es `STABLE` y la llama `hallazgos_generar`,
+que a su vez llama `ejecucion_preparar` — volverla `VOLATILE` obliga a desmarcar
+toda la cadena; (2) preguntar no debería escribir: el portal puede querer
+previsualizar sin registrar; (3) probarla dejaría de ser gratis. El registro
+corre en `ejecucion_cerrar`, junto al snapshot y por la misma razón: es cuando
+de verdad se le entregó algo al dueño. Si falla, queda en `fallas` y la
+ejecución se cierra igual.
 
 ---
 

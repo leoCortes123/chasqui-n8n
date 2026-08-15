@@ -196,6 +196,12 @@ nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
     <!-- La memoria del negocio (058). Cada análisis deja registrado cómo estaba
          el negocio ese día; acá se ve la serie. Las comparaciones entre dos
          estados son B3: por ahora esto solo muestra la historia. -->
+    <!-- Lo que Chasqui recomendó y qué pasó después (059). El informe muestra
+         lo de hoy; acá está lo que sigue abierto, desde cuándo, y lo que ya se
+         resolvió. Los botones para actuar sobre una recomendación son D1. -->
+    <h2>Lo que te vengo diciendo</h2>
+    <p class="vacio" id="r-nota"></p>
+    <div id="recos"></div>
     <h2>Cómo viene tu negocio</h2>
     <p class="vacio" id="h-nota"></p>
     <div id="historia"></div>
@@ -750,7 +756,54 @@ async function cargarHistoria() {
   })));
 }
 
+// Las recomendaciones persistidas (059). El informe dice qué pasa hoy; esto
+// dice qué se viene diciendo y qué se arregló, que es lo que el informe solo
+// no puede contar porque cada corrida arranca de cero.
+async function cargarRecomendaciones() {
+  const r = await rpc('portal_recomendaciones', { p_limite: 50 });
+  const vigentes = r.vigentes || [];
+  const cerradas = r.cerradas || [];
+
+  $('#r-nota').textContent = vigentes.length === 0 && cerradas.length === 0
+    ? 'Todavía no hay recomendaciones. Salen del primer análisis.'
+    : vigentes.length + ' sin resolver' +
+      (cerradas.length ? ' · ' + cerradas.length + ' ya cerradas' : '');
+
+  const cont = $('#recos');
+  if (!vigentes.length && !cerradas.length) { cont.replaceChildren(); return; }
+
+  const filas = [];
+
+  for (const v of vigentes) {
+    const f = el('div', undefined, 'fila');
+    const izq = el('span', v.titulo);
+    f.append(izq);
+    f.append(el('span', v.impacto || ''));
+    // "Van 4 veces que te lo digo" es información que antes no existía.
+    if (v.veces_vista > 1)
+      f.append(el('span', 'van ' + v.veces_vista + ' veces', 'etiqueta'));
+    else if (v.dias_abierta > 0)
+      f.append(el('span', 'hace ' + v.dias_abierta + ' días', 'etiqueta'));
+    f.append(el('span', v.prioridad, 'etiqueta'));
+    filas.push(f);
+  }
+
+  for (const c of cerradas) {
+    const f = el('div', undefined, 'fila');
+    f.append(el('span', c.titulo));
+    // Se distingue quién la cerró: que el dato diga que se arregló no es lo
+    // mismo que el dueño diciendo que ya lo hizo.
+    const como = { dato: 'se resolvió', accion_usuario: 'lo hiciste',
+                   sin_datos: 'dejé de verlo' };
+    f.append(el('span', como[c.cerrada_por] || c.estado, 'etiqueta'));
+    filas.push(f);
+  }
+
+  cont.replaceChildren(tarjetaLista(filas));
+}
+
 async function cargarInformes() {
+  await cargarRecomendaciones();
   await cargarHistoria();
   const lista = await rpc('portal_informes', { p_limite: 30 });
   $('#informes').replaceChildren(...(lista.length

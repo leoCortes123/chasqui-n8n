@@ -15,8 +15,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **A4** Router modular | ✅ **hecha y verificada** | `056_router_modular.sql` |
 | **A5** Limpieza + interfaz de matching | ✅ **hecha y verificada** | `057_limpieza.sql` |
 | **B1** Snapshot del estado empresarial | ✅ **hecha y verificada** | `058_snapshot_negocio.sql` |
-| **B2** Recomendaciones persistentes | ⏭️ **siguiente** | `059_recomendaciones_persistentes.sql` |
-| B3-B4, C, D, E, F | pendientes | — |
+| **B2** Recomendaciones persistentes | ✅ **hecha y verificada** | `059_recomendaciones_persistentes.sql` |
+| **B3** Reglas comparativas | ⏭️ **siguiente** | `060_reglas_comparativas.sql` |
+| B4, C, D, E, F | pendientes | — |
 
 **La Fase A está cerrada.** Las cuatro restricciones globales se sostienen, los
 cinco hallazgos que ordenaban el roadmap (H1-H5) están resueltos, y C3 —el
@@ -191,6 +192,63 @@ los volúmenes del segmento objetivo (pymes) no es problema y jsonb comprime,
 pero no está medido con un catálogo grande. Recortar los arrays no es opción:
 el producto que "dejó de venderse" sería justo el que se recorta.
 
+### Lo que dejó B2
+
+**Se cumple R-III.** Una recomendación deja de ser un renglón de un informe y
+pasa a ser algo que se le dijo al dueño, con historia.
+
+**La identidad hubo que inventarla.** Hasta acá lo único que identificaba a una
+recomendación era el nombre del producto en `titulo` — ni estable ni único. Las
+seis CTEs publican ahora `clave_objeto` (`producto:<id>` / `proveedor:<nombre>`),
+y la identidad es `(negocio, regla, clave_objeto)`. Un problema que vuelve tras
+cerrarse **abre una fila nueva**, garantizado por un índice único parcial sobre
+las abiertas: "te lo dije, lo arreglaste y volvió" es historia que hay que poder
+contar, y pisar la fila la borraría. Verificado en la prueba de ciclo de vida.
+
+**`resuelta` ≠ `caducada`**, y esa distinción es lo que evita mentir. Que algo no
+se detecte hoy puede ser que se arregló (las reglas evaluaron el objeto y no
+dispararon → `cerrada_por='dato'`) o que dejó de poder verse (el producto no
+tiene un movimiento en la ventana visible → `cerrada_por='sin_datos'`). Probado
+en los dos sentidos.
+
+**Un hallazgo de diseño con consecuencia real**: los topes del informe (2 por
+regla, 8 en total) esconden problemas. Con los datos de prueba se detectan **5**
+recomendaciones y solo **4** llegan al informe — PANELA CUADRADA queda fuera por
+el tope de su regla. Si el registro hubiera usado la salida del informe, PANELA
+nunca se habría registrado, o peor, se habría cerrado como *resuelta* en la
+corrida siguiente sin que nada se arreglara. Por eso `recomendaciones_negocio`
+recibió el parámetro `p_registro`: en modo registro devuelve todo lo detectado,
+con `en_informe` para saber qué llegó de verdad al dueño. Solo eso cuenta como
+`vista_en`.
+
+**El modo informe no cambió**: `recomendaciones_negocio(negocio_id)` devuelve
+byte a byte lo mismo que antes (verificado contra los hallazgos de la ejecución
+11). Ese JSON es lo que ve el modelo y lo que audita `validar_cifras`; no tiene
+por qué enterarse de una clave interna.
+
+**Desvío deliberado del plan**: el roadmap decía "`recomendaciones_negocio` pasa
+de función pura a función + upsert". Se implementó como función pura +
+`recomendaciones_registrar`. Razones: la función es `STABLE` y la llama
+`hallazgos_generar`, que llama `ejecucion_preparar` —volverla `VOLATILE` obliga a
+desmarcar toda la cadena—; preguntar no debería escribir; y el banco de pruebas
+depende de poder correrla contra producción sin efectos. El efecto buscado se
+cumple igual: el registro corre en `ejecucion_cerrar`, junto al snapshot.
+
+**Los dos ejes, separados desde el diseño.** `estado` solo responde "¿qué pasó
+con la recomendación?". La columna `resultado` (¿sirvió?) queda creada, en NULL
+y con su CHECK, y B2 **nunca la escribe**: está para que D3 la llene sin
+remodelar nada, y para que a nadie se le ocurra meter `sirvio`/`no_sirvio`
+dentro de `estado`.
+
+**Verificado además**: con `recomendaciones_registrar` reventando a propósito, la
+ejecución se cierra igual, la entrega sale, la falla queda en `fallas` y el
+snapshot de B1 se toma lo mismo — una falla no arrastra a la otra. Banco del
+router: 63 casos sin cambios de comportamiento.
+
+**Portal**: la pestaña Informes muestra qué sigue abierto y desde cuándo ("van 4
+veces que te lo digo") y qué se cerró, distinguiendo quién lo cerró. Los botones
+para actuar son D1.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -256,7 +314,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 | **Cuantificar** | ✅ Corregido en A2 y A3 | `impacto_tipo` separa flujos de stocks con umbral propio (`055`); el stock declara su `origen_stock` (`054`) |
 | **Recomendar** | ✅ Sólido | Opciones condicionales por regla, prioridad relativa a `v_base_mes`, tope 2×regla / 8 total |
 | **Ejecutar** | ❌ No existe | Ninguna recomendación tiene acción; nada se registra ni se mide después |
-| **Cerebro acumulativo** | 🟡 Tiene memoria (B1); falta usarla | `snapshots_negocio` (`058`) registra el estado en cada análisis. El plan free ya no borra el pasado (`053`). Falta comparar (B3) y recordar recomendaciones (B2) |
+| **Cerebro acumulativo** | 🟡 Tiene memoria (B1 y B2); falta usarla | `snapshots_negocio` (`058`) registra el estado en cada análisis. El plan free ya no borra el pasado (`053`). Falta comparar (B3) y recordar recomendaciones (B2) |
 | **IA no es fuente de verdad** | ✅ Excelente | `validar_cifras` (`026`) + informe seco (`047:894`). Es el activo más valioso del proyecto |
 | **Mensajería como interfaz** | ✅ Sólido | Router en SQL, dos canales, portal para lo que no cabe en el chat |
 
@@ -365,7 +423,7 @@ Se corrige en **A3**, que ya toca `recomendaciones_negocio`. No se tocó en A1 p
 | `conocimiento_pendiente` + `v_conocimiento_faltante` | 029 | **SECUNDARIA** | Buen mecanismo, pero apunta al bot público (congelado) |
 | `conocimiento.clave` / `.datos` / `origen='archivo'` | 029 | **ELIMINAR o completar** | El importador de listas de precios que motivó el índice único parcial nunca se escribió |
 | `snapshots_negocio` + `snapshot_tomar`/`_anterior` | 058 | **CORE** | La memoria. Estado empresarial versionado, no una copia del informe |
-| Persistencia y seguimiento de recomendaciones | — | **NO EXISTE** | Viola R-III: hoy se recalculan y se tiran |
+| `recomendaciones` + `recomendaciones_registrar` | 059 | **CORE** | Cumple R-III. Identidad `(negocio, regla, clave_objeto)`; cierre automático distinguiendo `resuelta` de `caducada` |
 
 ### 3.4 Interfaz: router, canales, plantillas
 
@@ -495,7 +553,7 @@ Dar de baja (por migración nueva, nunca editando el histórico): `servicios.pas
 Tabla `snapshots_negocio(negocio_id, fecha, version, periodo daterange, salud jsonb, metricas jsonb, origen)`.
 **El snapshot es estado empresarial, no una copia del informe renderizado.** Contiene datos estructurados y versionados suficientes para comparar estados futuros **aunque cambie por completo el diseño del informe**: márgenes, coberturas, gasto por proveedor, notas de salud, totales por periodo. No contiene texto narrado, ni HTML, ni la estructura de secciones. `ejecuciones.hallazgos` (C4) sirve de material para un backfill parcial, pero **no es el snapshot**: su forma cambió cuatro veces y volverá a cambiar. De ahí la columna `version`.
 
-**B2. Recomendaciones persistentes** — `059_recomendaciones_persistentes.sql`
+**B2. Recomendaciones persistentes** — `059_recomendaciones_persistentes.sql` ✅ **APLICADA 2026-08-15**
 Cumple R-III. Tabla `recomendaciones(negocio_id, regla, clave_objeto, titulo, impacto, impacto_tipo, prioridad, estado, vista_en, cerrada_en, ...)` con estados **`nueva | vigente | resuelta | ignorada | caducada`**.
 
 **Separación de dimensiones desde el diseño**: el **estado de ejecución** (¿el dueño hizo algo?) y el **resultado empresarial** (¿sirvió?) son dos ejes distintos y no se colapsan en una columna. "Aplicar precio sugerido" puede quedar *ejecutada por el usuario* y aun así producir un resultado *positivo, neutro o negativo*. B2 no está obligada a implementar el eje de resultado —lo necesita D3—, pero su modelo **no puede impedirlo ni obligar a remodelar** las recomendaciones después: el eje de resultado se acomoda como columnas/tabla anexa sin tocar `estado`.
