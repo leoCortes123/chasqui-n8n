@@ -314,6 +314,8 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `recomendaciones_registrar(negocio_id, ejecucion_id) → jsonb` | Persiste lo detectado, cierra lo que ya no está y marca lo que llegó al informe. Devuelve el conteo de cada cosa. |
 | `recomendacion_objeto_evaluable(negocio_id, clave) → boolean` | ¿El objeto sigue teniendo movimientos visibles? Es lo que separa "se resolvió" de "lo perdí de vista". |
 | `recomendaciones_vigentes(negocio_id, limite) → jsonb` | Las abiertas, con `dias_abierta` y `veces_vista`. La entrada de C1 y D1. |
+| `alertas_evaluar() → jsonb` | **La proactividad** (`067`). Recorre `v_negocios_alertables`, evalúa las reglas y devuelve notificaciones con el contrato de siempre. Cero nodos nuevos: `mantenimiento_ciclo` las concatena y `wf_cron` las despacha. |
+| `v_negocios_alertables` | Quién está en condiciones de recibir un aviso: hay a quién avisarle, autorizó (051), y **entraron datos después del último análisis**. |
 | `recomendaciones_medir(negocio_id) → jsonb` | Llena el eje `resultado` (`066`): compara la magnitud de cada regla contra la foto tomada al cerrar. Solo mide si **llegaron** datos después del cierre (`creado_en`, no `fecha`). |
 | `metricas_resultado` | Qué magnitud mira cada regla y hacia dónde debería moverse. Una tabla, no un algoritmo: medir una regla nueva es un INSERT. |
 | `recomendacion_metrica_valor(...)` / `recomendacion_marcar_cierre(id)` | Leer una magnitud, y la foto que se guarda al cerrar. Sin esa foto no hay contra qué comparar. |

@@ -23,8 +23,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **D1** Acciones sobre la recomendación | ✅ **hecha y verificada** | `064_acciones.sql` |
 | **D2** Lista de pedido | ✅ **hecha y verificada** | `065_pedido.sql` |
 | **D3** El resultado se mide | ✅ **hecha y verificada** | `066_resultado.sql` |
-| **E1** Motor de alertas | ⏭️ **siguiente** | `067_alertas.sql` |
-| E2, F | pendientes | — |
+| **E1** Motor de alertas | ✅ **hecha y verificada** | `067_alertas.sql` |
+| **E2** Informe periódico automático | ⏭️ **siguiente** | `068_informe_periodico.sql` |
+| F | pendientes | — |
 
 **La Fase D está cerrada.** El ciclo detectar → explicar → cuantificar →
 recomendar → **ejecutar** → **medir** funciona de punta a punta.
@@ -521,6 +522,42 @@ producto → el stock baja a 12 y la recomendación queda `positivo` con −71,4
 muestra "sin medir todavía". Una recomendación cerrada ayer no tiene resultado
 hoy, y fingir que sí es peor que esperar.
 
+### Lo que dejó E1
+
+Chasqui habla primero. Hasta acá todo empezaba porque el dueño escribía algo: si
+subía las ventas de la semana y no tocaba "Analizar", nadie le decía que un
+producto se le estaba agotando, aunque el dato ya estuviera cargado y la regla ya
+lo supiera.
+
+**La regla que gobierna toda la migración no es "avisar" sino "no molestar"**:
+un bot que avisa de más lo silencian, y silenciado no sirve para nada. Cinco
+compuertas, y las cinco son para NO avisar:
+
+| Compuerta | Por qué |
+|---|---|
+| Solo prioridad **alta** | Lo demás espera al informe |
+| **Un** aviso por negocio y corrida | Nunca una ráfaga |
+| **Cooldown** de 14 días por regla+objeto | El mismo problema no se avisa dos veces seguidas |
+| **Horario** del negocio (8–20) | Un aviso a las 3 AM es la forma más rápida de que lo bloqueen |
+| Solo si **entraron datos nuevos** desde el último análisis | Sin datos nuevos no hay nada que el dueño no haya visto |
+
+**El aviso avisa y ofrece; no registra.** Lleva un hallazgo real —calculado con
+la misma función que el informe— y dos botones: *ver el análisis completo* y *ya
+hice algo*. Deliberadamente **no** escribe en `recomendaciones` ni toca
+`vista_en`: eso solo pasa cuando hay un informe de verdad (B2), y meter mano acá
+haría que `veces_vista` contara mensajes que no son informes. Verificado: tras
+una alerta, `veces_vista` queda igual.
+
+**Cero nodos nuevos**, como pedía el roadmap. `mantenimiento_ciclo` concatena las
+notificaciones a las suyas y `wf_cron` las despacha con el fanout que ya tenía
+desde la 016. Va con su propio guardarraíl: si evaluar las reglas revienta, el
+reaper —que es lo que no puede dejar de correr— ya hizo su trabajo y sus
+notificaciones salen igual.
+
+**Verificado**: sin datos nuevos nadie es alertable; con datos nuevos sale un
+aviso con el hallazgo de mayor impacto; la segunda corrida no repite nada; fuera
+de horario ni siquiera se evalúa.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -896,7 +933,7 @@ Consolida las recomendaciones R4 en una lista de compra (producto, unidades, pro
 
 ### Fase E — Proactividad
 
-**E1. Motor de alertas en `wf_cron`** — `066_alertas.sql`
+**E1. Motor de alertas en `wf_cron`** — `067_alertas.sql` ✅ **APLICADA 2026-08-15**
 `alertas_evaluar()` recorre negocios activos con umbral de relevancia y cooldown por regla+objeto, devolviendo notificaciones con el mismo contrato que ya usa `mantenimiento_ciclo` (`016`). **Cero nodos nuevos**: `wf_cron` ya hace fanout a `wf_enviar`. Tabla `alertas_enviadas` para el cooldown — sin ella, Chasqui se vuelve ruido y lo silencian.
 
 **E2. Informe periódico automático**, apoyado en B1 y B3.
