@@ -207,6 +207,11 @@ nav button[aria-current="true"] { color: var(--acento); font-weight: 700; }
     <h2>Lo que te vengo diciendo</h2>
     <p class="vacio" id="r-nota"></p>
     <div id="recos"></div>
+    <!-- Las recomendaciones de "se agota", consolidadas (065). El paso de
+         "acá tenés seis avisos" a "esto es lo que hay que comprar y cuesta $X". -->
+    <h2>Lo que habría que comprar</h2>
+    <p class="vacio" id="ped-nota"></p>
+    <div id="pedido"></div>
     <h2>Cómo viene tu negocio</h2>
     <p class="vacio" id="h-nota"></p>
     <div id="historia"></div>
@@ -868,8 +873,37 @@ async function cargarRecomendaciones() {
   cont.replaceChildren(tarjetaLista(filas));
 }
 
+// La lista de pedido (065). Las unidades NO se recalculan acá: son las que se
+// le mostraron al dueño en el informe. Si cambiaron, es porque hay una
+// recomendación nueva.
+async function cargarPedido() {
+  const p = await rpc('portal_pedido');
+  const items = p.items || [];
+
+  $('#ped-nota').textContent = items.length === 0
+    ? 'Por ahora no hay nada que se esté agotando.'
+    : items.length + ' producto' + (items.length > 1 ? 's' : '')
+      + ' · ' + p.total_txt
+      + (p.sin_precio ? ' (más ' + p.sin_precio + ' sin precio conocido)' : '');
+
+  const cont = $('#pedido');
+  if (!items.length) { cont.replaceChildren(); return; }
+
+  cont.replaceChildren(tarjetaLista(items.map(i => {
+    const f = el('div', undefined, 'fila');
+    f.append(el('span', i.producto + ' · ' + i.unidades_txt));
+    f.append(el('span', i.proveedor
+                        ? i.proveedor + ' · ' + (i.costo_txt || 'sin precio')
+                        : 'nunca se lo compraste a nadie'));
+    // 054: si el stock con el que se decidió pedir era estimado, se dice.
+    if (i.stock_estimado) f.append(el('span', 'stock estimado', 'etiqueta'));
+    return f;
+  })));
+}
+
 async function cargarInformes() {
   await cargarRecomendaciones();
+  await cargarPedido();
   await cargarHistoria();
   const lista = await rpc('portal_informes', { p_limite: 30 });
   $('#informes').replaceChildren(...(lista.length

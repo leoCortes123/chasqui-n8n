@@ -21,8 +21,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **C1** Preguntar a los números | ✅ **hecha y verificada** | `062_consulta_sobre_numeros.sql` |
 | **C2** Intenciones como contrato | ✅ **hecha y verificada** | `063_intenciones_consulta.sql` |
 | **D1** Acciones sobre la recomendación | ✅ **hecha y verificada** | `064_acciones.sql` |
-| **D2** Lista de pedido | ⏭️ **siguiente** | `065_pedido.sql` |
-| D3, E, F | pendientes | — |
+| **D2** Lista de pedido | ✅ **hecha y verificada** | `065_pedido.sql` |
+| **D3** El resultado se mide | ⏭️ **siguiente** | `066_resultado.sql` |
+| E, F | pendientes | — |
 
 **La Fase C está cerrada.** Las ocho preguntas se responden en el chat con los
 números del negocio.
@@ -458,6 +459,30 @@ prefijo `rec:`.
 **El botón de aplicar precio solo aparece si hay un precio que aplicar**: un
 botón que no puede funcionar es peor que no tener botón.
 
+### Lo que dejó D2
+
+El paso de "acá tenés seis avisos" a "esto es lo que hay que comprar esta semana
+y cuesta $X". Las recomendaciones abiertas de *se agota* se consolidan en una
+lista con producto, unidades, el proveedor más barato y el costo estimado.
+
+Tres decisiones:
+
+- **Las unidades NO se recalculan.** Sería fácil llamar de nuevo a la regla y
+  sería peor: el dueño vio "pedí 7" en el informe del martes, y si el jueves la
+  lista dice 9 porque entró una venta, deja de confiar en las dos cifras. La
+  lista muestra lo que se le recomendó; si el número cambió es porque hay una
+  recomendación nueva.
+- **El proveedor más barato es el más barato CONOCIDO**, o sea el de sus propias
+  compras. Chasqui no tiene precios de mercado y no los inventa: si nunca le
+  compró ese producto a nadie, la lista lo dice en vez de sugerir a alguien.
+- **El total declara lo que le falta.** Un producto sin precio conocido no entra
+  al total, y `sin_precio` lo cuenta: un total al que le faltan renglones no es
+  el total de la compra, y presentarlo como si lo fuera sería mentir por
+  omisión. Cada renglón arrastra además `stock_estimado` (A2) — comprar de más
+  por una cuenta inventada es exactamente el error que A2 vino a evitar.
+
+En el desempate entre dos proveedores al mismo precio gana el más reciente.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -826,7 +851,7 @@ reconversión es la Fase F.
 **D1. Acciones sobre la recomendación** — `064_acciones.sql` ✅ **APLICADA 2026-08-15**
 Botones en el informe: **✅ Ya lo hice** / **⏭️ No aplica** / **💲 Aplicar precio sugerido**. Aplicar precio escribe en `conocimiento` tipo `precio` (que ya existe y ya tiene pantalla) y registra la acción contra la recomendación de B2.
 
-**D2. Lista de pedido** — `065_pedido.sql`
+**D2. Lista de pedido** — `065_pedido.sql` ✅ **APLICADA 2026-08-15**
 Consolida las recomendaciones R4 en una lista de compra (producto, unidades, proveedor más barato conocido, costo estimado), entregada en el portal. No se envía a nadie.
 
 **D3. El resultado se mide** — activa el eje de resultado previsto en B2: toda acción registrada se contrasta contra los datos del periodo siguiente. Alimenta "resultados de acciones anteriores" de la prioridad 3.
