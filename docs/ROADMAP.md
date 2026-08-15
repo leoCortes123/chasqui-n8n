@@ -18,8 +18,9 @@ registro histórico de las Fases 1-4 viejas.*
 | **B2** Recomendaciones persistentes | ✅ **hecha y verificada** | `059_recomendaciones_persistentes.sql` |
 | **B3** Reglas comparativas | ✅ **hecha y verificada** | `060_reglas_comparativas.sql` |
 | **B4** Perfil consolidado | ✅ **hecha y verificada** | `061_perfil_negocio.sql` |
-| **C1** Preguntar a los números | ⏭️ **siguiente** | `062_consulta_sobre_numeros.sql` |
-| C2, D, E, F | pendientes | — |
+| **C1** Preguntar a los números | ✅ **hecha y verificada** | `062_consulta_sobre_numeros.sql` |
+| **C2** Intenciones como contrato | ⏭️ **siguiente** | `063_intenciones_consulta.sql` |
+| D, E, F | pendientes | — |
 
 **La Fase B está cerrada.** Chasqui tiene memoria: registra su estado (B1),
 recuerda lo que recomendó (B2), compara contra su propia historia (B3) y sabe
@@ -333,6 +334,43 @@ que uno al que se lo vienen diciendo desde hace seis meses.
 porque es la mejor forma de que el dueño detecte un dato mal cargado — si dice
 que su proveedor principal es uno que casi no usa, hay un problema en la carga.
 
+### Lo que dejó C1
+
+**H2 cerrado.** La pregunta insignia del producto empezó a responderse con los
+datos del producto. Antes, `consulta_iniciar` cortaba ANTES de arrancar si la KB
+no tenía una FAQ parecida: a un negocio con quince meses de facturas cargadas,
+su índice de salud calculado y ocho recomendaciones vigentes, Chasqui le
+contestaba *"todavía no tengo eso cargado"*. La compuerta ahora arranca si hay KB
+**o** si hay números.
+
+`contexto_negocio_recuperar` compone lo que la Fase B construyó, junto por
+primera vez: la KB de siempre (se conserva — un precio cargado a mano le gana a
+cualquier agregado cuando la pregunta es por eso), el perfil (B4), la salud de
+hoy, el comparativo (B3) y las recomendaciones vigentes (B2). ~5 KB de contexto,
+todo calculado por SQL.
+
+**Probado contra el LLM real.** "¿Cómo está mi negocio y qué debería hacer
+primero?" ahora responde: *"Índice de salud 71 (igual que antes). Prioridad alta:
+ACEITE PREMIER 1L tiene $386.400 inmovilizados. El stock de 4 productos es
+estimado, no conteado."* — con `validar_cifras` en `ok` y sin caer al seco. El
+banco del router lo registra: el caso "texto libre" pasó de `consulta.sin_datos`
+a lanzar una ejecución.
+
+**Un error real, encontrado probando y no razonando.** El primer intento volvió
+vacío y cayó al informe seco. Desde afuera parecía un fallo de `validar_cifras`;
+no lo era. El proveedor devolvía `finish_reason: "length"` con `content: ""`: con
+`max_tokens = 900` —el valor de cuando el contexto era una lista de FAQs— el
+modelo gastaba todo el presupuesto razonando sobre 5 KB y no le quedaba nada para
+escribir. Subido a 3000, no a 8000 como los informes: la respuesta sigue siendo
+corta, lo que hace falta es lugar para pensar. **Regla que deja el episodio: el
+presupuesto de salida es parte del contrato del contexto — si crece uno, hay que
+revisar el otro.**
+
+**Lo que C1 no puede responder**, y por eso existe C2: preguntas que piden un
+agregado puntual ("¿cuánto vendí en marzo?"). El agregado de marzo no está en el
+contexto, y el prompt tiene prohibido calcularlo. Hoy contesta qué dato sí tiene;
+C2 es lo que hace que el agregado exista antes de preguntar.
+
 ---
 
 ## CONFIGURACIÓN TEMPORAL QUE NO ESTÁ EN NINGUNA MIGRACIÓN
@@ -406,7 +444,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 
 **H1 — El plan free destruye historia.** `movimientos_limite_plan()` (`051:60-76`) es un `BEFORE INSERT` que devuelve **NULL** para filas fuera de la ventana de 3 meses. Viola R-II frontalmente: impide el comparativo interanual, y un upgrade a plan pago **no recupera nada** — el cliente tendría que volver a subir todo.
 
-**H2 — `consulta` no mira los números.** `conocimiento_recuperar` (`030`) hace trigram sobre la tabla `conocimiento` (FAQs y precios cargados a mano) y nada más. "¿Cómo está mi negocio?" escrito en el chat **no consulta `movimientos`, ni `salud_negocio`, ni las recomendaciones**. La pregunta insignia del producto no se responde con los datos del producto.
+**H2 — `consulta` no mira los números.** *(Resuelto en `062`.)* `conocimiento_recuperar` (`030`) hace trigram sobre la tabla `conocimiento` (FAQs y precios cargados a mano) y nada más. "¿Cómo está mi negocio?" escrito en el chat **no consulta `movimientos`, ni `salud_negocio`, ni las recomendaciones**. La pregunta insignia del producto no se responde con los datos del producto.
 
 **H3 — El inventario es una estimación no declarada.** `v_balance_unidades` (`006:55-63`) = comprado − vendido, sin stock inicial. Sobre ese número se calculan R4 (se agota), R5 (plata quieta) y la nota de Inventario de `salud_negocio` — o sea 2 de las 6 reglas y 1 de las 5 notas. `047:245` reconoce el síntoma (coberturas negativas) y lo parchea con un texto especial en vez de arreglar el dato.
 
@@ -663,7 +701,7 @@ intención → consulta/agregado determinístico (SQL) → contexto estructurado
 
 **Nunca se pasan movimientos completos al LLM para que calcule.** La cifra final siempre proviene de SQL.
 
-**C1. `conocimiento_recuperar` → `contexto_negocio_recuperar`** — `062_consulta_sobre_numeros.sql`
+**C1. `conocimiento_recuperar` → `contexto_negocio_recuperar`** — `062_consulta_sobre_numeros.sql` ✅ **APLICADA 2026-08-15**
 La `funcion_hallazgos` de `consulta` compone: KB (`conocimiento_buscar`, se conserva) + último snapshot (B1) + recomendaciones vigentes (B2) + agregados precalculados según la intención. Cambia el `sistema` del prompt de `consulta` para redactar sobre ese contexto — **sin añadirle ninguna regla de cálculo**.
 
 **C2. Intenciones como contrato de datos** — `063_intenciones_consulta.sql`

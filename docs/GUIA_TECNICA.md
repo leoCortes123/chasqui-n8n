@@ -314,6 +314,7 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `recomendaciones_registrar(negocio_id, ejecucion_id) → jsonb` | Persiste lo detectado, cierra lo que ya no está y marca lo que llegó al informe. Devuelve el conteo de cada cosa. |
 | `recomendacion_objeto_evaluable(negocio_id, clave) → boolean` | ¿El objeto sigue teniendo movimientos visibles? Es lo que separa "se resolvió" de "lo perdí de vista". |
 | `recomendaciones_vigentes(negocio_id, limite) → jsonb` | Las abiertas, con `dias_abierta` y `veces_vista`. La entrada de C1 y D1. |
+| `contexto_negocio_recuperar(negocio_id, ctx) → jsonb` | La `funcion_hallazgos` de `consulta` (`062`). Compone KB + perfil + salud + comparativo + recomendaciones vigentes. Reemplaza a `conocimiento_recuperar`, que solo miraba la KB (H2). |
 | `v_perfil_negocio` / `perfil_negocio(negocio_id) → jsonb` | **El perfil consolidado** (`061`): lo estable del negocio —qué vende, a quién le compra, margen típico (mediana), estacionalidad, problemas recurrentes, acciones tomadas, calidad del dato—. Es el contexto estructurado que consume la Fase C. No es un informe ni un diagnóstico: no dice qué hacer. |
 
 ### 4.5 Router y admin
