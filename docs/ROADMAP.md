@@ -12,8 +12,8 @@ registro histórico de las Fases 1-4 viejas.*
 | **A1** Historia completa | ✅ **hecha y verificada** | `053_historia_completa.sql` |
 | **A2** Inventario declarado | ✅ **hecha y verificada** | `054_inventario_declarado.sql` |
 | **A3** Impacto tipado + fix de `validar_cifras` | ✅ **hecha y verificada** | `055_impacto_tipado.sql` |
-| **A4** Router modular | ⏭️ **siguiente** | `056_router_modular.sql` |
-| A5 Limpieza + interfaz de matching | pendiente | `057_limpieza.sql` |
+| **A4** Router modular | ✅ **hecha y verificada** | `056_router_modular.sql` |
+| **A5** Limpieza + interfaz de matching | ⏭️ **siguiente** | `057_limpieza.sql` |
 | B, C, D, E, F | pendientes | — |
 
 ### Lo que dejó A3
@@ -54,6 +54,28 @@ recurrencia. Solo clasificación y priorización.
 eligieron por razonamiento sobre un solo negocio de prueba, no por evidencia. Son
 parámetros, así que se recalibran sin migración; pero hasta ver varios negocios
 reales no hay con qué defender los números exactos.
+
+### Lo que dejó A4
+
+El router pasó de 356 líneas en una función a un despachador de ~40 y seis
+piezas reemplazables una por una. **Cero cambios de comportamiento**, y está
+medido: se armó un banco de **61 casos** (`db/pruebas/router_casos.sql`) que
+recorre los cinco estados —sin autorizar, autorizado sin sesión, intake,
+recibiendo, procesando—, los reportes de admin, el caso de un solo servicio
+activo y la entrada por WhatsApp, y se corrió **antes y después** de la
+migración: salida byte a byte idéntica. Cada caso se ejecuta en un subbloque que
+se revierte, así que ninguno contamina al siguiente y el banco no deja rastro en
+la base; sirve tal cual para las fases que vienen.
+
+Verificado aparte el detalle que motivó separar `router_h_admin`: con una sesión
+abierta de dos horas de antigüedad, un `/salud` de admin la deja intacta y un
+mensaje normal sí la refresca.
+
+**Deuda que A4 no salda**: `usuario_de_canal`, `router_arranque_servicio`,
+`ingesta_resumen_sesion` y `mercado_compras_bienvenida` siguen copiándose
+enteras entre migraciones. Son mucho más chicas que el router y ninguna está
+en el camino crítico de B/C/D, pero el mecanismo que produjo H5 sigue vivo
+para ellas.
 
 ---
 
@@ -134,7 +156,7 @@ Estas cuatro reglas son **restricciones**, no recomendaciones. Ninguna migració
 
 **H4 — `impacto_mes` mezcla flujos con stocks.** *(Resuelto en `055`.)* R1/R2/R3 son pesos por mes; R4 es lucro cesante del ciclo de entrega (evento único) y R5 es capital inmovilizado (un stock). Los cinco compiten en el mismo ranking `impacto_mes / v_base_mes` (`047:336-338`). R5 puede encabezar el informe por ser un acumulado: el orden de "¿qué debería hacer primero?" es incorrecto por construcción.
 
-**H5 — `router_procesar_mensaje` va por su octava copia íntegra** (012, 015, 016, 024, 030, 033, 041, 042, 043, 045, 046, 051; ~300 líneas cada vez). Ya se perdió un fix por ese mecanismo: el `periodo` de `ingesta_resumen_sesion` que la 046 agregó con justificación explícita y la 051 borró sin mencionarlo.
+**H5 — `router_procesar_mensaje` va por su octava copia íntegra** *(Resuelto en `056`.)* (012, 015, 016, 024, 030, 033, 041, 042, 043, 045, 046, 051; ~300 líneas cada vez). Ya se perdió un fix por ese mecanismo: el `periodo` de `ingesta_resumen_sesion` que la 046 agregó con justificación explícita y la 051 borró sin mencionarlo.
 
 ---
 
@@ -340,8 +362,12 @@ Todo resultado con `origen_stock='estimado'` se marca como tal y **no se present
 
 *Separada conceptualmente de A para las verificaciones; puede compartir ventana de ejecución si no multiplica migraciones sin necesidad.*
 
-**A4. Router modular** — `056_router_modular.sql`
+**A4. Router modular** — `056_router_modular.sql` ✅ **APLICADA 2026-08-15**
 Partir `router_procesar_mensaje` en handlers por estado (`router_h_comandos`, `router_h_sin_sesion`, `router_h_intake`, `router_h_recibiendo`) con un despachador delgado. Cada migración futura reemplaza **un** handler, no 300 líneas. Sin esto, C, D y F pagan el impuesto de la copia íntegra y arriesgan repetir la regresión del `periodo` (H5).
+
+*Salieron **cinco** handlers, no cuatro*: `router_h_admin` quedó aparte porque el bloque de admin corre **antes** de leer la sesión, y meterlo en `router_h_comandos` habría hecho que un `/salud` le refrescara `ultima_actividad` a una sesión que estaba por expirar. Se agregó además `router_ctx`, que arma el contexto del mensaje: es la pieza que una fase futura reemplaza para reconocer un prefijo de botón nuevo (`rec:` de D1, por ejemplo) sin tocar ningún handler.
+
+**El contrato**: un solo argumento `ctx jsonb` —agregarle un dato no cambia ninguna firma— y `NULL` como "no me toca, seguí". `NULL` es inequívoco porque `router_respuesta` construye siempre un objeto, incluso cuando la respuesta no lleva texto.
 
 **A5. Limpieza y calidad de datos** — `057_limpieza.sql`
 Dar de baja (por migración nueva, nunca editando el histórico): `servicios.pasos`, `plantillas_pdf` + Gotenberg del compose, `parametros.rotacion_baja_dias`, `teclado_servicios()`. *(`hallazgos_compras(bigint)` sale de esta lista: está viva.)* Recuperar el `periodo` de `ingesta_resumen_sesion`. Bajar a `plantillas` los textos hard-codeados de `gen_wf_ingesta.py` y `gen_wf_error.py`. Corregir `docs/GUIA_TECNICA.md:39,50`.

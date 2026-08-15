@@ -290,7 +290,13 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 
 | Función | Qué hace |
 |---|---|
-| `router_procesar_mensaje(evento jsonb) → jsonb` | El cerebro de la conversación (ver §6.1). Devuelve `{chat_id, respuestas[], acciones[]}`. |
+| `router_procesar_mensaje(evento jsonb) → jsonb` | El cerebro de la conversación (ver §6.1). Devuelve `{chat_id, respuestas[], acciones[]}`. Desde `056` es un **despachador delgado** sobre los handlers de abajo; la firma y el contrato de salida no cambiaron. |
+| `router_ctx(evento jsonb) → jsonb` | Arma el contexto del mensaje: parseo del texto y de los prefijos de botón (`svc:`, `mod:`, `modayuda:`, `tipo:`, `acepto:`), identidad (`usuario_de_canal`, que crea usuario y negocio si es la primera vez) y capacidades activas del sistema. |
+| `router_h_admin(ctx) → jsonb` | Reportes de admin. Corre **antes** de leer la sesión: un `/salud` no debe refrescarle `ultima_actividad` a una sesión que estaba por expirar. |
+| `router_h_comandos(ctx) → jsonb` | Comandos y botones que no dependen del estado: informativos, módulos, consentimiento, `tipo:`, `/portal`, `/plan`, `/saber`, `/cancelar`, `/nueva`, `svc:`. |
+| `router_h_sin_sesion(ctx) → jsonb` | No hay conversación abierta: archivo suelto, pregunta libre o `sin_sesion`. |
+| `router_h_intake(ctx) → jsonb` | Hay sesión y falta elegir servicio (match difuso por nombre o código). |
+| `router_h_recibiendo(ctx) → jsonb` | Hay servicio elegido y entran archivos: `/todos`, `/faltan`, `/listo`. |
 | `router_respuesta(chat, plantilla, vars, teclado, acciones) → jsonb` | Arma ese valor de retorno. Evita repetir quince veces el mismo `jsonb_build_object` y elimina de raíz el error de tipado de la migración 016 (literales `'{}'` entrando como `text`). Con `plantilla = NULL` devuelve solo acciones. |
 | `admin_reporte(cmd) → text` | Formatea las vistas de operación como texto para Telegram (`/salud`, `/embudo`, `/fallas`, `/consumo`, `/matching`). |
 
@@ -463,29 +469,43 @@ tunnel esa URL cambia en cada reinicio. Un Webhook en ruta fija + el `registrado
 (que re-apunta el webhook cuando el túnel cambia) sobrevive los reinicios sin
 tocar nada.
 
-La máquina de estados de `router_procesar_mensaje`:
+La máquina de estados de `router_procesar_mensaje`. Desde `056` cada bloque vive
+en su propio handler y el despachador solo decide el orden; a la derecha, quién
+contesta cada cosa:
 
 ```
-/salud,/embudo,…          → admin_reporte (solo rol=admin)
-/start,/help,/ayuda       → bienvenida
-/comofunciona,/privacidad → informativos (accesibles SIN autorizar)
+/salud,/embudo,…          → admin_reporte (solo rol=admin)      h_admin
+   ── acá se lee la sesión y se le marca ultima_actividad ──    (despachador)
+/start,/help,/ayuda       → bienvenida                          h_comandos
+/comofunciona,/privacidad → informativos (accesibles SIN autorizar)   ″
 (sin autorización)        → pide "acepto"; al aceptar, marca autorizacion_datos
 /cancelar                 → cierra la sesión abierta (o sin_sesion si no hay)
 /nueva                    → cierra sesiones previas; con 1 servicio activo va
                             directo a recibiendo(cargar_archivos), si no abre
                             intake(elegir_servicio) con teclado_servicios()
 sin sesión + documento    → con 1 servicio: abre sesión y {ingerir}; si hay
-                            varios, pregunta cuál
-sin sesión                → sin_sesion
+                            varios, pregunta cuál                h_sin_sesion
+sin sesión                → sin_sesion                                ″
 estado procesando         → ejecucion.ya_en_curso (bloquea la segunda corrida)
-intake + svc:<codigo>     → recibiendo(cargar_archivos)
-intake + texto            → match difuso del servicio
-recibiendo + documento    → acción {ingerir, sesion_id}
+intake + svc:<codigo>     → recibiendo(cargar_archivos)          h_comandos
+intake + texto            → match difuso del servicio            h_intake
+recibiendo + documento    → acción {ingerir, sesion_id}          h_recibiendo
 recibiendo + svc:<codigo> → servicio_ya_elegido (teclado viejo del historial)
 recibiendo + /listo       → si hay docs parseados: crea ejecucion(preparando),
-                            acción {ejecutar, ejecucion_id}
-fallback                  → no_entendido
+                            acción {ejecutar, ejecucion_id}            ″
+fallback                  → no_entendido                        (despachador)
 ```
+
+**Cómo se extiende.** Un handler devuelve `NULL` para decir "esto no me toca,
+seguí"; nunca se confunde con una respuesta real, porque `router_respuesta`
+construye siempre un objeto. Todos reciben **un solo argumento** (`ctx jsonb`),
+así que agregarle un dato al contexto no cambia ninguna firma ni obliga a
+repuntar los handlers que no se enteraron — el contrato es un dato, como en
+`servicios.funcion_hallazgos` y en `plantillas`. Una fase que cambie una
+conversación reemplaza **su** handler; una que agregue un estado agrega un
+handler y tres líneas al despachador. Antes de `056` cualquiera de las dos
+obligaba a pegar las 356 líneas enteras del router, y así fue como la `051`
+borró sin querer el `periodo` que la `046` había agregado.
 
 El menú de comandos del botón azul (`setMyCommands`) lo registra
 `bin/registrar-webhook.sh` junto con el webhook. Es la única entrada que Telegram
