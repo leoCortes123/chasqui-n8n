@@ -1417,6 +1417,13 @@ VALUES ('consumo_publicos', '…', '… {{hallazgos}}', 'deepseek-v4-flash');
 --    obliga a tocar la tabla.
 INSERT INTO metricas_resultado (regla, metrica, direccion, umbral_pct)
 VALUES ('consumo_alto', 'costo', 'baja_mejor', 5);
+
+-- 6. si el servicio trae pantallas propias de NAVEGACIÓN —un menú, una ayuda,
+--    una pregunta con botones—, marcarlas (070). Sin esto cada toque apila un
+--    mensaje nuevo y el chat se llena de pantallas muertas; el síntoma es
+--    confuso porque nada falla. Los informes y las confirmaciones NO se marcan.
+UPDATE plantillas SET reemplaza = true
+ WHERE clave IN ('consumo_publicos.pedir_recibos');
 ```
 
 **El botón del servicio aparece solo**: `teclado_modulo()` lee los servicios
