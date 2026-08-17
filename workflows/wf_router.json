@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst item = $input.first().json;\nconst secretOk = (item.headers?.['x-telegram-bot-api-secret-token'] || '') === 'ed5a7589ec01eaf170c3b5ce7527a4021392f1238c7a053b';\nif (!secretOk) return [];              // rechaza lo que no venga de Telegram\nconst b = item.body || item;\nconst msg = b.message || b.edited_message || b.callback_query?.message || {};\nconst from = b.message?.from || b.callback_query?.from || msg.from || {};\nconst texto = b.message?.text || b.callback_query?.data || msg.caption || '';\nconst tiene_documento = !!(msg.document || (msg.photo && msg.photo.length));\nif (!from.id) return [];\nreturn [{ json: { evento: {\n  canal: 'telegram',\n  from: { id: from.id, username: from.username },\n  chat: { id: msg.chat?.id || from.id },\n  texto, tiene_documento,\n  // Solo presente cuando el update es un toque de botón.\n  callback_id: b.callback_query?.id || null,\n  file_id: msg.document?.file_id || (msg.photo ? msg.photo[msg.photo.length-1].file_id : null),\n  file_name: msg.document?.file_name || null,\n  mime: msg.document?.mime_type || null\n} } }];\n"
+        "jsCode": "\nconst item = $input.first().json;\nconst secretOk = (item.headers?.['x-telegram-bot-api-secret-token'] || '') === 'ed5a7589ec01eaf170c3b5ce7527a4021392f1238c7a053b';\nif (!secretOk) return [];              // rechaza lo que no venga de Telegram\nconst b = item.body || item;\nconst msg = b.message || b.edited_message || b.callback_query?.message || {};\nconst from = b.message?.from || b.callback_query?.from || msg.from || {};\nconst texto = b.message?.text || b.callback_query?.data || msg.caption || '';\nconst tiene_documento = !!(msg.document || (msg.photo && msg.photo.length));\nif (!from.id) return [];\nreturn [{ json: { evento: {\n  canal: 'telegram',\n  from: { id: from.id, username: from.username },\n  chat: { id: msg.chat?.id || from.id },\n  texto, tiene_documento,\n  // Solo presentes cuando el update es un toque de botón. `message_id` es el\n  // mensaje que TRAE el botón: es lo que permite reemplazar esa pantalla en vez\n  // de apilar otra (070). Sin él, la respuesta sale como mensaje nuevo.\n  callback_id: b.callback_query?.id || null,\n  message_id: b.callback_query?.message?.message_id || null,\n  file_id: msg.document?.file_id || (msg.photo ? msg.photo[msg.photo.length-1].file_id : null),\n  file_name: msg.document?.file_name || null,\n  mime: msg.document?.mime_type || null\n} } }];\n"
       },
       "id": "Normalizar",
       "name": "Normalizar",
@@ -87,7 +87,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT router_procesar_mensaje('{{ JSON.stringify($('Normalizar').first().json.evento).replaceAll(\"'\",\"''\") }}'::jsonb) AS r;",
+        "query": "SELECT router_marcar_editables(router_procesar_mensaje(ev), ev) AS r FROM (SELECT '{{ JSON.stringify($('Normalizar').first().json.evento).replaceAll(\"'\",\"''\") }}'::jsonb AS ev) e;",
         "options": {}
       },
       "id": "Router",

@@ -37,6 +37,18 @@ La alternativa limpia —un nodo HTTP Request contra api.telegram.org, con contr
 total del body— necesita el token del bot dentro del contenedor de n8n
 (TELEGRAM_BOT_TOKEN hoy solo lo ve el servicio `registrador`), y agregarlo obliga
 a recrear el contenedor. Queda pendiente de decisión.
+
+MENÚS QUE SE REEMPLAZAN EN VEZ DE APILARSE (070)
+------------------------------------------------
+Una respuesta puede traer `editar` con el id del mensaje que trae el botón que
+el usuario tocó. Cuando viene, la pantalla se actualiza en su lugar
+(editMessageText) y el chat no se llena de menús muertos. Quién puede
+reemplazarse lo decide la base (`plantillas.reemplaza`); el id lo pone
+`router_marcar_editables` en wf_router, que es quien lo tiene.
+
+Eso duplica el switch por cantidad de filas: la limitación de arriba obliga a
+tener un nodo por forma de teclado también del lado de la edición. A cambio, el
+generador arma las dos ramas con la misma función y el tope sigue siendo uno.
 """
 import os, sys
 from wf_lib import WF, PG, TG, WA, GRAPH
@@ -70,7 +82,10 @@ for (const r of (inp.respuestas || [])) {
   if (r.plantilla) out.push({ json: {
     chat_id: chat, plantilla: r.plantilla, vars: r.vars || {},
     // null explícito: la plantilla se queda con el teclado de su fila.
-    teclado: r.teclado ?? null } });
+    teclado: r.teclado ?? null,
+    // 070: id del mensaje a reemplazar. Lo pone router_marcar_editables solo
+    // cuando la pantalla es de navegación y el update fue un toque de botón.
+    editar: r.editar ?? null } });
 }
 return out;
 """, [220, 200])
@@ -83,6 +98,9 @@ w.pg("Resolver",
      "SELECT c.chat_id, c.canal, "
      "res ->> 'texto'  AS texto, "
      "res -> 'teclado' AS teclado, "
+     # El nodo Postgres solo deja pasar lo que selecciona, así que `editar`
+     # tiene que viajar explícito o se pierde acá.
+     "nullif('{{ $json.editar ?? \"\" }}', '')::bigint AS editar, "
      "CASE WHEN c.canal = 'whatsapp' THEN "
      "wa_payload(c.chat_id::text, wa_texto(res ->> 'texto'), res -> 'teclado') "
      "END AS wa "
@@ -136,15 +154,27 @@ return [{{ json: {{ ...j, n: usados.length, b: usados.concat(relleno) }} }}];
 """, [660, 200])
 w.link("EsWa?", "Filas", 1)
 
-w.node("CuantasFilas", "n8n-nodes-base.switch", 3, {
-    "rules": {"values": [
-        {"conditions": {"options": {"typeValidation": "loose"}, "combinator": "and",
-            "conditions": [{"leftValue": "={{ $json.n }}", "rightValue": k,
-                "operator": {"type": "number", "operation": "equals"}}]},
-         "outputKey": f"filas{k}"}
-        for k in range(MAX_FILAS + 1)]},
-    "options": {}}, [880, 200])
-w.link("Filas", "CuantasFilas")
+# La pantalla que llegó por botón y está marcada como navegable (070) se edita
+# en su lugar; todo lo demás se manda como mensaje nuevo.
+w.if_("EsEdicion?", "={{ !!$json.editar }}", [760, 200])
+w.link("Filas", "EsEdicion?")
+
+
+def switch_filas(name, pos):
+    return w.node(name, "n8n-nodes-base.switch", 3, {
+        "rules": {"values": [
+            {"conditions": {"options": {"typeValidation": "loose"}, "combinator": "and",
+                "conditions": [{"leftValue": "={{ $json.n }}", "rightValue": k,
+                    "operator": {"type": "number", "operation": "equals"}}]},
+             "outputKey": f"filas{k}"}
+            for k in range(MAX_FILAS + 1)]},
+        "options": {}}, pos)
+
+
+switch_filas("CuantasFilas", [880, 200])
+w.link("EsEdicion?", "CuantasFilas", 1)
+switch_filas("CuantasFilasEd", [880, -420])
+w.link("EsEdicion?", "CuantasFilasEd", 0)
 
 # appendAttribution: false quita el "This message was sent automatically with
 # n8n" que el nodo agrega por defecto al final de cada mensaje.
@@ -160,18 +190,24 @@ w.link("Filas", "CuantasFilas")
 # guardaba nada (EXECUTIONS_DATA_SAVE_ON_SUCCESS=none) y el informe simplemente
 # no aparecía en el chat sin dejar rastro en ningún lado. Ahora falla, wf_error
 # lo registra en `fallas` y avisa. retryOnFail cubre el hipo transitorio.
+def teclado_literal(filas):
+    """La forma del teclado, literal; solo las hojas salen de expresiones."""
+    if not filas:
+        return {}
+    return {"replyMarkup": "inlineKeyboard",
+            "inlineKeyboard": {"rows": [
+                {"row": {"buttons": [{
+                    "text": f"={{{{ $json.b[{i}].text }}}}",
+                    "additionalFields": {"callback_data": f"={{{{ $json.b[{i}].dato }}}}"}}]}}
+                for i in range(filas)]}}
+
+
 def enviar_texto(filas, pos):
     params = {
         "chatId": "={{ $json.chat_id }}",
         "text": "={{ $json.texto }}",
         "additionalFields": {"appendAttribution": False, "parse_mode": "HTML"}}
-    if filas:
-        params["replyMarkup"] = "inlineKeyboard"
-        params["inlineKeyboard"] = {"rows": [
-            {"row": {"buttons": [{
-                "text": f"={{{{ $json.b[{i}].text }}}}",
-                "additionalFields": {"callback_data": f"={{{{ $json.b[{i}].dato }}}}"}}]}}
-            for i in range(filas)]}
+    params.update(teclado_literal(filas))
     return w.node(f"EnviarTexto{filas}", "n8n-nodes-base.telegram", 1.2, params,
                   pos, {"telegramApi": TG},
                   {"retryOnFail": True, "maxTries": 3, "waitBetweenTries": 2000})
@@ -179,6 +215,43 @@ def enviar_texto(filas, pos):
 for k in range(MAX_FILAS + 1):
     enviar_texto(k, [1100, 40 + k * 110])
     w.link("CuantasFilas", f"EnviarTexto{k}", k)
+
+
+# --- Rama edición (070) -------------------------------------------------------
+# Mismo diseño que la de envío y por la misma razón (la forma del teclado tiene
+# que ser literal), con dos diferencias:
+#
+#   * `messageId` apunta al mensaje que trae el botón que el usuario tocó.
+#   * onError continueErrorOutput: editar puede fallar por motivos que NO son
+#     un fallo del sistema —Telegram rechaza editar un mensaje de más de 48 h, y
+#     devuelve 400 "message is not modified" si el contenido es idéntico—. La
+#     salida de error va a `EdicionFallo?`, que descarta el "not modified" (la
+#     pantalla ya muestra eso: no hay nada que hacer) y manda el resto por la
+#     rama de envío normal. Así una edición imposible degrada a mensaje nuevo en
+#     vez de dejar al usuario sin respuesta.
+def editar_texto(filas, pos):
+    params = {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {"appendAttribution": False, "parse_mode": "HTML"}}
+    params.update(teclado_literal(filas))
+    return w.node(f"EditarTexto{filas}", "n8n-nodes-base.telegram", 1.2, params,
+                  pos, {"telegramApi": TG},
+                  {"onError": "continueErrorOutput",
+                   "retryOnFail": True, "maxTries": 2, "waitBetweenTries": 1000})
+
+for k in range(MAX_FILAS + 1):
+    editar_texto(k, [1100, -580 + k * 110])
+    w.link("CuantasFilasEd", f"EditarTexto{k}", k)
+    w.link(f"EditarTexto{k}", "EdicionFallo?", 1)   # salida de error
+
+w.if_("EdicionFallo?",
+      "={{ !String($json.error?.message ?? $json.error ?? '').includes('not modified') }}",
+      [1320, -420])
+w.link("EdicionFallo?", "CuantasFilas", 0)
 
 # --- Rama documento (si viene binario y alguna respuesta lo pide) --------------
 w.if_("HayDoc?",

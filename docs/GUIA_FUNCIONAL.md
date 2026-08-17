@@ -89,6 +89,12 @@ Todo lo que se puede tocar se puede también escribir (`/nueva`, `/listo`,
 cuando alguien se pierde. Los botones de mensajes viejos siguen funcionando: si
 ya no aplican, Chasqui responde algo con sentido en vez de "no te entendí".
 
+**Los menús no llenan el chat**: al navegar entre pantallas —abrir el menú,
+entrar a una opción, volver— el mismo mensaje se va actualizando en su lugar en
+vez de mandar uno nuevo. Lo que sí queda como mensaje propio es lo que vale la
+pena conservar: los informes, las confirmaciones de cada archivo y el resultado
+de cada acción.
+
 Si adjuntás un archivo sin haber empezado nada, Chasqui abre el análisis solo y
 lo procesa, en vez de pedirte que arranques de cero y lo reenvíes.
 

@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst inp = $input.first().json;\nconst chat = inp.chat_id;\nconst out = [];\nfor (const r of (inp.respuestas || [])) {\n  if (r.plantilla) out.push({ json: {\n    chat_id: chat, plantilla: r.plantilla, vars: r.vars || {},\n    // null explícito: la plantilla se queda con el teclado de su fila.\n    teclado: r.teclado ?? null } });\n}\nreturn out;\n"
+        "jsCode": "\nconst inp = $input.first().json;\nconst chat = inp.chat_id;\nconst out = [];\nfor (const r of (inp.respuestas || [])) {\n  if (r.plantilla) out.push({ json: {\n    chat_id: chat, plantilla: r.plantilla, vars: r.vars || {},\n    // null explícito: la plantilla se queda con el teclado de su fila.\n    teclado: r.teclado ?? null,\n    // 070: id del mensaje a reemplazar. Lo pone router_marcar_editables solo\n    // cuando la pantalla es de navegación y el update fue un toque de botón.\n    editar: r.editar ?? null } });\n}\nreturn out;\n"
       },
       "id": "Expandir",
       "name": "Expandir",
@@ -31,7 +31,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT c.chat_id, c.canal, res ->> 'texto'  AS texto, res -> 'teclado' AS teclado, CASE WHEN c.canal = 'whatsapp' THEN wa_payload(c.chat_id::text, wa_texto(res ->> 'texto'), res -> 'teclado') END AS wa FROM resolver_plantilla('{{ $json.plantilla }}', '{{ JSON.stringify($json.vars).replaceAll(\"'\",\"''\") }}'::jsonb, '{{ JSON.stringify($json.teclado ?? null).replaceAll(\"'\",\"''\") }}'::jsonb) AS t(res), LATERAL (SELECT ({{ $json.chat_id }})::bigint AS chat_id, canal_de_chat(({{ $json.chat_id }})::bigint) AS canal) c;",
+        "query": "SELECT c.chat_id, c.canal, res ->> 'texto'  AS texto, res -> 'teclado' AS teclado, nullif('{{ $json.editar ?? \"\" }}', '')::bigint AS editar, CASE WHEN c.canal = 'whatsapp' THEN wa_payload(c.chat_id::text, wa_texto(res ->> 'texto'), res -> 'teclado') END AS wa FROM resolver_plantilla('{{ $json.plantilla }}', '{{ JSON.stringify($json.vars).replaceAll(\"'\",\"''\") }}'::jsonb, '{{ JSON.stringify($json.teclado ?? null).replaceAll(\"'\",\"''\") }}'::jsonb) AS t(res), LATERAL (SELECT ({{ $json.chat_id }})::bigint AS chat_id, canal_de_chat(({{ $json.chat_id }})::bigint) AS canal) c;",
         "options": {}
       },
       "id": "Resolver",
@@ -132,6 +132,35 @@
       "typeVersion": 2,
       "position": [
         660,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.editar }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "EsEdicion?",
+      "name": "EsEdicion?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        760,
         200
       ]
     },
@@ -283,6 +312,156 @@
       "position": [
         880,
         200
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 4,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas4"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas5"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 6,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas6"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "CuantasFilasEd",
+      "name": "CuantasFilasEd",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        880,
+        -420
       ]
     },
     {
@@ -758,6 +937,534 @@
     },
     {
       "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "EditarTexto0",
+      "name": "EditarTexto0",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -580
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EditarTexto1",
+      "name": "EditarTexto1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -470
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EditarTexto2",
+      "name": "EditarTexto2",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -360
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EditarTexto3",
+      "name": "EditarTexto3",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -250
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[3].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[3].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EditarTexto4",
+      "name": "EditarTexto4",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -140
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[3].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[3].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[4].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[4].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EditarTexto5",
+      "name": "EditarTexto5",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -30
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.editar }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[2].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[2].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[3].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[3].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[4].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[4].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[5].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[5].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "EditarTexto6",
+      "name": "EditarTexto6",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        80
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ !String($json.error?.message ?? $json.error ?? '').includes('not modified') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "EdicionFallo?",
+      "name": "EdicionFallo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        -420
+      ]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "typeValidation": "loose"
@@ -1018,6 +1725,24 @@
       "main": [
         [
           {
+            "node": "EsEdicion?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EsEdicion?": {
+      "main": [
+        [
+          {
+            "node": "CuantasFilasEd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "CuantasFilas",
             "type": "main",
             "index": 0
@@ -1072,6 +1797,154 @@
         [
           {
             "node": "EnviarTexto6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CuantasFilasEd": {
+      "main": [
+        [
+          {
+            "node": "EditarTexto0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EditarTexto1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EditarTexto2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EditarTexto3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EditarTexto4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EditarTexto5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "EditarTexto6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto0": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto4": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto5": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EditarTexto6": {
+      "main": [
+        [],
+        [
+          {
+            "node": "EdicionFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EdicionFallo?": {
+      "main": [
+        [
+          {
+            "node": "CuantasFilas",
             "type": "main",
             "index": 0
           }

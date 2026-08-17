@@ -46,8 +46,11 @@ return [{{ json: {{ evento: {{
   from: {{ id: from.id, username: from.username }},
   chat: {{ id: msg.chat?.id || from.id }},
   texto, tiene_documento,
-  // Solo presente cuando el update es un toque de botón.
+  // Solo presentes cuando el update es un toque de botón. `message_id` es el
+  // mensaje que TRAE el botón: es lo que permite reemplazar esa pantalla en vez
+  // de apilar otra (070). Sin él, la respuesta sale como mensaje nuevo.
   callback_id: b.callback_query?.id || null,
+  message_id: b.callback_query?.message?.message_id || null,
   file_id: msg.document?.file_id || (msg.photo ? msg.photo[msg.photo.length-1].file_id : null),
   file_name: msg.document?.file_name || null,
   mime: msg.document?.mime_type || null
@@ -76,10 +79,15 @@ w.link("EsBoton?", "Responder", 0)
 
 # El evento se lee de Normalizar, no de $json: en la rama del botón el item que
 # llega acá es la respuesta de Telegram al answerCallbackQuery.
+# El envoltorio de la 070 le pega el message_id del botón a las respuestas cuya
+# plantilla sea de navegación. Va acá y no dentro del router para no volver
+# STABLE a `router_respuesta`, que usan los seis handlers: el evento entra dos
+# veces a la misma consulta y ningún handler se entera.
 w.pg("Router",
-     "SELECT router_procesar_mensaje("
+     "SELECT router_marcar_editables(router_procesar_mensaje(ev), ev) AS r "
+     "FROM (SELECT "
      "'{{ JSON.stringify($('Normalizar').first().json.evento).replaceAll(\"'\",\"''\") }}'"
-     "::jsonb) AS r;",
+     "::jsonb AS ev) e;",
      [800, 300])
 w.link("Responder", "Router")
 w.link("EsBoton?", "Router", 1)

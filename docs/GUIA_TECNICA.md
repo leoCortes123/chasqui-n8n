@@ -222,7 +222,8 @@ enlace público (`portal_cotizacion_publica`).
 ### 3.3 Tablas de contenido (sacan los textos de los nodos)
 
 **`plantillas`** — textos de mensajes **y sus botones**. `clave (PK), canal,
-cuerpo, formato, variables jsonb, teclado jsonb, crudas jsonb, version, activo`.
+cuerpo, formato, variables jsonb, teclado jsonb, crudas jsonb, reemplaza,
+version, activo`.
 `respuestas[]` devuelve `{plantilla, vars, teclado?}`; el texto final y el
 `reply_markup` se resuelven en Postgres con `resolver_plantilla`.
 
@@ -231,6 +232,12 @@ cuerpo, formato, variables jsonb, teclado jsonb, crudas jsonb, version, activo`.
   Filas → botones; `dato` viaja como `callback_data`. Admite `{{variables}}` en
   ambos campos. `teclado_markup` lo traduce a `{"inline_keyboard": [...]}`.
   Agregar un botón a un paso de la conversación es un `UPDATE`.
+- **`reemplaza`** (`070`) — la pantalla es de **navegación**: cuando la dispara
+  un botón, edita ese mensaje en vez de mandar uno nuevo, y el chat deja de
+  llenarse de menús muertos. Marcar una pantalla nueva como navegable es un
+  UPDATE, igual que agregarle un botón. Falso para informes, confirmaciones y
+  resultados: un informe que pisa al anterior sería peor que la saturación. Ver
+  §6.4.
 - **`crudas`** — nombres de variables que se insertan **sin escapar** porque su
   valor ya es HTML nuestro (hoy: el informe renderizado). Todo lo demás se
   escapa siempre. Es la frontera de confianza de la migración 022, hecha
@@ -393,6 +400,7 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 | `router_h_sin_sesion(ctx) → jsonb` | No hay conversación abierta: archivo suelto, pregunta libre o `sin_sesion`. |
 | `router_h_intake(ctx) → jsonb` | Hay sesión y falta elegir servicio (match difuso por nombre o código). |
 | `router_h_recibiendo(ctx) → jsonb` | Hay servicio elegido y entran archivos: `/todos`, `/faltan`, `/listo`. |
+| `router_marcar_editables(res jsonb, evento jsonb) → jsonb` | Le pega `editar: <message_id>` a las respuestas cuya plantilla tenga `reemplaza` (`070`). Envuelve al router en el propio nodo en vez de vivir dentro: leer `plantillas` desde `router_respuesta` —que usan los seis handlers— la volvería `STABLE` y obligaría a repuntar la cadena entera. Sin `message_id` (mensaje escrito, o WhatsApp) devuelve su entrada intacta. |
 | `router_respuesta(chat, plantilla, vars, teclado, acciones) → jsonb` | Arma ese valor de retorno. Evita repetir quince veces el mismo `jsonb_build_object` y elimina de raíz el error de tipado de la migración 016 (literales `'{}'` entrando como `text`). Con `plantilla = NULL` devuelve solo acciones. |
 | `admin_reporte(cmd) → text` | Formatea las vistas de operación como texto para Telegram (`/salud`, `/embudo`, `/fallas`, `/consumo`, `/matching`, `/pendientes`). |
 
@@ -905,7 +913,11 @@ acciones) → `Switch`:
 - `ejecutar` → wf_ejecutar → wf_enviar (manda el informe)
 
 `Normalizar` mapea `callback_query.data` al mismo campo `texto` que un mensaje,
-así que el router atiende los dos igual. `Responder` existe porque Telegram deja
+así que el router atiende los dos igual. Publica además `message_id` —el mensaje
+que **trae** el botón—, que es lo único que hace falta para reemplazar esa
+pantalla en vez de apilar otra (§6.4). El nodo `Router` envuelve la llamada en
+`router_marcar_editables`, así que el evento entra dos veces a la misma
+consulta y ningún handler se entera. `Responder` existe porque Telegram deja
 el botón con el relojito girando hasta que se le contesta el callback; va sin
 texto, solo apaga el reloj. Es el **único** nodo de la ruta de salida con
 `onError: continueRegularOutput`, y se justifica: un `callback_id` vencido
@@ -1074,8 +1086,35 @@ final del informe, no en la mitad.
 `Inicio` → dos ramas:
 - **Texto:** `Expandir` (una salida por respuesta) → `Resolver`
   (`resolver_plantilla`: texto + `reply_markup`) → `EsWa?` → `Filas` (aplana el
-  teclado y cuenta) → `CuantasFilas` (Switch) → `EnviarTexto0…EnviarTexto6`.
+  teclado y cuenta) → `EsEdicion?`, que abre las dos formas de entregar:
+  - sin `editar` → `CuantasFilas` (Switch) → `EnviarTexto0…EnviarTexto6`.
+  - con `editar` → `CuantasFilasEd` → `EditarTexto0…EditarTexto6`.
 - **Documento:** `HayDoc?` → `PrepDoc` → `EnviarDoc` (Telegram sendDocument con el binario).
+
+**Un menú reemplaza al anterior en vez de apilarse** (`070`). Cada toque de
+botón producía un mensaje nuevo: navegar tres pantallas dejaba tres mensajes con
+botones, y los dos primeros ya no servían para nada. Ahora una respuesta puede
+traer `editar` con el id del mensaje que trae el botón, y la pantalla se
+actualiza en su lugar (`editMessageText`).
+
+Las dos mitades de la decisión viven donde corresponde: **qué** pantalla es
+reemplazable es un dato (`plantillas.reemplaza`), y **cuál** es el mensaje a
+editar solo lo sabe quien recibió el update (§6.1). Sin `message_id` —mensaje
+escrito, o WhatsApp, donde editar no existe— sale como mensaje nuevo y nada
+cambia.
+
+> **La edición degrada a envío, no a silencio.** Telegram rechaza editar un
+> mensaje de más de 48 h, y devuelve 400 `message is not modified` si el
+> contenido es idéntico. Por eso los `EditarTexto*` van con
+> `onError: continueErrorOutput` y su salida de error entra a `EdicionFallo?`,
+> que descarta el *not modified* —la pantalla ya muestra eso, no hay nada que
+> hacer— y manda todo lo demás por la rama de envío normal. Es la única
+> excepción a la regla de "sin `onError` en la salida": acá el fallo tiene un
+> plan B que el usuario sí ve.
+
+Medido de punta a punta: tres navegaciones seguidas (abrir el menú, ver la
+ayuda, volver) **no crean un solo mensaje** — el contador de `message_id` del
+chat no avanza.
 
 > **Por qué hay siete nodos de envío en vez de uno.** El nodo de Telegram de n8n
 > no acepta un `reply_markup` ya armado: `getNodeParameter` resuelve los parámetros
@@ -1098,7 +1137,10 @@ final del informe, no en la mitad.
 > De ahí el diseño: un nodo por cantidad de filas y `teclado_markup` aplanando a
 > un botón por fila con el tope de `MAX_FILAS`. El tope está en los **dos** lados
 > (generador y base) para que no pueda existir un teclado que el enviador recorte
-> en silencio.
+> en silencio. Y de ahí también que la rama de edición duplique el switch: la
+> forma del teclado tiene que ser literal también al editar. El generador arma
+> las dos ramas con la misma función, así que el costo es de nodos, no de
+> mantenimiento.
 >
 > La alternativa limpia es un nodo HTTP Request contra `api.telegram.org`, con
 > control total del body y sin tope de filas. Requiere dos cosas: que
