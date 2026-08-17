@@ -12,8 +12,9 @@
 --
 -- QUÉ SE BORRA (todo lo que entró por el uso del sistema)
 --   negocios, usuarios, identidades, sesiones, documentos, movimientos,
---   productos, alias, terceros, facturas, pagos, ejecuciones, cotizaciones,
---   fallas, conocimiento, conocimiento_pendiente, portal_tokens,
+--   productos, alias, conteos_inventario, terceros, facturas, pagos,
+--   ejecuciones, snapshots_negocio, recomendaciones, alertas_enviadas,
+--   cotizaciones, fallas, conocimiento, conocimiento_pendiente, portal_tokens,
 --   los umbrales por negocio y los formatos tabulares APRENDIDOS.
 --
 -- QUÉ SE CONSERVA (todo lo que instalaron las migraciones)
@@ -34,9 +35,11 @@ BEGIN;
 --    `negocios` no está acá porque `parametros` la referencia y no se puede
 --    truncar; se borra abajo con DELETE.
 TRUNCATE TABLE
+    alertas_enviadas,
     alias,
     conocimiento,
     conocimiento_pendiente,
+    conteos_inventario,
     cotizaciones,
     documentos,
     ejecuciones,
@@ -47,7 +50,9 @@ TRUNCATE TABLE
     pagos,
     portal_tokens,
     productos,
+    recomendaciones,
     sesiones,
+    snapshots_negocio,
     terceros,
     usuarios
 RESTART IDENTITY;

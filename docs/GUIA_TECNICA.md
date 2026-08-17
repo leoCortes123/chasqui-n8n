@@ -6,10 +6,11 @@ Documento de referencia para quien opera, mantiene o extiende el sistema.
 
 ## 1. Tesis de diseño
 
-n8n es un **runtime fijo de 6 workflows** que casi nunca se tocan. Todo el
+n8n es un **runtime fijo de 7 workflows** que casi nunca se tocan. Todo el
 comportamiento del sistema —los pasos de la conversación, los textos, los
-umbrales, los prompts del LLM, los formatos de archivo
-que se aceptan— **vive en filas de Postgres**, no en nodos de n8n.
+umbrales, los prompts del LLM, los formatos de archivo que se aceptan, las
+reglas que disparan una recomendación, las preguntas que sabe responder, cuándo
+avisa y cuándo se calla— **vive en filas de Postgres**, no en nodos de n8n.
 
 La regla operativa que lo verifica: **si para lanzar un servicio nuevo hay que
 abrir el editor de n8n, el diseño se rompió.** Agregar un servicio es un
@@ -32,26 +33,31 @@ tomado el lock de la sesión bloqueando al usuario.
 ## 2. Stack y topología
 
 ```
-Telegram  ──webhook──►  cloudflared (túnel)  ──►  n8n :5678
-                                                    │
-                            ┌───────────────────────┴─────────────┐
-                            ▼                                     ▼
-                       Postgres :5432                      Proveedor LLM
-                       ├── base "chasqui"                  (redacción)
-                       │   (negocio: todo)
-                       └── base "n8n"
-                           (runtime n8n)
+Telegram / WhatsApp ──webhook──►  cloudflared (túnel)  ──►  proxy (Caddy)
+Navegador (portal)  ──────────────────────────────────►      │
+                                          ┌──────────────────┼──────────────┐
+                                          ▼                  ▼              │
+                                   n8n :5678          PostgREST :3000       │
+                                          │                  │      (/portal: estáticos)
+                            ┌─────────────┴────┐             │
+                            ▼                  ▼             ▼
+                     Proveedor LLM        Postgres :5432 ◄────┘
+                     (redacción)          ├── base "chasqui" (negocio: todo)
+                                          └── base "n8n"     (runtime n8n)
 ```
 
 | Servicio | Imagen | Rol |
 |---|---|---|
 | `postgres` | postgres:16 | Dos bases separadas en una instancia: `chasqui` (negocio) y `n8n` (runtime). |
 | `n8n` | n8nio/n8n:2.31.5 | Orquestador. Backend en la base `n8n` (no SQLite). |
-| `cloudflared` | cloudflare/cloudflared | Quick tunnel. Perfil `local`. |
-| `registrador` | alpine:3.20 | Descubre la URL del túnel y re-registra el webhook de Telegram. Perfil `local`. |
+| `postgrest` | postgrest:v12.2.12 | API del portal. Solo RPC `portal_*`; sin puertos publicados, se llega por el proxy. |
+| `proxy` | caddy:2-alpine | Un solo hostname público para tres cosas: `/webhook` (n8n), `/api` (PostgREST) y `/portal` (los estáticos de `portal/publico`). El editor de n8n **no** queda expuesto. |
+| `cloudflared` | cloudflare/cloudflared | Quick tunnel, apuntando al proxy. Perfil `local`. |
+| `registrador` | alpine:3.20 | Descubre la URL del túnel y re-registra el webhook de Telegram (y la suscripción de Meta). Perfil `local`. |
 
 **Migración a la nube:** apagar el perfil `local` (cloudflared + registrador) y
-fijar `WEBHOOK_URL` al dominio real. Es la **única** variable que cambia. Ningún
+fijar `WEBHOOK_URL` al dominio real (más el parámetro `portal_url_base`, que es
+una fila de la base y no una variable). Ningún
 componente se reescribe. Los archivos van en `bytea`, así que no hay bucket que
 migrar; un `pg_dump` cubre todo.
 
@@ -65,6 +71,11 @@ migrar; un `pg_dump` cubre todo.
 | `TELEGRAM_WEBHOOK_PATH` | Ruta fija del webhook en n8n (`telegram`). |
 | `CHASQUI_DB_*` / `N8N_DB_*` | Credenciales de cada base. Usuarios distintos. |
 | `DEEPSEEK_API_KEY` | Autenticación del LLM. |
+| `DEEPSEEK_BASE_URL` | Endpoint del proveedor LLM. Ya no está hardcodeado: entra por `LLM_URL` en `bin/wf_lib.py` y se hornea en el JSON al generar los workflows. |
+| `PORTAL_DB_PASSWORD` | Contraseña del rol `authenticator` con el que se conecta PostgREST. La pone `bin/preparar-portal.sh`. |
+| `PORTAL_JWT_SECRET` | Secreto con el que `portal_sesion_abrir` firma el JWT **y** con el que PostgREST lo verifica. No se guarda en la base: viaja como `app.settings.jwt_secret`. |
+| `PROXY_PORT` | Puerto local del proxy (`127.0.0.1:8080` por defecto). La base pública del portal **no** es una variable de entorno: es el parámetro `portal_url_base` de la base, que es quien arma el enlace de `/portal`. |
+| `WA_*` | Bloque de WhatsApp Cloud API (`WA_PHONE_NUMBER_ID`, `WA_ACCESS_TOKEN`, `WA_VERIFY_TOKEN`, `WA_WEBHOOK_PATH`…). Ver `docs/WHATSAPP.md`. |
 
 n8n está configurado con `EXECUTIONS_DATA_SAVE_ON_SUCCESS=none`,
 `SAVE_ON_ERROR=all`, `PRUNE=true`, `MAX_AGE=168` (7 días): solo guarda los
@@ -166,6 +177,44 @@ La identidad es `(negocio_id, regla, clave_objeto)` — `producto:<id>` o
 abiertas**: un problema que vuelve tras cerrarse abre una fila nueva en vez de
 pisar la vieja, porque "te lo dije, lo arreglaste y volvió" es historia que hay
 que poder contar. Ver §5.5.
+
+**`metricas_resultado`** (066) — qué magnitud mira cada regla y hacia dónde
+debería moverse. `regla (PK), metrica` (lista cerrada por CHECK: `costo`,
+`margen_pct`, `dias_cobertura`, `balance`, `concentracion_pct`,
+`unidades_vendidas`, `ventas`), `direccion (sube_mejor|baja_mejor),
+umbral_pct` (5 por defecto: cambio mínimo para dejar de ser `neutro`). Es una
+**tabla, no un algoritmo**: medir el resultado de una regla nueva es un INSERT.
+Ver §5.7.
+
+**`alertas_enviadas`** (067) — el cooldown de la proactividad.
+`id, negocio_id, regla, clave_objeto, enviada_en`. Sin esta tabla el mismo
+problema se avisaría en cada corrida del cron.
+
+**`intenciones`** (063) — qué preguntas sabe responder Chasqui.
+`codigo (PK), nombre, patrones text[], metrica, periodo, filtros text[],
+comparativo, orden, activo`. Es un **contrato de datos, no un despachador**: la
+fila declara qué se pide y sobre qué ventana, y un único agregador genérico lo
+calcula. Una pregunta nueva es un INSERT. Ver §5.6.
+
+**`terceros` / `facturas` / `pagos`** (`036`; alta manual en la `069`) — clientes
+y proveedores por nombre normalizado, sus facturas y sus abonos. `facturas` se
+llena desde el XML de la DIAN y, desde F2, también a mano por el portal
+(`portal_factura_guardar`). El tercero se reusa por nombre normalizado: sin eso
+"Panadería El Sol" y "panaderia el sol" serían dos deudores y cada cartera se
+vería la mitad de grande. Ver §5.8.
+
+**`conocimiento` / `conocimiento_pendiente`** — la KB del negocio: precios,
+hechos y FAQs que el dueño enseñó (`/saber`, el portal, o "aplicar el precio
+sugerido" de D1), y las preguntas que no se supieron responder.
+
+**`portal_tokens`** (033) — enlaces de un solo uso del portal.
+`id, usuario_id, token_hash, expira_en, usado_en`. Ver §5.10.
+
+**`identidades`** (044) — `(canal, externo_id) → usuario`. Es lo que permite que
+WhatsApp y Telegram sean el mismo usuario sin duplicar la máquina de estados.
+
+**`cotizaciones`** — cotizaciones armadas desde el portal, compartibles por
+enlace público (`portal_cotizacion_publica`).
 
 **`fallas`** — lo que registra wf_error.
 `id, workflow, ejecucion_id, sesion_id, tipo, transitoria, intentos, detalle jsonb, creada_en`
@@ -351,9 +400,11 @@ n8n **nunca escribe un INSERT directo**; solo llama funciones.
 los propios comandos (`/nueva`, `/listo`, `/cancelar`, `acepto`), así que
 `router_procesar_mensaje` no distingue un toque de un mensaje escrito: no hay dos
 máquinas de estados que mantener sincronizadas. Los formatos propios son
-`svc:<codigo>` (elegir servicio), `mod:<codigo>` (entrar a un módulo) y
-`modayuda:<codigo>` (qué hace ese módulo) y `tipo:<codigo>` (naturaleza del
-negocio).
+`svc:<codigo>` (elegir servicio), `mod:<codigo>` (entrar a un módulo),
+`modayuda:<codigo>` (qué hace ese módulo), `tipo:<codigo>` (naturaleza del
+negocio), `acepto:<mensaje original>` (el consentimiento se lleva puesto el paso
+que lo disparó, para poder retomarlo) y `rec:<accion>[:<id>]` (`064`: `list`,
+`ver`, `hice`, `no_aplica`, `precio`; lo atiende `router_h_comandos`).
 
 **La entrada, desde las migraciones 045-046.** `/start` y `/ayuda` devuelven
 `sistema.bienvenida`: Chasqui se presenta como asistente, invita a escribir lo
@@ -603,7 +654,238 @@ ejecución se cierra igual.
 
 ---
 
-## 6. Los 6 workflows
+## 5.6 Preguntar a los números (Fase C)
+
+El servicio `consulta` no pide archivos: se dispara escribiendo. Hasta la `062`
+cortaba antes de arrancar si la KB no tenía una FAQ parecida — a un negocio con
+quince meses de facturas cargadas le contestaba *"todavía no tengo eso
+cargado"*. Hoy la compuerta arranca si hay KB **o** si hay números.
+
+**El contexto lo compone SQL, no el prompt.** `contexto_negocio_recuperar` junta
+lo que la Fase B construyó: la KB (un precio cargado a mano le gana a cualquier
+agregado cuando la pregunta es por eso), el perfil (`061`), la salud de hoy, el
+comparativo (`060`) y las recomendaciones vigentes (`059`). Son ~5 KB de
+contexto, todo calculado.
+
+> **El presupuesto de salida es parte del contrato del contexto.** Con
+> `max_tokens = 900` —el valor de cuando el contexto era una lista de FAQs— el
+> modelo gastaba todo razonando sobre 5 KB y devolvía `finish_reason: length`
+> con `content: ""`. Subido a 3000, no a 8000 como los informes: la respuesta
+> sigue siendo corta, lo que hace falta es lugar para pensar. Si crece uno, hay
+> que revisar el otro.
+
+**Los agregados puntuales son C2.** "¿Cuánto vendí en marzo?" no se puede
+contestar con un contexto general, y el prompt tiene prohibido calcular. La
+cadena:
+
+```
+intencion_detectar(texto)     → qué se preguntó, por patrones sobre `intenciones`
+periodo_resolver(texto, …)    → la ventana, resuelta a fechas concretas
+intencion_agregados(…)        → UN agregador para las siete métricas
+intencion_resolver(…)         → todo junto, con el resultado ya calculado
+```
+
+Cuatro decisiones que sostienen el diseño:
+
+- **La detección es determinística**, no una llamada al modelo. Un patrón que
+  falla se arregla con un UPDATE a un array; un clasificador que falla se
+  arregla peleando con un prompt. Si algún día los patrones no dan, el modelo
+  puede entrar **solo como desempate** — nunca como el que decide qué se calcula.
+- **Un agregador, siete métricas.** Es lo que evita que `intenciones` se
+  convierta en un despachador de funciones y que cada pregunta nueva sea código.
+- **El ancla temporal es la fecha más reciente de los datos**, no el reloj, por
+  la misma razón que en las reglas comparativas. Y los nombres de mes se buscan
+  como palabra completa (`\y`): "mayo" dentro de "Mayorista Centro" hacía que
+  *"¿cuánto le compré a Mayorista Centro?"* se respondiera con las compras de
+  mayo, con total seguridad y sin avisar de nada.
+- **Filtrar por producto usa `word_similarity`, no `similarity`.** La pregunta es
+  larga y el nombre corto: comparar las cadenas enteras castiga al producto por
+  el largo de la pregunta ("yogurt" vs. "¿cuánto stock me queda de yogurt?" daba
+  0,167; con `word_similarity`, 0,412).
+
+**"No tengo datos de entonces" ≠ "vendiste $0".** Una ventana sin un solo
+movimiento se marca `sin_datos` con su nota, porque un total en cero suena a que
+el negocio se hundió. Y las cifras viajan **también formateadas**
+(`total_txt`, `utilidad_txt`): si el modelo formatea por su cuenta produce una
+cifra que no está en el contexto y `validar_cifras` la rechaza.
+
+---
+
+## 5.7 Del consejo a la acción, y a la medición (Fase D)
+
+`recomendacion_accion` es **el único punto de escritura** de las acciones, para
+chat y portal: `hice` → resuelta · `no_aplica` → ignorada · `precio` → escribe el
+precio sugerido en `conocimiento` y cierra. Valida el negocio y que la
+recomendación siga abierta, así que un botón de un informe viejo no cierra nada
+dos veces.
+
+**Los botones no viajan dentro del informe, y no es una limitación.** El informe
+se arma en `ejecucion_preparar` y las filas de `recomendaciones` recién existen
+al cerrar (`059`): en el momento del render no hay a qué apuntar. Además el
+teclado topa en 6 filas (§6.4) y ocho recomendaciones por tres acciones son
+veinticuatro. Entonces `ejecucion.entregada` lleva **un** botón —*"✅ Ya hice
+algo"*, `rec:list`— y todo lo demás se resuelve al tocarlo, contra la tabla ya
+escrita. El mismo camino sirve para el portal y para WhatsApp sin cambiar nada.
+
+**El precio sugerido dejó de vivir dentro de una frase.** Las CTEs publican
+`datos` (`precio_sugerido`, `unidades_pedir`, `proveedor_sugerido`): aplicar el
+precio parseando *"Subilo a $12.500"* habría sido depender de un texto que se
+reescribe cualquier día. De ahí sale también la cantidad que consume D2.
+
+**La lista de pedido** (`pedido_sugerido`, `065`) consolida las recomendaciones
+abiertas de *se agota*. Tres reglas:
+
+- **Las unidades no se recalculan.** El dueño vio "pedí 7" el martes; si el
+  jueves la lista dice 9 porque entró una venta, deja de creerle a las dos
+  cifras. La lista muestra lo que se le recomendó.
+- **El proveedor más barato es el más barato CONOCIDO** (`v_proveedor_mas_barato`,
+  de sus propias compras). Chasqui no tiene precios de mercado y no los inventa.
+- **El total declara lo que le falta.** Un producto sin precio conocido no entra
+  al total y `sin_precio` lo cuenta: presentarlo como el total de la compra sería
+  mentir por omisión. Cada renglón arrastra `stock_estimado` (A2).
+
+**El resultado es un segundo eje, no un estado más** (`066`). "Aplicar el precio
+sugerido" puede quedar perfectamente ejecutada —`estado = resuelta`,
+`cerrada_por = accion_usuario`— y aun así dar resultado **negativo**: subió el
+precio y dejó de vender. Colapsarlos en una columna haría imposible distinguir
+"me hicieron caso" de "les fue bien".
+
+Se mide sin inventar un modelo: `metricas_resultado` dice qué magnitud mira cada
+regla y hacia dónde debería moverse; al cerrarse se guarda el valor
+(`recomendacion_marcar_cierre`) y cuando entran datos nuevos se relee y se
+compara (`recomendaciones_medir`). Un cambio menor que el umbral es `neutro`.
+
+> **La compuerta mira `creado_en`, no `fecha`.** Un archivo con ventas fechadas
+> la semana que viene ya estaba cargado cuando se cerró la recomendación, así que
+> no dice nada sobre si la acción sirvió. Lo que importa es que haya **entrado**
+> información nueva. Con el gate mal, todo se medía de inmediato contra sí mismo
+> y daba `neutro`.
+
+Lo que no se mide, se dice: `sin_medir` se cuenta en el perfil y el portal
+muestra "sin medir todavía".
+
+---
+
+## 5.8 Proactividad: alertas e informe periódico (Fase E)
+
+**La regla que gobierna la `067` no es "avisar" sino "no molestar"**: un bot que
+avisa de más lo silencian, y silenciado no sirve para nada. Las cinco compuertas
+de `alertas_evaluar` son todas para NO avisar:
+
+| Compuerta | Parámetro | Por qué |
+|---|---|---|
+| Solo prioridad **alta** | — | Lo demás espera al informe |
+| **Un** aviso por negocio y corrida | `alerta_max_por_corrida` (1) | Nunca una ráfaga |
+| Cooldown por regla+objeto | `alerta_cooldown_dias` (14) | El mismo problema no se avisa dos veces seguidas |
+| Horario del negocio | `alerta_hora_desde/hasta` (8–20), `zona_horaria` | Un aviso a las 3 AM es la forma más rápida de que lo bloqueen |
+| Solo con datos nuevos | `v_negocios_alertables` | Sin datos nuevos no hay nada que el dueño no haya visto |
+
+**El aviso avisa y ofrece; no registra.** Lleva un hallazgo real —calculado con
+la misma función que el informe— y dos botones (*ver el análisis completo*, *ya
+hice algo*), y deliberadamente **no** escribe en `recomendaciones` ni toca
+`vista_en`: eso solo pasa cuando hay un informe de verdad, o `veces_vista`
+contaría mensajes que no son informes.
+
+**Cero nodos nuevos en E1**: `mantenimiento_ciclo` concatena las notificaciones a
+las suyas y `wf_cron` las despacha con el fanout que ya tenía desde la `016`. Con
+su guardarraíl: si evaluar las reglas revienta, el reaper —que es lo que no puede
+dejar de correr— ya hizo su trabajo y sus notificaciones salen igual.
+
+**El informe periódico (`068`) sí necesitó un nodo**, y es inevitable: una alerta
+es un mensaje y `wf_cron` ya sabía mandarlos; un informe es una **ejecución** y
+hay que llamar a `wf_ejecutar`. `mantenimiento_ciclo` pasó a devolver dos listas
+—`notificaciones` y `ejecuciones`— y el contrato viejo no cambió: quien solo lea
+`notificaciones` sigue funcionando.
+
+`v_negocios_informe_periodico` decide a quién le toca: **nunca al que nunca vio
+un informe** (el primero lo pide el dueño, y así aprende qué es), solo si pasaron
+`informe_periodico_dias` (30) y entraron al menos `informe_periodico_min_movs`
+(10) movimientos desde entonces. Un aviso corto va **antes** del informe: uno que
+aparece sin explicación se lee como spam por bueno que sea.
+
+> `wf_cron` no se puede correr con `n8n execute --id`: su disparador es de agenda
+> y no de sub-workflow. Se prueba llamando a `mantenimiento_ciclo()` directo, que
+> es donde está toda la lógica.
+
+---
+
+## 5.9 Cartera como señal de liquidez (Fase F)
+
+La cartera estaba clasificada como **ERP-DRIFT** y se justificaba **solo** si
+alimentaba `recomendaciones_negocio`. La `069` la convierte en la regla número
+once y en el sexto frente de `salud_negocio`.
+
+**Es `capital`, no una fuga.** Una factura vencida no es plata que se pierde: es
+plata que es tuya y no está — el mismo caso que "plata quieta", solo que en la
+calle en vez de en la bodega. Comparte tipo de impacto y umbrales (`055`);
+tratarla como fuga mensual la pondría siempre arriba de todo, que es el error que
+A3 vino a arreglar.
+
+**El impacto es el saldo VENCIDO, no el total que el cliente debe.** Se detectó
+probando, con un cliente que debe $9.200.000 de los cuales solo $200.000 están
+vencidos: con el total, el impacto habría sido 46 veces el real y habría
+encabezado el informe. `v_cartera_tercero` no separa las dos cosas, así que la
+cuenta se hace en la regla, y el texto menciona aparte lo que todavía no vence.
+
+**Liquidez sigue la regla de las otras cinco notas: NULL si no hay datos.** Un
+negocio que vende todo de contado no ve bajar su índice por una nota que no le
+aplica.
+
+**F2 (el alta manual) no era opcional**: `facturas` solo se llenaba desde XML de
+la DIAN, así que quien carga CSV nunca tenía una factura y por lo tanto nunca
+recibía la recomendación.
+
+---
+
+## 5.10 El portal (PostgREST)
+
+El portal es **HTML estático + PostgREST**. No hay backend propio: el navegador
+llama RPC `portal_*` y toda la autorización vive en Postgres.
+
+**Tres roles, y por qué son tres** (`bin/preparar-portal.sh`, que corre como
+superusuario porque `CREATE ROLE` no está al alcance del dueño de la base y por
+eso no puede ser una migración):
+
+| Rol | Puede |
+|---|---|
+| `authenticator` | Nada propio. `NOINHERIT`; lo único que hace es `SET ROLE` a los otros dos. Es con el que se conecta PostgREST. |
+| `portal_anon` | Solo `portal_sesion_abrir` (y la cotización pública). |
+| `portal_usuario` | Solo las RPC `portal_*`. |
+
+**Magic link.** `/portal` en el chat llama a `portal_token_crear`, que devuelve un
+token de **un solo uso** con 15 minutos de vida (en la base se guarda el hash, no
+el token). El navegador lo canjea con `portal_sesion_abrir`, que lo marca usado y
+firma un JWT con `app.settings.jwt_secret` — el mismo secreto que verifica
+PostgREST, que nunca se persiste. La identidad sigue siendo la cuenta de
+Telegram: no hay contraseñas.
+
+**Ninguna función es pública por defecto.** Postgres da `EXECUTE` a `PUBLIC` en
+toda función nueva, y `ALTER DEFAULT PRIVILEGES … IN SCHEMA` **no** lo quita:
+cada migración que agrega una RPC del portal tiene que revocar y otorgar
+explícitamente, y terminar con `NOTIFY pgrst, 'reload schema'` para que PostgREST
+vea la firma nueva.
+
+**Cada RPC deriva el negocio de la sesión** (`portal_negocio()`), nunca de un
+parámetro: por eso `portal_alias_confirmar` o `portal_recomendacion_accion`
+pueden delegar en la misma función que usa el router sin abrir un boquete.
+
+Las cinco pestañas y de dónde salen:
+
+| Pestaña | RPC principales |
+|---|---|
+| 🏪 Mi negocio | `portal_perfil`, `portal_movimientos_resumen` |
+| 📈 Ventas | `portal_movimientos`, `portal_cartera`, `portal_factura_guardar`, `portal_pago_registrar`, `portal_conteos`/`portal_conteo_guardar`, `portal_pendientes`/`portal_alias_confirmar`, `portal_documentos` |
+| 🏷️ Precios | `portal_conocimiento*`, `portal_cotizacion*` |
+| 💡 Conocimiento | `portal_conocimiento*` |
+| 📊 Informes | `portal_recomendaciones`/`portal_recomendacion_accion`, `portal_pedido`, `portal_snapshots`, `portal_informes`/`portal_informe` |
+
+> **Los resultados se entregan en el portal, no en PDF.** Gotenberg y
+> `plantillas_pdf` se dieron de baja en la `057`; un documento entregable
+> (una cotización, por ejemplo) se decide caso a caso.
+
+---
+
+## 6. Los 7 workflows
 
 Todos se generan con `bin/gen_wf_*.py` (+ `bin/wf_lib.py`) y se importan con
 `n8n import:workflow`. Los IDs de credencial (`chasquiPg…`, `chasquiTg…`,
@@ -665,6 +947,10 @@ recibiendo + documento    → acción {ingerir, sesion_id}          h_recibiendo
 recibiendo + svc:<codigo> → servicio_ya_elegido (teclado viejo del historial)
 recibiendo + /listo       → si hay docs parseados: crea ejecucion(preparando),
                             acción {ejecutar, ejecucion_id}            ″
+rec:list|ver|hice|…       → lista/detalle/acción sobre una recomendación
+                            (064, `recomendacion_accion`)       h_comandos
+texto libre sin sesión    → servicio `consulta`: pregunta sobre los números
+                            (062/063)                          h_sin_sesion
 fallback                  → no_entendido                        (despachador)
 ```
 
@@ -831,10 +1117,17 @@ marcada como exitosa, no se guardaba nada
 el chat sin dejar rastro en ningún lado. `retryOnFail` (3 intentos) cubre el hipo
 transitorio.
 
-### 6.5 wf_cron — resiliencia programada
+### 6.5 wf_cron — resiliencia programada y proactividad
 
-`Schedule (5 min)` → `Mantenimiento` (`mantenimiento_ciclo`) → `Fanout` (una
-salida por notificación) → `Avisar` (wf_enviar). Ver §7.
+`Cada5min` → `Mantenimiento` (`mantenimiento_ciclo`) → dos ramas de reparto:
+
+- `Fanout` (una salida por notificación) → `Avisar` (wf_enviar) — reaper,
+  recordatorios y **alertas** (§5.8).
+- `FanoutEjec` (una salida por ejecución) → `Analizar` (wf_ejecutar) — el
+  **informe periódico** (§5.8).
+
+Los dos nodos de la segunda rama son los únicos que agregó la Fase E: solo
+reparten lo que Postgres ya decidió. Ver §7.
 
 ### 6.6 wf_error — error workflow de los otros
 
@@ -846,6 +1139,37 @@ El usuario final nunca ve el stack trace.
 > **wf_admin no existe como workflow.** Con un solo bot hay un solo webhook. Los
 > comandos de operación viven en `router_procesar_mensaje` restringidos por
 > `usuarios.rol` — "cero código nuevo", exactamente como pide el plan.
+
+### 6.7 wf_wa_router — el segundo canal
+
+WhatsApp entra por la Cloud API de Meta y usa **el mismo cerebro**: no hay una
+segunda máquina de estados.
+
+- `WebhookGet` → `Verificar` → `TokenOk?` → `Challenge` / `Rechazar`: el
+  *handshake* de suscripción de Meta, que es un GET con un token que se devuelve
+  tal cual.
+- `Webhook` (POST) → `Normalizar` (arma el mismo evento que Telegram, con
+  `canal: 'whatsapp'`) → `Router` (`router_procesar_mensaje`) → `Despachar` →
+  `Switch` → wf_enviar / wf_ingesta / wf_ejecutar. Idéntico a §6.1.
+
+La identidad se cuelga en `identidades` (canal + `wa_id`), el `chat_id` que viaja
+por los sobres es el teléfono en dígitos, y `wf_enviar` decide al final por qué
+canal contestar (`canal_de_chat`, `044`).
+
+Las diferencias de interfaz las absorbe la salida, no el router: máximo 3
+botones (más de eso va como lista desplegable), `*negrita*` en vez de HTML
+(`wa_texto`), y cuerpo de 1024 caracteres cuando lleva botones (`wa_payload`).
+
+> **La ventana de 24 h de Meta.** Solo se puede iniciar conversación dentro de
+> las 24 h del último mensaje del usuario; fuera de eso hacen falta *message
+> templates* aprobadas. Consecuencia: **los recordatorios del cron y las alertas
+> no salen por WhatsApp** para quien tenga esa única identidad. El flujo normal
+> no se ve afectado, porque el bot siempre responde a algo recién enviado.
+
+Meta no manda cabecera secreta como Telegram: hoy la defensa es la ruta con
+sufijo aleatorio (`WA_WEBHOOK_PATH`) más el filtro por `phone_number_id`;
+verificar `X-Hub-Signature-256` sigue pendiente. Alta y credenciales, en
+`docs/WHATSAPP.md`.
 
 ---
 
@@ -859,6 +1183,8 @@ El usuario final nunca ve el stack trace.
 | **Falla de workflow** | wf_error registra en `fallas`, clasifica transitoria y avisa al admin con el detalle. |
 | **Cifra inventada por el LLM** | `validar_cifras` la detecta; la ejecución reintenta una vez y, si vuelve a fallar, envía el **informe seco** sin narración. Mejor un informe seco que uno con cifras falsas. |
 | **Cupo superado** | `ejecucion_preparar` devuelve `{bloqueado:true}` antes de gastar tokens; el usuario recibe el mensaje del límite. |
+| **Falla el snapshot o el registro de recomendaciones** | `ejecucion_cerrar` los envuelve: la falla queda en `fallas` y la ejecución se cierra igual. Un informe entregado vale más que una foto perfecta, y una falla no arrastra a la otra. |
+| **Falla la evaluación de alertas** | El reaper ya corrió antes: sus notificaciones salen igual. Lo que no puede dejar de correr no depende de lo que sí. |
 
 ---
 
@@ -906,6 +1232,16 @@ un asterisco con su nota al pie, y `recomendaciones_negocio` publica
 `v_deriva_costo`, `v_rotacion_producto` (incluye días de cobertura),
 `v_balance_unidades`, `v_pareto_utilidad`.
 
+**Comparación y decisión** (las que consumen las fases B–F):
+`v_proveedor_mas_barato` (el más barato **conocido**, de sus propias compras),
+`v_cartera_tercero` (saldo por deudor; la regla separa vencido de por vencer),
+`v_perfil_negocio` (lo estable del negocio, §4.4).
+
+**Elegibilidad de la proactividad** — dos vistas que existen para decir *que no*:
+`v_negocios_alertables` (hay a quién avisarle, autorizó, y entraron datos después
+del último análisis) y `v_negocios_informe_periodico` (ya vio un informe, pasaron
+30 días, cargó datos desde entonces).
+
 **Operación** (la observabilidad también son SELECTs):
 `v_consumo_negocio`, `v_sesiones_atascadas`, `v_embudo_servicios`
 (dónde se cae la gente), `v_ejecuciones_fallidas`, `v_calidad_matching`,
@@ -934,6 +1270,21 @@ corre a mano cuando cambian los textos o aparece un admin nuevo. El
 `registrador` ya no toca el menú: lo hacía en cada reconexión del túnel y
 pisaba la separación por ámbito.
 
+### Roles del portal
+`bin/preparar-portal.sh` crea `authenticator`, `portal_anon` y `portal_usuario`.
+Corre como **superusuario** —`CREATE ROLE` no está al alcance del dueño de la
+base— y por eso no puede ser una migración. Es idempotente: se vuelve a correr
+para rotar la contraseña. Orden en una instalación nueva:
+
+```bash
+bash bin/preparar-portal.sh      # roles
+bash bin/migrar.sh               # el resto, incluida la 033 (que da los GRANT)
+docker compose up -d
+```
+
+Toda migración que agregue una RPC `portal_*` termina en
+`NOTIFY pgrst, 'reload schema'`, o PostgREST no ve la firma nueva. Ver §5.10.
+
 ### Extensiones
 `db/init/00_bases.sh` crea las dos bases y sus roles, e instala `pgcrypto`
 (hash), `pg_trgm` + `unaccent` (matching). Corre una sola vez, al primer arranque
@@ -946,11 +1297,39 @@ La base ES la herramienta entera. Restaurar:
 Recomendado además WAL archiving en producción.
 
 ### Workflows en git
-`bin/exportar-workflows.sh` exporta los 6 a `workflows/` (formato separado).
+`bin/exportar-workflows.sh` exporta los 7 a `workflows/` (formato separado).
 No por portabilidad: reconstruirlos a mano tras perder un volumen es un día
 perdido. Las credenciales NO se exportan ahí (van cifradas con
 `N8N_ENCRYPTION_KEY`); se recuperan restaurando el dump de la base `n8n` con esa
 misma clave.
+
+### Bancos de prueba
+`bash bin/pruebas.sh` corre los bancos de `db/pruebas/` y resume el resultado
+(`-v` para la salida completa; se le pueden pasar nombres sueltos). **Todos
+corren dentro de una transacción que termina en ROLLBACK**: no dejan rastro y se
+pueden correr contra producción.
+
+| Banco | Qué comprueba |
+|---|---|
+| `aceptacion.sql` | Las pruebas de aceptación del roadmap, automatizadas. |
+| `router_casos.sql` | 67 casos que recorren los cinco estados de la conversación, los reportes de admin y la entrada por WhatsApp. **Correrlo antes y después** de tocar el router y comparar: es lo que hizo verificable la A4. No lleva golden a propósito — tres de sus casos (`/salud`, `/matching`, `/pendientes`) reportan la base entera y su salida cambia con cada dataset. |
+| `reglas_comparativas.sql` | Un negocio sintético de 15 meses donde cada producto dispara una sola de las cuatro reglas de B3. Anclado a `current_date`, así que no caduca. |
+| `empty_state.sql` | El negocio recién nacido —cero de todo— : que exista, que opere y que **no invente nada**. Los demás bancos parten de un negocio con historia. |
+| `escenarios_generados.sql` | Que Chasqui vea en los datos cargados **exactamente** lo que declara el manifest del generador. |
+
+### Datos de prueba sintéticos
+Para ejercitar muchos negocios y escenarios sin datos privados de clientes, hay
+un generador en cuatro piezas (`bin/gen_datos_prueba.py` escribe CSV de ventas y
+facturas UBL 2.1; `bin/cargar_datos_prueba.py` los mete **por la ruta real de
+ingesta**; `bin/validar_datos_prueba.py` calcula un oráculo independiente;
+`db/pruebas/escenarios_generados.sql` compara). El dataset se adapta a Chasqui y
+nunca al revés: lo que no se puede representar por las rutas que existen queda
+declarado como limitación. Manual completo en `docs/TEST_DATA_GENERATOR.md`, el
+diseño en `docs/PLAN_DATOS_PRUEBA.md`.
+
+`bin/prueba_ciclo_vida.py` es el complemento de `empty_state`: prueba que un
+negocio vacío pueda **moverse** a operando —primera factura, primer CSV,
+`/listo`, análisis— por las rutas que usa un usuario real y en ese orden.
 
 ### Prueba headless del motor
 ```bash
@@ -965,10 +1344,13 @@ El `N8N_RUNNERS_BROKER_PORT=5699` evita el choque con el broker del contenedor e
 ## 11. Cómo agregar un servicio (sin tocar n8n)
 
 ```sql
--- 1. el servicio. `modulo_codigo` decide bajo qué botón del menú aparece.
-INSERT INTO servicios (codigo, nombre, descripcion, pasos, modulo_codigo, orden)
-VALUES ('consumo_publicos', 'Consumo de servicios públicos', '…', '[…]',
-        'negocio', 20);
+-- 1. el servicio. `modulo_codigo` decide bajo qué botón del menú aparece;
+--    `entrada` distingue los que piden archivos de los que se disparan
+--    escribiendo. (`pasos` se dio de baja en la 057: el router los resuelve.)
+INSERT INTO servicios (codigo, nombre, descripcion, entrada, funcion_hallazgos,
+                       modulo_codigo, orden)
+VALUES ('consumo_publicos', 'Consumo de servicios públicos', '…', 'archivos',
+        'hallazgos_generar', 'negocio', 20);
 
 -- 2. qué archivos pide
 INSERT INTO servicios_entradas (servicio_codigo, formato_codigo, obligatorio, min_archivos, max_archivos)
@@ -988,7 +1370,11 @@ VALUES ('recibo_csv', 'Recibos POS', '{text/csv}', '{csv}', 'ingesta_cargar_tabu
 INSERT INTO prompts (servicio_codigo, sistema, usuario, modelo)
 VALUES ('consumo_publicos', '…', '… {{hallazgos}}', 'deepseek-v4-flash');
 
--- 5. la plantilla PDF (opcional: hoy el informe se entrega como texto)
+-- 5. si el servicio tiene reglas propias, qué mide cada una (opcional, 066)
+--    `metrica` sale de una lista cerrada por CHECK; una magnitud nueva sí
+--    obliga a tocar la tabla.
+INSERT INTO metricas_resultado (regla, metrica, direccion, umbral_pct)
+VALUES ('consumo_alto', 'costo', 'baja_mejor', 5);
 ```
 
 **El botón del servicio aparece solo**: `teclado_modulo()` lee los servicios
@@ -1020,6 +1406,14 @@ corrige ahí, no después.**
 - Nodos Code no leen variables de entorno (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true` por defecto en 2.0): los secretos van por credenciales.
 - `retryOnFail` solo en nodos idempotentes (el registro por hash lo es; un envío de Telegram no).
 - Autorización de datos explícita del usuario antes de tratar nada (`autorizacion_datos`).
+- El editor de n8n **no** queda expuesto: el túnel apunta al proxy, que solo pasa
+  `/webhook`, `/api` y `/portal`.
+- Portal sin contraseñas: enlace de un solo uso (se guarda el hash, vence a los
+  15 min) → JWT firmado en Postgres. `portal_anon` solo puede abrir sesión;
+  `portal_usuario` solo las RPC `portal_*`, y cada una deriva el negocio de la
+  sesión, nunca de un parámetro. Ninguna función es pública por defecto (§5.10).
+- Al LLM solo le llegan cifras ya calculadas y, en la ingesta, nombres de
+  columnas con cinco filas de muestra. Nunca el archivo completo.
 
 ---
 
@@ -1038,3 +1432,9 @@ corrige ahí, no después.**
 | Informe sale seco (sin narración) | `validar_cifras` rechazó el texto dos veces | Revisar el prompt; el modelo está inventando o formateando cifras fuera de los hallazgos. |
 | Ejecución atascada en `procesando` | LLM caído o n8n reiniciado | El reaper la barre en ≤5 min; ver `v_sesiones_atascadas`. |
 | Credenciales "no se pueden descifrar" tras mover el stack | `N8N_ENCRYPTION_KEY` distinta | Restaurar la clave original del `.env`. |
+| El portal responde 404 en una RPC recién creada | PostgREST tiene la caché de esquema vieja | La migración tiene que terminar en `NOTIFY pgrst, 'reload schema'`; si no, `docker compose restart postgrest`. |
+| El portal responde 401/403 con un enlace recién pedido | El token ya se usó, venció (15 min), o `PORTAL_JWT_SECRET` no coincide entre PostgREST y `app.settings.jwt_secret` | Pedir otro con `/portal`; verificar que las dos variables del compose salgan del mismo valor. |
+| `/portal` contesta "todavía no tengo configurada la dirección" | Falta el parámetro `portal_url_base` | `UPDATE parametros SET valor = '"https://…"'::jsonb WHERE clave='portal_url_base' AND negocio_id IS NULL;` |
+| No llega ninguna alerta pese a haber problemas altos | Alguna de las cinco compuertas de §5.8 | `SELECT * FROM v_negocios_alertables;` y revisar `alertas_enviadas` (cooldown) y la hora contra `alerta_hora_desde/hasta`. |
+| El informe periódico no dispara | Ya hay un análisis en curso, o el negocio nunca vio un informe | `SELECT * FROM v_negocios_informe_periodico;` |
+| Una recomendación cerrada nunca se mide | No entraron datos **nuevos** desde el cierre (`creado_en`) | Es el comportamiento correcto: se reporta `sin_medir` hasta que llegue un archivo posterior. |
