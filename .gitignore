@@ -6,3 +6,10 @@ __pycache__/
 docs/prototipo/credenciales-*.json
 *.dump
 .fuse_hidden*
+
+# Datos de prueba generados: el dataset de UCI pesa 45 MB y lo generado se
+# vuelve a producir con `bin/gen_datos_prueba.py --seed`. Los manifests sí se
+# versionan: son el contrato de los escenarios.
+docs/ejemplos/fuente/
+docs/ejemplos/generados/*/
+!docs/ejemplos/generados/manifests/

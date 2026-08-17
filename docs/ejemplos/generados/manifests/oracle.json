@@ -1,0 +1,2800 @@
+{
+  "generado_en": "2026-08-16T17:20:04",
+  "perfil": "medium",
+  "seed": 20260815,
+  "huella_normalizada": "5ddf867e443ce0c0144f184be6aa82fd",
+  "umbrales": {
+    "margen_minimo_pct": 15,
+    "deriva_costo_alerta_pct": 10,
+    "dias_cobertura_min": 7,
+    "rotacion_lenta_dias": 60,
+    "dependencia_proveedor_pct": 50,
+    "dias_sin_venta_alerta": 45,
+    "ventas_minimas_historicas": 3,
+    "subidas_proveedor_alerta": 3,
+    "caida_margen_pp_alerta": 3,
+    "caida_anual_pct_alerta": 15,
+    "cartera_mora_dias": 15,
+    "max_pct_nulos": 20
+  },
+  "nota": "calculado en Python desde los archivos generados, desde la definición de cada umbral y no desde el SQL de Chasqui",
+  "escenarios": [
+    {
+      "escenario": "saludable",
+      "negocio": "PRUEBA GEN saludable",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {},
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 001": 27.7,
+        "PROVEEDOR DEMO 002": 37.0,
+        "PROVEEDOR DEMO 003": 35.3
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 27318500,
+        "antes": 28603250,
+        "caida_pct": 4.5
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "3 STRIPEY MICE FELTCRAFT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 112.0,
+          "dias_cobertura": 25.105,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.461,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "ANTIQUE SILVER TEA GLASS ETCHED": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 531.0,
+          "dias_cobertura": 25.013,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 21.229,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "CERAMIC STRAWBERRY CAKE MONEY BANK": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.724,
+          "balance": 187.0,
+          "dias_cobertura": 25.032,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 7.47,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            31.72,
+            31.72,
+            31.72
+          ]
+        },
+        "COLOUR GLASS T-LIGHT HOLDER HANGING": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.308,
+          "balance": 684.0,
+          "dias_cobertura": 25.033,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 27.324,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.31,
+            32.31,
+            32.31
+          ]
+        },
+        "FELTCRAFT CUSHION OWL": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 61.0,
+          "dias_cobertura": 25.098,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.43,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "HAND WARMER OWL DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 230.0,
+          "dias_cobertura": 25.047,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.183,
+          "dias_sin_vender": 21,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "HAND WARMER UNION JACK": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 136.0,
+          "dias_cobertura": 25.032,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.433,
+          "dias_sin_vender": 13,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "HEART OF WICKER LARGE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 325.0,
+          "dias_cobertura": 25.004,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.998,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "HOT WATER BOTTLE I AM SO POORLY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.043,
+          "balance": 99.0,
+          "dias_cobertura": 25.191,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.93,
+          "dias_sin_vender": 7,
+          "margen_serie": [
+            32.04,
+            32.04,
+            32.04
+          ]
+        },
+        "PACK OF 72 SKULL CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 515.0,
+          "dias_cobertura": 25.043,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 20.565,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "RED RETROSPOT CAKE STAND": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.963,
+          "balance": 84.0,
+          "dias_cobertura": 25.25,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.327,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.96,
+            31.96,
+            31.96
+          ]
+        },
+        "RED RETROSPOT PEG BAG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.157,
+          "balance": 114.0,
+          "dias_cobertura": 25.093,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.543,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.16,
+            32.16,
+            32.16
+          ]
+        },
+        "SET OF 3 HEART COOKIE CUTTERS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 152.0,
+          "dias_cobertura": 25.065,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.064,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "WOOD S/3 CABINET ANT WHITE FINISH": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 58.0,
+          "dias_cobertura": 25.128,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 2.308,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "margen_bajo",
+      "negocio": "PRUEBA GEN margen_bajo",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "margen": [
+          "12 PENCILS SMALL TUBE RED RETROSPOT",
+          "CHOCOLATE HOT WATER BOTTLE",
+          "HEART FILIGREE DOVE  SMALL",
+          "WOODEN PICTURE FRAME WHITE FINISH"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 004": 33.4,
+        "PROVEEDOR DEMO 005": 36.5,
+        "PROVEEDOR DEMO 006": 30.1
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 40815400,
+        "antes": 40701100,
+        "caida_pct": -0.3
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "12 PENCILS SMALL TUBE RED RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 10.769,
+          "balance": 294.0,
+          "dias_cobertura": 25.05,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.736,
+          "dias_sin_vender": 11,
+          "margen_serie": [
+            10.77,
+            10.77,
+            10.77
+          ]
+        },
+        "ASSORTED COLOURS SILK FAN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.53,
+          "balance": 1306.0,
+          "dias_cobertura": 25.004,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 52.231,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.53,
+            32.53,
+            32.53
+          ]
+        },
+        "BEWARE OF THE CAT METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.953,
+          "balance": 137.0,
+          "dias_cobertura": 25.036,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.472,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "CHILLI LIGHTS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 278.0,
+          "dias_cobertura": 25.066,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.091,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "CHOCOLATE HOT WATER BOTTLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 9.899,
+          "balance": 107.0,
+          "dias_cobertura": 25.163,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.252,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            9.9,
+            9.9,
+            9.9
+          ]
+        },
+        "GUMBALL COAT RACK": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.157,
+          "balance": 141.0,
+          "dias_cobertura": 25.029,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.634,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.16,
+            32.16,
+            32.16
+          ]
+        },
+        "HAND WARMER SCOTTY DOG DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 234.0,
+          "dias_cobertura": 25.025,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 9.351,
+          "dias_sin_vender": 16,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "HEART FILIGREE DOVE  SMALL": {
+          "deriva_pct": 0.0,
+          "margen_pct": 10.4,
+          "balance": 249.0,
+          "dias_cobertura": 25.063,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.935,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            10.4,
+            10.4,
+            10.4
+          ]
+        },
+        "JUMBO BAG OWLS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 268.0,
+          "dias_cobertura": 25.018,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.712,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "JUMBO BAG WOODLAND ANIMALS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.212,
+          "balance": 284.0,
+          "dias_cobertura": 25.072,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.327,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.21,
+            32.21,
+            32.21
+          ]
+        },
+        "SET OF 3 CAKE TINS PANTRY DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 160.0,
+          "dias_cobertura": 25.096,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.376,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "SET/6 RED SPOTTY PAPER PLATES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 326.0,
+          "dias_cobertura": 25.026,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 13.026,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "SMALL GLASS HEART TRINKET POT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 141.0,
+          "dias_cobertura": 25.089,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 5.62,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "WOODEN PICTURE FRAME WHITE FINISH": {
+          "deriva_pct": 0.0,
+          "margen_pct": 9.804,
+          "balance": 289.0,
+          "dias_cobertura": 25.027,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.547,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            9.8,
+            9.8,
+            9.8
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "costos_crecientes",
+      "negocio": "PRUEBA GEN costos_crecientes",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "costo": [
+          "HANGING HEART JAR T-LIGHT HOLDER",
+          "PAPER BUNTING RETROSPOT",
+          "SPACEBOY LUNCH BOX",
+          "WHITE HANGING HEART T-LIGHT HOLDER"
+        ],
+        "margen": [
+          "HANGING HEART JAR T-LIGHT HOLDER",
+          "PAPER BUNTING RETROSPOT",
+          "SPACEBOY LUNCH BOX",
+          "WHITE HANGING HEART T-LIGHT HOLDER"
+        ],
+        "margen_cae": [
+          "HANGING HEART JAR T-LIGHT HOLDER",
+          "PAPER BUNTING RETROSPOT",
+          "SPACEBOY LUNCH BOX",
+          "WHITE HANGING HEART T-LIGHT HOLDER"
+        ],
+        "proveedor_sube": [
+          "HANGING HEART JAR T-LIGHT HOLDER",
+          "PAPER BUNTING RETROSPOT",
+          "SPACEBOY LUNCH BOX",
+          "WHITE HANGING HEART T-LIGHT HOLDER"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 007": 39.0,
+        "PROVEEDOR DEMO 008": 30.2,
+        "PROVEEDOR DEMO 009": 30.8
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 33512450,
+        "antes": 33606750,
+        "caida_pct": 0.3
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "ALARM CLOCK BAKELIKE PINK": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 91.0,
+          "dias_cobertura": 25.146,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.619,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "HAND WARMER BIRD DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 153.0,
+          "dias_cobertura": 25.086,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 6.099,
+          "dias_sin_vender": 19,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "HANGING HEART JAR T-LIGHT HOLDER": {
+          "deriva_pct": 40.0,
+          "margen_pct": 4.8,
+          "balance": 236.0,
+          "dias_cobertura": 25.017,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.434,
+          "dias_sin_vender": 0,
+          "subidas": 11,
+          "margen_serie": [
+            8.8,
+            6.4,
+            4.8
+          ]
+        },
+        "HEART OF WICKER SMALL": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 278.0,
+          "dias_cobertura": 25.011,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.115,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "PAPER BUNTING RETROSPOT": {
+          "deriva_pct": 39.801,
+          "margen_pct": 4.746,
+          "balance": 170.0,
+          "dias_cobertura": 25.081,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.778,
+          "dias_sin_vender": 0,
+          "subidas": 11,
+          "margen_serie": [
+            8.47,
+            6.44,
+            4.75
+          ]
+        },
+        "PLASTERS IN TIN STRONGMAN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 104.0,
+          "dias_cobertura": 25.007,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.159,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "POTTERING IN THE SHED METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.212,
+          "balance": 72.0,
+          "dias_cobertura": 25.287,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.847,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.21,
+            32.21,
+            32.21
+          ]
+        },
+        "RETROSPOT HEART HOT WATER BOTTLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 55.0,
+          "dias_cobertura": 25.15,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.187,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "RIBBON REEL STRIPES DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 93.0,
+          "dias_cobertura": 25.047,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.713,
+          "dias_sin_vender": 6,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "ROSES REGENCY TEACUP AND SAUCER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 158.0,
+          "dias_cobertura": 25.037,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.311,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "SET OF 4 PANTRY JELLY MOULDS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 305.0,
+          "dias_cobertura": 25.015,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.193,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "SPACEBOY LUNCH BOX": {
+          "deriva_pct": 31.915,
+          "margen_pct": 4.615,
+          "balance": 267.0,
+          "dias_cobertura": 25.087,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.643,
+          "dias_sin_vender": 0,
+          "subidas": 11,
+          "margen_serie": [
+            8.21,
+            6.67,
+            4.62
+          ]
+        },
+        "VINTAGE UNION JACK BUNTING": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 82.0,
+          "dias_cobertura": 25.065,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 3.272,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "WHITE HANGING HEART T-LIGHT HOLDER": {
+          "deriva_pct": 39.801,
+          "margen_pct": 4.746,
+          "balance": 804.0,
+          "dias_cobertura": 25.022,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 32.132,
+          "dias_sin_vender": 0,
+          "subidas": 11,
+          "margen_serie": [
+            8.47,
+            6.44,
+            4.75
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "inventario_excesivo",
+      "negocio": "PRUEBA GEN inventario_excesivo",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "quieto": [
+          "LUNCH BAG WOODLAND",
+          "PLASTERS IN TIN VINTAGE PAISLEY",
+          "ROUND SNACK BOXES SET OF4 WOODLAND"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 010": 31.5,
+        "PROVEEDOR DEMO 011": 35.1,
+        "PROVEEDOR DEMO 012": 33.4
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 31289300,
+        "antes": 32064500,
+        "caida_pct": 2.4
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "6 RIBBONS RUSTIC CHARM": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 179.0,
+          "dias_cobertura": 25.018,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.155,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "72 SWEETHEART FAIRY CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 387.0,
+          "dias_cobertura": 25.048,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 15.451,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "CHARLOTTE BAG SUKI DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 371.0,
+          "dias_cobertura": 25.026,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 14.825,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "CLOTHES PEGS RETROSPOT PACK 24": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.215,
+          "balance": 204.0,
+          "dias_cobertura": 25.08,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 8.134,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.21,
+            32.21,
+            32.21
+          ]
+        },
+        "DOORMAT SPOTTY HOME SWEET HOME": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 42.0,
+          "dias_cobertura": 25.033,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 1.678,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "JUMBO BAG PINK VINTAGE PAISLEY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 231.0,
+          "dias_cobertura": 25.08,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.211,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "JUMBO BAG RED RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 993.0,
+          "dias_cobertura": 25.02,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 39.688,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "LUNCH BAG APPLE DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 525.0,
+          "dias_cobertura": 25.0,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 21.0,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "LUNCH BAG WOODLAND": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 1475.0,
+          "dias_cobertura": 150.073,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.829,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "PINK CREAM FELT CRAFT TRINKET BOX": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 202.0,
+          "dias_cobertura": 25.104,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 8.046,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "PLASTERS IN TIN VINTAGE PAISLEY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 764.0,
+          "dias_cobertura": 150.162,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.088,
+          "dias_sin_vender": 7,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "PLASTERS IN TIN WOODLAND ANIMALS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 151.0,
+          "dias_cobertura": 25.157,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 6.002,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "RED RETROSPOT UMBRELLA": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.933,
+          "balance": 56.0,
+          "dias_cobertura": 25.265,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.217,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.93,
+            31.93,
+            31.93
+          ]
+        },
+        "ROUND SNACK BOXES SET OF4 WOODLAND": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 834.0,
+          "dias_cobertura": 150.16,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.554,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "productos_agotandose",
+      "negocio": "PRUEBA GEN productos_agotandose",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "agota": [
+          "DOLLY GIRL LUNCH BOX",
+          "HEART IVORY TRELLIS SMALL",
+          "WOODEN FRAME ANTIQUE WHITE"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 013": 35.1,
+        "PROVEEDOR DEMO 014": 33.4,
+        "PROVEEDOR DEMO 015": 31.5
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 24803750,
+        "antes": 24660750,
+        "caida_pct": -0.6
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "60 TEATIME FAIRY CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 668.0,
+          "dias_cobertura": 25.001,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 26.719,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "DOLLY GIRL LUNCH BOX": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 38.0,
+          "dias_cobertura": 3.038,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.509,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "HEART IVORY TRELLIS SMALL": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 15.0,
+          "dias_cobertura": 3.127,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.797,
+          "dias_sin_vender": 10,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "LUNCH BAG  BLACK SKULL.": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 236.0,
+          "dias_cobertura": 25.06,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.418,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "LUNCH BAG PINK POLKADOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 221.0,
+          "dias_cobertura": 25.076,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 8.813,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "LUNCH BAG RED RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 430.0,
+          "dias_cobertura": 25.035,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 17.176,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "PINK BLUE FELT CRAFT TRINKET BOX": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 139.0,
+          "dias_cobertura": 25.021,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.555,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "RED 3 PIECE MINI DOTS CUTLERY SET": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 98.0,
+          "dias_cobertura": 25.218,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.886,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "RED GINGHAM ROSE JEWELLERY BOX": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 73.0,
+          "dias_cobertura": 25.021,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.918,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "RED RETROSPOT MINI CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 37.0,
+          "dias_cobertura": 25.682,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 1.441,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "RED SPOTTY BISCUIT TIN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 48.0,
+          "dias_cobertura": 25.0,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 1.92,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "SET OF 72 RETROSPOT PAPER  DOILIES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.724,
+          "balance": 126.0,
+          "dias_cobertura": 25.1,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.02,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.72,
+            31.72,
+            31.72
+          ]
+        },
+        "VINTAGE SNAP CARDS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 271.0,
+          "dias_cobertura": 25.015,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.833,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "WOODEN FRAME ANTIQUE WHITE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 17.0,
+          "dias_cobertura": 3.02,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.628,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "proveedor_caro",
+      "negocio": "PRUEBA GEN proveedor_caro",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "cartera": [
+          "CLIENTE DEMO PROVEEDOR_CA"
+        ],
+        "proveedor": [
+          "ALARM CLOCK BAKELIKE GREEN",
+          "LUNCH BAG VINTAGE DOILY",
+          "STRAWBERRY LUNCH BOX WITH CUTLERY"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 016": 38.6,
+        "PROVEEDOR DEMO 017": 26.2,
+        "PROVEEDOR DEMO 018": 8.2,
+        "PROVEEDOR DEMO 019": 27.0
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 35785850,
+        "antes": 35442000,
+        "caida_pct": -1.0
+      },
+      "cartera": {
+        "saldo_vencido": 28628700,
+        "dias_mora": 40
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "ALARM CLOCK BAKELIKE GREEN": {
+          "deriva_pct": -27.843,
+          "precio_pagado": 12539.779,
+          "precio_mejor": 9200.0,
+          "margen_pct": 50.933,
+          "balance": 145.0,
+          "dias_cobertura": 25.014,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.797,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            50.93
+          ]
+        },
+        "BAKING SET 9 PIECE RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 100.0,
+          "dias_cobertura": 25.097,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 3.985,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "BOX OF 24 COCKTAIL PARASOLS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 30.952,
+          "balance": 260.0,
+          "dias_cobertura": 25.047,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.381,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            30.95,
+            30.95,
+            30.95
+          ]
+        },
+        "CREAM HEART CARD HOLDER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.899,
+          "balance": 182.0,
+          "dias_cobertura": 25.069,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.26,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "DOORMAT HEARTS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 97.0,
+          "dias_cobertura": 25.161,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.855,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "HANGING HEART ZINC T-LIGHT HOLDER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 422.0,
+          "dias_cobertura": 25.052,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 16.845,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "HOT WATER BOTTLE TEA AND SYMPATHY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.899,
+          "balance": 94.0,
+          "dias_cobertura": 25.036,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.755,
+          "dias_sin_vender": 6,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "JUMBO BAG STRAWBERRY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 526.0,
+          "dias_cobertura": 25.037,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 21.009,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "LOVE BUILDING BLOCK WORD": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.933,
+          "balance": 79.0,
+          "dias_cobertura": 25.313,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.121,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.93,
+            31.93,
+            31.93
+          ]
+        },
+        "LUNCH BAG VINTAGE DOILY": {
+          "deriva_pct": -27.679,
+          "precio_pagado": 5263.334,
+          "precio_mejor": 4050.0,
+          "margen_pct": 50.909,
+          "balance": 691.0,
+          "dias_cobertura": 25.019,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 27.619,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            50.91
+          ]
+        },
+        "PACK OF 60 SPACEBOY CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 273.0,
+          "dias_cobertura": 25.047,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.9,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "RED KITCHEN SCALES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 42.0,
+          "dias_cobertura": 25.111,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 1.673,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "RED RETROSPOT ROUND CAKE TINS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.96,
+          "balance": 40.0,
+          "dias_cobertura": 25.183,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 1.588,
+          "dias_sin_vender": 6,
+          "margen_serie": [
+            31.96,
+            31.96,
+            31.96
+          ]
+        },
+        "STRAWBERRY LUNCH BOX WITH CUTLERY": {
+          "deriva_pct": -27.746,
+          "precio_pagado": 8584.823,
+          "precio_mejor": 6250.0,
+          "margen_pct": 50.98,
+          "balance": 120.0,
+          "dias_cobertura": 25.132,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.775,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.16,
+            32.16,
+            50.98
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "ventas_decrecientes",
+      "negocio": "PRUEBA GEN ventas_decrecientes",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "sin_ventas": [
+          "HOME BUILDING BLOCK WORD",
+          "SMALL HEART MEASURING SPOONS"
+        ],
+        "vs_ano_anterior": [
+          "negocio"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 020": 27.3,
+        "PROVEEDOR DEMO 021": 29.0,
+        "PROVEEDOR DEMO 022": 43.7
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 14615900,
+        "antes": 23716500,
+        "caida_pct": 38.4
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "BLUE 3 PIECE MINI DOTS CUTLERY SET": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 69.0,
+          "dias_cobertura": 25.152,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.743,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "CHILDRENS APRON SPACEBOY DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 56.0,
+          "dias_cobertura": 25.153,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 2.226,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "DOORMAT RED RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 80.0,
+          "dias_cobertura": 25.108,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.186,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "HAND OVER THE CHOCOLATE   SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 121.0,
+          "dias_cobertura": 25.01,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.838,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "HOME BUILDING BLOCK WORD": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.933,
+          "balance": 78.0,
+          "dias_cobertura": 25.052,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.114,
+          "dias_sin_vender": 94,
+          "margen_serie": [
+            31.93,
+            31.93,
+            31.93
+          ]
+        },
+        "JUMBO BAG APPLES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.212,
+          "balance": 217.0,
+          "dias_cobertura": 25.03,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 8.67,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.21,
+            32.21,
+            32.21
+          ]
+        },
+        "JUMBO BAG PINK POLKADOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 296.0,
+          "dias_cobertura": 25.029,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.826,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "LOVEBIRD HANGING DECORATION WHITE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 76.0,
+          "dias_cobertura": 25.202,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.016,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "PLASTERS IN TIN CIRCUS PARADE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 104.0,
+          "dias_cobertura": 25.157,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.134,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "POSTAGE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 39.0,
+          "dias_cobertura": 25.528,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 1.528,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "RED RETROSPOT SMALL MILK JUG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.157,
+          "balance": 41.0,
+          "dias_cobertura": 25.187,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 1.628,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.16,
+            32.16,
+            32.16
+          ]
+        },
+        "SCOTTIE DOG HOT WATER BOTTLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 48.0,
+          "dias_cobertura": 25.183,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 1.906,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "SMALL HEART MEASURING SPOONS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 67.0,
+          "dias_cobertura": 25.187,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.66,
+          "dias_sin_vender": 96,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "SWEETHEART CERAMIC TRINKET BOX": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 199.0,
+          "dias_cobertura": 25.049,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.944,
+          "dias_sin_vender": 6,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "ventas_crecientes",
+      "negocio": "PRUEBA GEN ventas_crecientes",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {},
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 023": 33.9,
+        "PROVEEDOR DEMO 024": 33.5,
+        "PROVEEDOR DEMO 025": 32.7
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 43242750,
+        "antes": 31464800,
+        "caida_pct": -37.4
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "FELTCRAFT BUTTERFLY HEARTS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.724,
+          "balance": 180.0,
+          "dias_cobertura": 25.032,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 7.191,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.72,
+            31.72,
+            31.72
+          ]
+        },
+        "GIN + TONIC DIET METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 242.0,
+          "dias_cobertura": 25.086,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.647,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "GRAND CHOCOLATECANDLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.724,
+          "balance": 310.0,
+          "dias_cobertura": 25.07,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.365,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            31.72,
+            31.72,
+            31.72
+          ]
+        },
+        "GREEN REGENCY TEACUP AND SAUCER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 260.0,
+          "dias_cobertura": 25.03,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.387,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "HANGING JAM JAR T-LIGHT HOLDER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 725.0,
+          "dias_cobertura": 25.01,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 28.989,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "JUMBO BAG SPACEBOY DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 324.0,
+          "dias_cobertura": 25.046,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.936,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "KNITTED UNION FLAG HOT WATER BOTTLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 88.0,
+          "dias_cobertura": 25.135,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.501,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "LUNCH BOX I LOVE LONDON": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 427.0,
+          "dias_cobertura": 25.024,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 17.063,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "METAL 4 HOOK HANGER FRENCH CHATEAU": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 87.0,
+          "dias_cobertura": 25.079,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 3.469,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "PACK OF 60 DINOSAUR CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 502.0,
+          "dias_cobertura": 25.02,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 20.064,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "PLEASE ONE PERSON METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 405.0,
+          "dias_cobertura": 25.052,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 16.166,
+          "dias_sin_vender": 14,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "RETRO SPOT LARGE MILK JUG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 52.0,
+          "dias_cobertura": 25.325,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.053,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "SET/5 RED RETROSPOT LID GLASS BOWLS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 285.0,
+          "dias_cobertura": 25.077,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 11.365,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "SPACEBOY BIRTHDAY CARD": {
+          "deriva_pct": 0.0,
+          "margen_pct": 30.952,
+          "balance": 388.0,
+          "dias_cobertura": 25.02,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 15.508,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            30.95,
+            30.95,
+            30.95
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "estacional",
+      "negocio": "PRUEBA GEN estacional",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {},
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 026": 31.8,
+        "PROVEEDOR DEMO 027": 34.6,
+        "PROVEEDOR DEMO 028": 33.5
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 11334750,
+        "antes": 10847500,
+        "caida_pct": -4.5
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "GREY HEART HOT WATER BOTTLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 101.0,
+          "dias_cobertura": 25.11,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.022,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "JUMBO BAG SCANDINAVIAN PAISLEY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 263.0,
+          "dias_cobertura": 25.05,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.499,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "LADIES & GENTLEMEN METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.157,
+          "balance": 114.0,
+          "dias_cobertura": 25.093,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.543,
+          "dias_sin_vender": 24,
+          "margen_serie": [
+            32.16,
+            32.16,
+            32.16
+          ]
+        },
+        "LUNCH BAG SPACEBOY DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 197.0,
+          "dias_cobertura": 25.019,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.874,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "PACK OF 60 PINK PAISLEY CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 646.0,
+          "dias_cobertura": 25.037,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 25.802,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "PINK REGENCY TEACUP AND SAUCER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 102.0,
+          "dias_cobertura": 25.215,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.045,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "RECIPE BOX PANTRY YELLOW DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 152.0,
+          "dias_cobertura": 25.084,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.06,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "RED TOADSTOOL LED NIGHT LIGHT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 312.0,
+          "dias_cobertura": 25.066,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.447,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "RETROSPOT CHILDRENS APRON": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 139.0,
+          "dias_cobertura": 25.07,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.544,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "TEA BAG PLATE RED RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 81.0,
+          "dias_cobertura": 25.046,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.234,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "WHITE SKULL HOT WATER BOTTLE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 155.0,
+          "dias_cobertura": 25.147,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.164,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "WICKER STAR": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 108.0,
+          "dias_cobertura": 25.068,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.308,
+          "dias_sin_vender": 7,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "WOODEN SCHOOL COLOURING SET": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 121.0,
+          "dias_cobertura": 25.134,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 4.814,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "WOODLAND CHARLOTTE BAG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 245.0,
+          "dias_cobertura": 25.036,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 9.786,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "datos_incompletos",
+      "negocio": "PRUEBA GEN datos_incompletos",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "agota": [
+          "ZINC METAL HEART DECORATION"
+        ],
+        "cartera": [
+          "CLIENTE DEMO DATOS_INCOMP"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 029": 25.0,
+        "PROVEEDOR DEMO 030": 27.6,
+        "PROVEEDOR DEMO 031": 47.4
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 32991150,
+        "antes": 34948250,
+        "caida_pct": 5.6
+      },
+      "cartera": {
+        "saldo_vencido": 26392900,
+        "dias_mora": 40
+      },
+      "conteo_contradice": [
+        {
+          "producto": "ZINC METAL HEART DECORATION",
+          "conteo_unidades": 1.0,
+          "antes": {
+            "origen_stock": "estimado",
+            "balance": 892.0,
+            "dias_cobertura": 150.0,
+            "regla": "quieto"
+          },
+          "despues": {
+            "origen_stock": "conteo",
+            "balance": 1.0,
+            "dias_cobertura": 0.2,
+            "regla": "agota"
+          }
+        }
+      ],
+      "productos": {
+        "DOORMAT FAIRY CAKE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 41.0,
+          "dias_cobertura": 25.309,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 1.62,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "DOORMAT NEW ENGLAND": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.95,
+          "balance": 54.0,
+          "dias_cobertura": 25.008,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.159,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "GARDENERS KNEELING PAD KEEP CALM": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 245.0,
+          "dias_cobertura": 25.02,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 9.792,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "IVORY KITCHEN SCALES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 39.0,
+          "dias_cobertura": 25.255,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 1.544,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "PACK OF 60 MUSHROOM CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 144.0,
+          "dias_cobertura": 25.169,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.721,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "PAPER CHAIN KIT 50'S CHRISTMAS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 232.0,
+          "dias_cobertura": 25.074,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.252,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "PLASTERS IN TIN SPACEBOY": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 156.0,
+          "dias_cobertura": 25.011,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.237,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "RECYCLING BAG RETROSPOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 181.0,
+          "dias_cobertura": 25.113,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.208,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "RED RETROSPOT OVEN GLOVE": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 122.0,
+          "dias_cobertura": 25.155,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.85,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "RED WOOLLY HOTTIE WHITE HEART.": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 92.0,
+          "dias_cobertura": 25.188,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 3.652,
+          "dias_sin_vender": 16,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "REGENCY CAKESTAND 3 TIER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 302.0,
+          "dias_cobertura": 25.07,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.046,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "SMALL POPCORN HOLDER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 688.0,
+          "dias_cobertura": 25.029,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 27.488,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "VICTORIAN GLASS HANGING T-LIGHT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 386.0,
+          "dias_cobertura": 25.005,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 15.437,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "ZINC METAL HEART DECORATION": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 1.0,
+          "dias_cobertura": 0.168,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 5.945,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "multiples_proveedores",
+      "negocio": "PRUEBA GEN multiples_proveedores",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {
+        "dependencia": [
+          "PROVEEDOR DEMO 032"
+        ]
+      },
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 032": 80.6,
+        "PROVEEDOR DEMO 033": 9.8,
+        "PROVEEDOR DEMO 034": 6.3,
+        "PROVEEDOR DEMO 035": 3.3
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 25350900,
+        "antes": 24953700,
+        "caida_pct": -1.6
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "BATHROOM METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 139.0,
+          "dias_cobertura": 25.044,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 5.55,
+          "dias_sin_vender": 6,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "DOORMAT UNION FLAG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.043,
+          "balance": 125.0,
+          "dias_cobertura": 25.011,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.998,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            32.04,
+            32.04,
+            32.04
+          ]
+        },
+        "HOT BATHS METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 133.0,
+          "dias_cobertura": 25.084,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.302,
+          "dias_sin_vender": 5,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "JAM MAKING SET WITH JARS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 227.0,
+          "dias_cobertura": 25.074,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.053,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "NATURAL SLATE HEART CHALKBOARD": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 174.0,
+          "dias_cobertura": 25.079,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.938,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "NO SINGING METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.905,
+          "balance": 151.0,
+          "dias_cobertura": 25.093,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.018,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.9,
+            31.9,
+            31.9
+          ]
+        },
+        "PAPER CHAIN KIT VINTAGE CHRISTMAS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 319.0,
+          "dias_cobertura": 25.045,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 12.737,
+          "dias_sin_vender": 7,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "RED RETROSPOT PICNIC BAG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.864,
+          "balance": 107.0,
+          "dias_cobertura": 25.006,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.279,
+          "dias_sin_vender": 4,
+          "margen_serie": [
+            31.86,
+            31.86,
+            31.86
+          ]
+        },
+        "RETROSPOT TEA SET CERAMIC 11 PC": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.919,
+          "balance": 112.0,
+          "dias_cobertura": 25.203,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.444,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.92,
+            31.92,
+            31.92
+          ]
+        },
+        "SET OF 72 PINK HEART PAPER DOILIES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.724,
+          "balance": 108.0,
+          "dias_cobertura": 25.163,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 4.292,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.72,
+            31.72,
+            31.72
+          ]
+        },
+        "SUKI  SHOULDER BAG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 71.0,
+          "dias_cobertura": 25.325,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.804,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "TOILET METAL SIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 88.0,
+          "dias_cobertura": 25.119,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.503,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "WOOD 2 DRAWER CABINET WHITE FINISH": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.933,
+          "balance": 56.0,
+          "dias_cobertura": 25.042,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 2.236,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.93,
+            31.93,
+            31.93
+          ]
+        },
+        "WOODEN BOX OF DOMINOES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 123.0,
+          "dias_cobertura": 25.171,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 4.887,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        }
+      }
+    },
+    {
+      "escenario": "accion_exitosa",
+      "negocio": "PRUEBA GEN accion_exitosa",
+      "periodo": {
+        "desde": "2025-05-02",
+        "hasta": "2026-07-31"
+      },
+      "reglas": {},
+      "concentracion_proveedor_pct": {
+        "PROVEEDOR DEMO 036": 41.8,
+        "PROVEEDOR DEMO 037": 29.5,
+        "PROVEEDOR DEMO 038": 28.7
+      },
+      "vs_ano_anterior": {
+        "mes_ref": "2026-07",
+        "ahora": 23728800,
+        "antes": 23380100,
+        "caida_pct": -1.5
+      },
+      "cartera": {
+        "saldo_vencido": 0,
+        "dias_mora": 0
+      },
+      "conteo_contradice": [],
+      "productos": {
+        "ASSORTED COLOUR BIRD ORNAMENT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.953,
+          "balance": 599.0,
+          "dias_cobertura": 25.018,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 23.943,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.95,
+            31.95,
+            31.95
+          ]
+        },
+        "CHARLOTTE BAG PINK POLKADOT": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 239.0,
+          "dias_cobertura": 25.006,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.558,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "JAM MAKING SET PRINTED": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.724,
+          "balance": 249.0,
+          "dias_cobertura": 25.075,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.93,
+          "dias_sin_vender": 2,
+          "margen_serie": [
+            31.72,
+            31.72,
+            31.72
+          ]
+        },
+        "LUNCH BAG SUKI  DESIGN": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.121,
+          "balance": 240.0,
+          "dias_cobertura": 25.017,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 9.593,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.12,
+            32.12,
+            32.12
+          ]
+        },
+        "PACK OF 6 BIRDY GIFT TAGS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 182.0,
+          "dias_cobertura": 25.058,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.263,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "PACK OF 72 RETROSPOT CAKE CASES": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.727,
+          "balance": 851.0,
+          "dias_cobertura": 25.013,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 34.022,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            32.73,
+            32.73,
+            32.73
+          ]
+        },
+        "PINK FAIRY CAKE CHILDRENS APRON": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.795,
+          "balance": 109.0,
+          "dias_cobertura": 25.015,
+          "origen_stock": "conteo",
+          "unidades_por_dia": 4.357,
+          "dias_sin_vender": 10,
+          "margen_serie": [
+            31.79,
+            31.79,
+            31.79
+          ]
+        },
+        "RED  HARMONICA IN BOX": {
+          "deriva_pct": 0.0,
+          "margen_pct": 30.0,
+          "balance": 261.0,
+          "dias_cobertura": 25.071,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 10.411,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            30.0,
+            30.0,
+            30.0
+          ]
+        },
+        "RED RETROSPOT CUP": {
+          "deriva_pct": 0.0,
+          "margen_pct": 30.275,
+          "balance": 97.0,
+          "dias_cobertura": 25.1,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 3.865,
+          "dias_sin_vender": 7,
+          "margen_serie": [
+            30.28,
+            30.28,
+            30.28
+          ]
+        },
+        "SET OF 20 VINTAGE CHRISTMAS NAPKINS": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 225.0,
+          "dias_cobertura": 25.083,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 8.97,
+          "dias_sin_vender": 16,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "SINGLE HEART ZINC T-LIGHT HOLDER": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.579,
+          "balance": 184.0,
+          "dias_cobertura": 25.061,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 7.342,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.58,
+            31.58,
+            31.58
+          ]
+        },
+        "STRAWBERRY CHARLOTTE BAG": {
+          "deriva_pct": 0.0,
+          "margen_pct": 31.765,
+          "balance": 165.0,
+          "dias_cobertura": 25.133,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 6.565,
+          "dias_sin_vender": 0,
+          "margen_serie": [
+            31.76,
+            31.76,
+            31.76
+          ]
+        },
+        "VINTAGE HEADS AND TAILS CARD GAME": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 137.0,
+          "dias_cobertura": 25.169,
+          "origen_stock": "estimado",
+          "unidades_por_dia": 5.443,
+          "dias_sin_vender": 6,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "WOOD BLACK BOARD ANT WHITE FINISH": {
+          "deriva_pct": 0.0,
+          "margen_pct": 32.0,
+          "balance": 129.0,
+          "dias_cobertura": 25.057,
+          "origen_stock": "calculado",
+          "unidades_por_dia": 5.148,
+          "dias_sin_vender": 3,
+          "margen_serie": [
+            32.0,
+            32.0,
+            32.0
+          ]
+        }
+      }
+    }
+  ]
+}
