@@ -17,3 +17,7 @@ docs/historico/prototipo/credenciales-*.json
 docs/ejemplos/fuente/
 docs/ejemplos/generados/*/
 !docs/ejemplos/generados/manifests/
+
+# Configuración local de Claude Code. La skill /pedido ya está versionada;
+# lo que se agregue después queda fuera salvo que se fuerce con `git add -f`.
+.claude/
