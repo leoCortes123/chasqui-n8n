@@ -137,3 +137,17 @@ miente — si el generador dejó de producir el faltante de stock y la factura
 vencida que el escenario declara, o si las reglas `agota` y `cartera` cambiaron
 de umbral y el contrato del banco quedó viejo. Tocar cualquiera de los dos sin
 esa respuesta es acomodar la prueba al resultado.
+
+## D-010 · `db/actual/` no refleja los tipos enum
+
+**Fecha:** 2026-08-19
+**Evidencia:** la migración 075 agrega el valor `descartado` a `estado_doc`.
+`bin/gen_estado_sql.sh` vuelca funciones, vistas, tablas y contenido, pero no
+tipos: después de regenerar, el único lugar del repo donde se lee la definición
+del enum sigue siendo `db/base/000_esquema.sql`, que está congelado en el
+baseline y ahora dice tres valores donde la base tiene cuatro.
+**Por qué no se corrige:** el arreglo es un volcado más en `gen_estado_sql.sh`
+(`db/actual/tipos/`), pero mientras `db/base/` no se rebase —y BASE-001 exige
+pedirlo explícitamente— el desfase entre baseline y base viva existe igual para
+todo lo que las migraciones cambian. Se corrige junto con el próximo rebase, no
+antes: dos fuentes de verdad para el esquema es peor que una desactualizada.

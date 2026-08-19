@@ -1,6 +1,6 @@
 # Estado vigente del esquema public — generado por bin/gen_estado_sql.sh
 # NO EDITAR A MANO. Se regenera desde el catálogo de Postgres.
-funciones: 159
+funciones: 160
 vistas:    22
 tablas:    34
-contenido: 200 filas en 12 tablas
+contenido: 201 filas en 12 tablas

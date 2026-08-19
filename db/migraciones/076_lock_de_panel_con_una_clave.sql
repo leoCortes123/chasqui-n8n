@@ -1,3 +1,22 @@
+-- 076_lock_de_panel_con_una_clave.sql — la 075 dejó `carga_evaluar` rota.
+--
+-- El lock se pidió como `pg_advisory_xact_lock(hashtext(...)::bigint,
+-- p_sesion_id)`, y esa firma no existe: las dos formas son (bigint) y
+-- (int, int). Con dos bigint Postgres no encuentra candidata y la función
+-- revienta antes de decidir nada:
+--
+--   ERROR: function pg_advisory_xact_lock(bigint, bigint) does not exist
+--
+-- Como `carga_evaluar` es lo que wf_ingesta llama después de cada archivo, con
+-- la 075 sola NINGUNA carga habría avanzado: ni panel, ni análisis. Visto al
+-- probar el gate contra la sesión 40, antes de cualquier prueba de usuario.
+--
+-- Se pasa a la firma de un solo argumento con la clave completa —nombre del
+-- recurso y sesión— en un bigint, que es lo que se quería desde el principio:
+-- dos sesiones distintas no se bloquean entre sí.
+--
+-- Sin cambios de firma, así que no hay nada que borrar (MIGRACION-001).
+
 CREATE OR REPLACE FUNCTION public.carga_evaluar(p_sesion_id bigint)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -65,4 +84,4 @@ BEGIN
 
     RETURN jsonb_build_object('accion', 'nada');
 END;
-$function$
+$function$;

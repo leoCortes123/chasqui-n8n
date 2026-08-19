@@ -11,7 +11,8 @@ CREATE TABLE public.sesiones (
     creada_en timestamp with time zone DEFAULT now() NOT NULL,
     cerrada_en timestamp with time zone,
     panel_mensaje_id bigint,
-    analisis_pedido_en timestamp with time zone
+    analisis_pedido_en timestamp with time zone,
+    panel_pedido_en timestamp with time zone
 );
 
 ALTER TABLE public.sesiones ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (

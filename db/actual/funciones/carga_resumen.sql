@@ -22,6 +22,12 @@ AS $function$
         'archivos',   (SELECT count(*) FROM d WHERE estado = 'parseado'),
         'pendientes', (SELECT count(*) FROM d WHERE estado = 'pendiente'),
         'fallados',   (SELECT count(*) FROM d WHERE estado = 'error'),
+        'descartados',(SELECT count(*) FROM d WHERE estado = 'descartado'),
+        'nombres_descartados',
+                      (SELECT coalesce(string_agg(nombre_archivo, ', '
+                                                  ORDER BY id), '')
+                         FROM (SELECT id, nombre_archivo FROM d
+                                WHERE estado = 'descartado' ORDER BY id LIMIT 5) t),
         'nombres_fallados',
                       (SELECT coalesce(string_agg(nombre_archivo, ', '
                                                   ORDER BY id), '')

@@ -111,6 +111,7 @@
     "n8n:wf_ingesta.json"
    ],
    "usa": [
+    "ejecuciones",
     "sesiones"
    ]
   },
@@ -529,7 +530,7 @@
   "ingesta_cargar_tabular": {
    "llama_a": [
     "ingesta_cargar_tabular_detalle",
-    "ingesta_marcar_error"
+    "ingesta_marcar_descartado"
    ],
    "llamada_por": [],
    "llamada_desde": [
@@ -645,11 +646,20 @@
     "documentos"
    ]
   },
+  "ingesta_marcar_descartado": {
+   "llama_a": [],
+   "llamada_por": [
+    "ingesta_cargar_tabular"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos"
+   ]
+  },
   "ingesta_marcar_error": {
    "llama_a": [],
    "llamada_por": [
     "ingesta_cargar_inventario",
-    "ingesta_cargar_tabular",
     "ingesta_cargar_tabular_detalle",
     "ingesta_identificar_tabular",
     "ingesta_parsear_dian",

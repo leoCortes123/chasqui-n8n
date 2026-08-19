@@ -4,7 +4,7 @@ Generado por `bin/gen_estado_sql.sh` desde el catálogo vivo de Postgres.
 **No editar a mano.** Una entrada por objeto que existe hoy — no hay
 versiones históricas acá; para el porqué de cada una, ver su migración.
 
-159 funciones · 22 vistas · 34 tablas
+160 funciones · 22 vistas · 34 tablas
 
 ## Funciones
 
@@ -62,6 +62,7 @@ versiones históricas acá; para el porqué de cada una, ver su migración.
 | `ingesta_inferir_formato_fecha` | `p_muestra jsonb, p_columna text` | `text` | `ingesta_inferir_formato_fecha.sql` |
 | `ingesta_inferir_mapeo_sql` | `p_documento_id bigint, p_columnas text[], p_muestra jsonb` | `jsonb` | `ingesta_inferir_mapeo_sql.sql` |
 | `ingesta_inferir_tipo` | `p_documento_id bigint, p_columnas text[]` | `text` | `ingesta_inferir_tipo.sql` |
+| `ingesta_marcar_descartado` | `p_documento_id bigint, p_motivo text` | `jsonb` | `ingesta_marcar_descartado.sql` |
 | `ingesta_marcar_error` | `p_documento_id bigint, p_error text` | `jsonb` | `ingesta_marcar_error.sql` |
 | `ingesta_num` | `p_valor jsonb, p_decimal text, p_miles text` | `numeric` | `ingesta_num.sql` |
 | `ingesta_parsear_dian` | `p_documento_id bigint` | `jsonb` | `ingesta_parsear_dian.sql` |
@@ -296,7 +297,7 @@ versiones históricas acá; para el porqué de cada una, ver su migración.
 | `schema_migraciones` | 2 |
 | `servicios` | 8 |
 | `servicios_entradas` | 5 |
-| `sesiones` | 12 |
+| `sesiones` | 13 |
 | `sinonimos_columna` | 3 |
 | `snapshots_negocio` | 10 |
 | `terceros` | 5 |
