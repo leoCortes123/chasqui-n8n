@@ -1,0 +1,40 @@
+-- 074_identificar_tabular_sin_ambiguedad.sql — se borra la firma vieja de
+-- ingesta_identificar_tabular, que dejaba toda llamada de dos argumentos rota.
+--
+-- Qué estaba mal (medido, no teórico):
+--
+--   La 073 le agregó a `ingesta_identificar_tabular` un tercer parámetro,
+--   `p_muestra jsonb DEFAULT '[]'::jsonb`, para poder deducir el formato de
+--   fecha y el separador decimal sin llamar al modelo. Cambiar la firma no
+--   reemplaza la función: CREATE OR REPLACE creó una SEGUNDA, y la de dos
+--   argumentos quedó viva con el cuerpo anterior a la 073 —el que no consulta
+--   el diccionario de sinónimos y manda todo a inferencia.
+--
+--   Con las dos presentes, y como la de tres trae DEFAULT en el último
+--   parámetro, cualquier llamada de dos argumentos es ambigua y Postgres la
+--   rechaza antes de ejecutarla:
+--
+--     ERROR: function ingesta_identificar_tabular(bigint, text[]) is not unique
+--     HINT:  Could not choose a best candidate function.
+--
+--   Eso rompe en seco a los tres llamadores que pasan dos argumentos:
+--   bin/prueba_ciclo_vida.py (aborta en la fase 2, con el primer CSV de
+--   ventas), bin/cargar_datos_prueba.py y bin/gen_ventas_demo.py. wf_ingesta no
+--   lo notó porque desde la 073 pasa los tres.
+--
+-- Reglas que quedan:
+--
+--   1. `ingesta_identificar_tabular` tiene UNA firma: (bigint, text[], jsonb).
+--   2. Quien la llame sin muestra recibe el DEFAULT '[]' y, por lo tanto, un
+--      mapeo sin formato de fecha ni separador decimal inferidos. Los tres
+--      llamadores de arriba pasan a mandar las primeras 100 filas, igual que
+--      wf_ingesta: es el mismo camino, no uno paralelo.
+--
+-- Alternativas descartadas:
+--
+--   - Quitarle el DEFAULT a p_muestra: desambigua, pero obliga a tocar
+--     wf_ingesta y deja la firma vieja viva, que es el problema de fondo.
+--   - Renombrar la de dos argumentos: conserva código muerto anterior a la 073
+--     con un nombre nuevo, que es exactamente lo que el baseline vino a matar.
+
+DROP FUNCTION IF EXISTS public.ingesta_identificar_tabular(bigint, text[]);

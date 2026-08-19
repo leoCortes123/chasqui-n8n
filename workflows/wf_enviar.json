@@ -1472,6 +1472,646 @@
           "combinator": "and",
           "conditions": [
             {
+              "leftValue": "={{ !!$json.panel }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "EsPanel?",
+      "name": "EsPanel?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT p ->> 'chat_id' AS chat_id, p ->> 'canal' AS canal, p ->> 'mensaje_id' AS mensaje_id, p ->> 'texto' AS texto, p -> 'teclado' AS teclado, CASE WHEN p ->> 'canal' = 'whatsapp' THEN wa_payload(p ->> 'chat_id', wa_texto(p ->> 'texto'), p -> 'teclado') END AS wa FROM (SELECT carga_panel( ({{ $json.panel.sesion_id }})::bigint, '{{ ($json.panel.modo ?? \"panel\").replaceAll(\"'\",\"''\") }}') AS p) t;",
+        "options": {}
+      },
+      "id": "PanelResolver",
+      "name": "PanelResolver",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        1200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.texto }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelHay?",
+      "name": "PanelHay?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst j = $input.first().json;\nconst MAX = 2;\nconst btns = [];\nfor (const fila of (j.teclado?.inline_keyboard || []))\n  for (const b of (fila || []))\n    if (b && b.text && b.callback_data) btns.push({ text: b.text, dato: b.callback_data });\nconst usados = btns.slice(0, MAX);\nconst relleno = Array.from({ length: MAX - usados.length }, () => ({ text: '', dato: '' }));\nreturn [{ json: { ...j, sesion_id: $('Inicio').first().json.panel.sesion_id,\n  n: usados.length, b: usados.concat(relleno) } }];\n"
+      },
+      "id": "PanelFilas",
+      "name": "PanelFilas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.canal !== 'whatsapp' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelEsTg?",
+      "name": "PanelEsTg?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.mensaje_id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelEditar?",
+      "name": "PanelEditar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "PanelCuantas",
+      "name": "PanelCuantas",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "PanelCrear0",
+      "name": "PanelCrear0",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        1180
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelCrear1",
+      "name": "PanelCrear1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        1290
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelCrear2",
+      "name": "PanelCrear2",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        1400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ({{ $json.result.message_id }})::bigint AS mensaje_id FROM carga_panel_registrar(({{ $('PanelFilas').first().json.sesion_id }})::bigint, ({{ $json.result.message_id }})::bigint);",
+        "options": {}
+      },
+      "id": "PanelGuardar",
+      "name": "PanelGuardar",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1620,
+        1320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "pinChatMessage",
+        "chatId": "={{ $('PanelFilas').first().json.chat_id }}",
+        "messageId": "={{ $json.mensaje_id }}",
+        "additionalFields": {
+          "disable_notification": true
+        }
+      },
+      "id": "PanelFijar",
+      "name": "PanelFijar",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1800,
+        1320
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.n }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "filas2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "PanelCuantasEd",
+      "name": "PanelCuantasEd",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.mensaje_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "PanelEditar0",
+      "name": "PanelEditar0",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        860
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.mensaje_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelEditar1",
+      "name": "PanelEditar1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        970
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "messageType": "message",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $json.mensaje_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[0].dato }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.b[1].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.b[1].dato }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelEditar2",
+      "name": "PanelEditar2",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        1080
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "chasquiTg0000000001",
+          "name": "Chasqui Telegram"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ !String($json.error?.message ?? $json.error ?? '').includes('not modified') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "PanelEdFallo?",
+      "name": "PanelEdFallo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
               "leftValue": "={{ ($json.respuestas || []).some(r => r.documento) && $binary && Object.keys($binary).length > 0 }}",
               "rightValue": true,
               "operator": {
@@ -1659,6 +2299,11 @@
         [
           {
             "node": "Expandir",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "EsPanel?",
             "type": "main",
             "index": 0
           },
@@ -1945,6 +2590,227 @@
         [
           {
             "node": "CuantasFilas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EsPanel?": {
+      "main": [
+        [
+          {
+            "node": "PanelResolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelResolver": {
+      "main": [
+        [
+          {
+            "node": "PanelHay?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelHay?": {
+      "main": [
+        [
+          {
+            "node": "PanelFilas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelFilas": {
+      "main": [
+        [
+          {
+            "node": "PanelEsTg?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelEsTg?": {
+      "main": [
+        [
+          {
+            "node": "PanelEditar?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PartirWa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelEditar?": {
+      "main": [
+        [
+          {
+            "node": "PanelCuantasEd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PanelCuantas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelCuantas": {
+      "main": [
+        [
+          {
+            "node": "PanelCrear0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PanelCrear1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PanelCrear2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelCrear0": {
+      "main": [
+        [
+          {
+            "node": "PanelGuardar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelCrear1": {
+      "main": [
+        [
+          {
+            "node": "PanelGuardar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelCrear2": {
+      "main": [
+        [
+          {
+            "node": "PanelGuardar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelGuardar": {
+      "main": [
+        [
+          {
+            "node": "PanelFijar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelCuantasEd": {
+      "main": [
+        [
+          {
+            "node": "PanelEditar0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PanelEditar1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PanelEditar2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelEditar0": {
+      "main": [
+        [],
+        [
+          {
+            "node": "PanelEdFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelEditar1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "PanelEdFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelEditar2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "PanelEdFallo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PanelEdFallo?": {
+      "main": [
+        [
+          {
+            "node": "PanelCuantas",
             "type": "main",
             "index": 0
           }

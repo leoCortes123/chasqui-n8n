@@ -109,8 +109,16 @@ FROM neg n,
        AS e(regla text)
 GROUP BY 1, 2;
 
-SELECT _chk('cargado/hay negocios generados', 'si',
-  CASE WHEN (SELECT count(*) FROM neg) > 0 THEN 'si' ELSE 'no' END);
+-- Sin dataset cargado esto NO es una falla del repositorio: el banco lee estado
+-- de entorno que deja `bin/cargar_datos_prueba.py`, y una base recién instalada
+-- —la que se usa para probar con un usuario real— no lo tiene. Antes salían tres
+-- FAIL fijos y `bin/verificar.sh` terminaba siempre en rojo, que es la forma más
+-- rápida de que nadie mire la salida.
+SELECT _chk('cargado/hay negocios generados', 'si', 'si')
+WHERE (SELECT count(*) FROM neg) > 0;
+SELECT _warn('cargado/dataset no cargado — correr bin/cargar_datos_prueba.py',
+             'ningún negocio PRUEBA GEN %')
+WHERE (SELECT count(*) FROM neg) = 0;
 
 -- ---------------------------------------------------------------------------
 -- Cada escenario dispara lo suyo y nada de lo prohibido
@@ -186,7 +194,8 @@ SELECT _chk('inventario/aparecen los tres orígenes de stock',
      FROM (SELECT CASE origen_stock WHEN 'conteo' THEN 'conteo'
                                     WHEN 'calculado' THEN 'calculado'
                                     ELSE 'estimado' END AS o
-             FROM v_balance_unidades b JOIN neg n ON n.id = b.negocio_id) s));
+             FROM v_balance_unidades b JOIN neg n ON n.id = b.negocio_id) s))
+WHERE EXISTS (SELECT 1 FROM neg);
 
 -- El producto que el conteo final contradijo: la estimación decía que había
 -- inventario para meses y el conteo dice que queda una unidad. La
@@ -393,20 +402,38 @@ WHERE NOT coalesce((SELECT (j ->> 'fuera_de_horario')::boolean FROM a1), false)
 -- ===========================================================================
 -- Informe periódico: el primero siempre lo pide el dueño
 -- ===========================================================================
-SELECT _chk('periodico/1 un negocio sin análisis previo no se lista', 'no',
-  CASE WHEN EXISTS (SELECT 1 FROM v_negocios_informe_periodico
-                     WHERE negocio_id = (SELECT min(id) FROM neg)) THEN 'si' ELSE 'no' END);
+-- Los tres casos del informe periódico necesitan un negocio generado. Sin
+-- fixture cargado, `min(id) FROM neg` es NULL y el INSERT de más abajo revienta
+-- contra el NOT NULL de ejecuciones.negocio_id: el banco entero moría con ERROR
+-- en vez de saltarse el escenario, que es lo que su propia cabecera promete.
+DO $$
+DECLARE v_neg bigint := (SELECT min(id) FROM neg);
+BEGIN
+    IF v_neg IS NULL THEN
+        PERFORM _warn('periodico/1 un negocio sin análisis previo no se lista',
+                      'sin escenarios cargados');
+        PERFORM _warn('periodico/2 con análisis viejo y datos nuevos sí se lista',
+                      'sin escenarios cargados');
+        PERFORM _warn('periodico/3 y trae al menos diez movimientos nuevos',
+                      'sin escenarios cargados');
+        RETURN;
+    END IF;
 
-INSERT INTO ejecuciones (negocio_id, servicio_codigo, estado, inicio, fin)
-SELECT min(id), 'ventas_compras', 'completada',
-       now() - interval '41 days', now() - interval '40 days' FROM neg;
+    PERFORM _chk('periodico/1 un negocio sin análisis previo no se lista', 'no',
+      CASE WHEN EXISTS (SELECT 1 FROM v_negocios_informe_periodico
+                         WHERE negocio_id = v_neg) THEN 'si' ELSE 'no' END);
 
-SELECT _chk('periodico/2 con análisis viejo y datos nuevos sí se lista', 'si',
-  CASE WHEN EXISTS (SELECT 1 FROM v_negocios_informe_periodico
-                     WHERE negocio_id = (SELECT min(id) FROM neg)) THEN 'si' ELSE 'no' END);
-SELECT _chk('periodico/3 y trae al menos diez movimientos nuevos', 'si',
-  CASE WHEN (SELECT movs_nuevos FROM v_negocios_informe_periodico
-              WHERE negocio_id = (SELECT min(id) FROM neg)) >= 10 THEN 'si' ELSE 'no' END);
+    INSERT INTO ejecuciones (negocio_id, servicio_codigo, estado, inicio, fin)
+    VALUES (v_neg, 'ventas_compras', 'completada',
+            now() - interval '41 days', now() - interval '40 days');
+
+    PERFORM _chk('periodico/2 con análisis viejo y datos nuevos sí se lista', 'si',
+      CASE WHEN EXISTS (SELECT 1 FROM v_negocios_informe_periodico
+                         WHERE negocio_id = v_neg) THEN 'si' ELSE 'no' END);
+    PERFORM _chk('periodico/3 y trae al menos diez movimientos nuevos', 'si',
+      CASE WHEN (SELECT movs_nuevos FROM v_negocios_informe_periodico
+                  WHERE negocio_id = v_neg) >= 10 THEN 'si' ELSE 'no' END);
+END $$;
 
 -- ===========================================================================
 -- Salud e informe: que el negocio generado produzca un informe completo
@@ -414,7 +441,8 @@ SELECT _chk('periodico/3 y trae al menos diez movimientos nuevos', 'si',
 -- Las seis notas de `salud_negocio` son seis claves del objeto, no un array.
 SELECT _chk('informe/la salud tiene las seis notas', '6',
   (SELECT count(*)::text FROM jsonb_object_keys(salud_negocio((SELECT min(id) FROM neg))) k
-    WHERE k IN ('ventas','margenes','inventario','compras','riesgos','liquidez')));
+    WHERE k IN ('ventas','margenes','inventario','compras','riesgos','liquidez')))
+WHERE EXISTS (SELECT 1 FROM neg);
 SELECT _chk('informe/los hallazgos traen números', 'si',
   CASE WHEN hallazgos_generar((SELECT min(id) FROM neg)) -> 'resumen' IS NOT NULL
        THEN 'si' ELSE 'no' END);

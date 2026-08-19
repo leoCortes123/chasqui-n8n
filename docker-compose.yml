@@ -68,6 +68,16 @@ services:
       EXECUTIONS_TIMEOUT: "300"
       EXECUTIONS_TIMEOUT_MAX: "900"
 
+      # Freno de mano. Sin esto, 101 archivos en 28 segundos abren 101
+      # ejecuciones simultáneas de wf_ingesta: fue lo que hizo que los diez CSV
+      # consultaran la caché de formatos ANTES de que el primero la escribiera
+      # y los diez llamaran al modelo por el mismo layout. Con la 073 esa
+      # llamada ya casi no existe, pero la estampida seguiría estando para todo
+      # lo demás (descargas de Telegram, conexiones a Postgres, RAM).
+      #
+      # Las ejecuciones no se pierden: n8n las encola y las va soltando.
+      N8N_CONCURRENCY_PRODUCTION_LIMIT: "5"
+
       # El modo en memoria fue removido en 2.0; los PDF no deben vivir en RAM.
       N8N_DEFAULT_BINARY_DATA_MODE: filesystem
       N8N_PAYLOAD_SIZE_MAX: "32"

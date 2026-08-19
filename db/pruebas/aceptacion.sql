@@ -147,6 +147,37 @@ SELECT _chk('contexto/3 resuelve la intención', 'ventas',
     #>> '{consulta,intencion}');
 
 -- ===========================================================================
+-- EL INFORME DECLARA SU BASE (072)
+-- ===========================================================================
+-- Un informe que no dice de cuántos archivos y cuántos registros salió no se
+-- puede auditar. Estos casos fijan ese contrato.
+SELECT _chk('base/1 dice cuántos registros analizó', 'si',
+  CASE WHEN informe_base_bloque(jsonb_build_object('negocio_id', :neg))
+            LIKE '%registros%' THEN 'si' ELSE 'no' END);
+
+-- Este fixture tiene compras Y ventas, así que NO debe salir el aviso de cero.
+SELECT _chk('base/2 con ventas no avisa que faltan', 'no',
+  CASE WHEN informe_base_bloque(jsonb_build_object('negocio_id', :neg))
+            LIKE '%No tengo ninguna venta%' THEN 'si' ELSE 'no' END);
+
+SELECT _chk('base/3 separa ventas de compras', 'si',
+  CASE WHEN informe_base_bloque(jsonb_build_object('negocio_id', :neg))
+            LIKE '%de venta%de compra%' THEN 'si' ELSE 'no' END);
+
+-- Y sin ventas tiene que gritarlo: es la mitad del análisis que no se puede
+-- hacer, y en la prueba de usuario nadie se enteró. Va al final del bloque
+-- porque borra las ventas del fixture (la transacción se descarta igual).
+DELETE FROM movimientos WHERE negocio_id = :neg AND tipo = 'venta';
+
+SELECT _chk('base/4 sin ventas lo dice con todas las letras', 'si',
+  CASE WHEN informe_base_bloque(jsonb_build_object('negocio_id', :neg))
+            LIKE '%No tengo ninguna venta%' THEN 'si' ELSE 'no' END);
+
+SELECT _chk('base/5 sin datos no dibuja el bloque', 'si',
+  CASE WHEN informe_base_bloque('{"negocio_id":-1}'::jsonb) IS NULL
+       THEN 'si' ELSE 'no' END);
+
+-- ===========================================================================
 -- Resultado
 -- ===========================================================================
 \echo ''

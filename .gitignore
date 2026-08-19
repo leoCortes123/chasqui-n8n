@@ -1,9 +1,13 @@
 .env
+# Copias de .env: llevan los mismos secretos y `.env` a secas no las cubre.
+# Se detectó que .env.bak-20260817 y -20260818 habrían entrado con un `git add -A`.
+.env.bak*
+.env.local
 respaldos/
 bin/gen_ventas_demo.py
 docs/ejemplos/ventas_demo_*.csv
 __pycache__/
-docs/prototipo/credenciales-*.json
+docs/historico/prototipo/credenciales-*.json
 *.dump
 .fuse_hidden*
 

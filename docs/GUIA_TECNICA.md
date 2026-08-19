@@ -520,7 +520,7 @@ sería mentir—.
 que el valor no lo pone el modelo.
 
 **Niveles 2 y 3** (comparar contra precios oficiales tipo SIPSA, y contra el
-resto de negocios anonimizados) están en `docs/PLAN_PRODUCCION.md`. El contrato
+resto de negocios anonimizados) están en `docs/historico/PLAN_PRODUCCION.md`. El contrato
 de `recomendaciones_negocio` no cambia: cambia de dónde sale el comparativo.
 
 ---
@@ -1367,7 +1367,7 @@ ingesta**; `bin/validar_datos_prueba.py` calcula un oráculo independiente;
 `db/pruebas/escenarios_generados.sql` compara). El dataset se adapta a Chasqui y
 nunca al revés: lo que no se puede representar por las rutas que existen queda
 declarado como limitación. Manual completo en `docs/TEST_DATA_GENERATOR.md`, el
-diseño en `docs/PLAN_DATOS_PRUEBA.md`.
+diseño en `docs/historico/PLAN_DATOS_PRUEBA.md`.
 
 `bin/prueba_ciclo_vida.py` es el complemento de `empty_state`: prueba que un
 negocio vacío pueda **moverse** a operando —primera factura, primer CSV,

@@ -99,8 +99,14 @@ const ev = $('Normalizar').first().json.evento;
 const out = [];
 if ((r.respuestas||[]).length)
   out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });
-for (const a of (r.acciones||[]))
-  out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });
+for (const a of (r.acciones||[])) {
+  // 071: el panel de carga lo dibuja wf_enviar, que espera {panel:{...}}.
+  if (a.tipo === 'panel')
+    out.push({ json: { tipo:'panel', chat_id:r.chat_id,
+      panel: { sesion_id: a.sesion_id, modo: a.modo || 'panel' } } });
+  else
+    out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });
+}
 return out;
 """, [1000, 300])
 w.link("Router", "Despachar")
@@ -117,14 +123,20 @@ w.node("Switch", "n8n-nodes-base.switch", 3, {
     {"conditions": {"options": {"typeValidation":"loose"}, "combinator":"and",
        "conditions":[{"leftValue":"={{ $json.tipo }}","rightValue":"ejecutar",
          "operator":{"type":"string","operation":"equals"}}]}, "outputKey":"ejecutar"},
+    # 071: refrescar el panel de carga. Sale por el mismo wf_enviar que todo lo
+    # demás; lo único que cambia es la forma del item.
+    {"conditions": {"options": {"typeValidation":"loose"}, "combinator":"and",
+       "conditions":[{"leftValue":"={{ $json.tipo }}","rightValue":"panel",
+         "operator":{"type":"string","operation":"equals"}}]}, "outputKey":"panel"},
   ]}, "options": {}}, [1220, 300])
 w.link("Despachar", "Switch")
 
-def exec_wf(name, wid, pos):
+def exec_wf(name, wid, pos, esperar=True):
     return w.node(name, "n8n-nodes-base.executeWorkflow", 1.2, {
         "workflowId": {"__rl": True, "value": wid, "mode": "id"},
         "workflowInputs": {"mappingMode":"defineBelow","value":{}},
-        "options": {}}, pos, None, {"onError":"continueRegularOutput"})
+        "options": {} if esperar else {"waitForSubWorkflow": False}},
+        pos, None, {"onError":"continueRegularOutput"})
 
 # salida 0 enviar, 1 ingerir, 2 ejecutar
 exec_wf("LlamarEnviar", "wfEnviar00000000001", [1440, 180])
@@ -133,10 +145,14 @@ w.link("Switch", "LlamarEnviar", 0)
 exec_wf("LlamarIngesta", "wfIngesta00000000001", [1440, 300])
 w.link("Switch", "LlamarIngesta", 1)
 
-exec_wf("LlamarEjecutar", "wfEjecutar000000001", [1440, 440])
+# El análisis se dispara y se suelta: desde ahora wf_ejecutar entrega su propio
+# informe. Si el router esperara, la generación entera correría dentro de SU
+# ejecución y contra SU reloj de 300 segundos, que es exactamente cómo se perdió
+# un informe ya terminado en la segunda prueba de usuario.
+exec_wf("LlamarEjecutar", "wfEjecutar000000001", [1440, 440], esperar=False)
 w.link("Switch", "LlamarEjecutar", 2)
-# tras ejecutar, wf_ejecutar devuelve respuestas[]+binario -> enviar
-exec_wf("EnviarInforme", "wfEnviar00000000001", [1660, 440])
-w.link("LlamarEjecutar", "EnviarInforme")
+
+# salida 3: panel -> el mismo wf_enviar
+w.link("Switch", "LlamarEnviar", 3)
 
 w.dump("workflows/wf_router.json")

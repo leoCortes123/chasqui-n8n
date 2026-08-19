@@ -23,7 +23,8 @@ for arg in "$@"; do
   esac
 done
 if [ ${#BANCOS[@]} -eq 0 ]; then
-  BANCOS=(aceptacion empty_state reglas_comparativas router_casos escenarios_generados)
+  BANCOS=(aceptacion empty_state carga_sin_perdida ingesta_sin_modelo
+          reglas_comparativas router_casos escenarios_generados)
 fi
 
 SALIDA=$(mktemp -d)

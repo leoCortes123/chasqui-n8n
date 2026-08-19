@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "decisiones": {
+      "command": "python3",
+      "args": ["bin/mcp_decisiones.py"],
+      "description": "Fuente normativa: como hemos decidido que debe funcionar Chasqui. Consultar ANTES de leer codigo."
+    },
+    "codigo": {
+      "command": "codebase-memory-mcp",
+      "args": [],
+      "description": "Estado vigente del codigo: como esta implementado hoy. Indexa db/actual/, bin/, workflows/, portal/."
+    }
+  }
+}

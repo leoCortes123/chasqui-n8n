@@ -64,7 +64,10 @@
           "name": "Chasqui Telegram"
         }
       },
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
@@ -334,7 +337,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst filas = $input.all().map(i => i.json).filter(f => f && Object.keys(f).length);\nconst docId = $('Registrar').first().json.reg.documento_id;\n// Las cabeceras son la unión de las claves: una fila suelta puede venir corta.\nconst cols = [];\nfor (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k)) cols.push(k);\nreturn [{ json: { documento_id: docId, columnas: cols, filas,\n                  muestra: filas.slice(0, 5) } }];\n"
+        "jsCode": "\nconst filas = $input.all().map(i => i.json).filter(f => f && Object.keys(f).length);\nconst docId = $('Registrar').first().json.reg.documento_id;\n// Las cabeceras son la unión de las claves: una fila suelta puede venir corta.\nconst cols = [];\nfor (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k)) cols.push(k);\nreturn [{ json: { documento_id: docId, columnas: cols, filas,\n                  muestra: filas.slice(0, 5),\n                  muestra_amplia: filas.slice(0, 100) } }];\n"
       },
       "id": "AgruparFilas",
       "name": "AgruparFilas",
@@ -348,7 +351,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT ingesta_identificar_tabular( ({{ $json.documento_id }})::bigint,   ARRAY(SELECT jsonb_array_elements_text(    '{{ JSON.stringify($json.columnas).replaceAll(\"'\",\"''\") }}'::jsonb))) AS ident, (SELECT to_jsonb(p) FROM prompts_tecnicos p   WHERE p.clave='ingesta.inferir_mapeo' AND p.activo) AS prompt;",
+        "query": "SELECT ingesta_identificar_tabular( ({{ $json.documento_id }})::bigint,   ARRAY(SELECT jsonb_array_elements_text(    '{{ JSON.stringify($json.columnas).replaceAll(\"'\",\"''\") }}'::jsonb)),   '{{ JSON.stringify($json.muestra_amplia).replaceAll(\"'\",\"''\") }}'::jsonb) AS ident, (SELECT to_jsonb(p) FROM prompts_tecnicos p   WHERE p.clave='ingesta.inferir_mapeo' AND p.activo) AS prompt;",
         "options": {}
       },
       "id": "Identificar",
@@ -411,7 +414,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://opencode.ai/zen/v1/chat/completions",
+        "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -517,37 +520,65 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "typeValidation": "loose"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "leftValue": "={{ $json.r.estado === 'parseado' }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ]
+        "operation": "executeQuery",
+        "query": "SELECT carga_registrar_fallo(({{ $('Inicio').first().json.sesion_id ?? $('Inicio').first().json.evento?.sesion_id }})::bigint, '{{ String($('Inicio').first().json.evento?.file_name ?? \"\").replaceAll(\"'\",\"''\") }}') AS ok;",
+        "options": {}
+      },
+      "id": "AnotarNoBajado",
+      "name": "AnotarNoBajado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        620
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
         }
       },
-      "id": "CargoBien?",
-      "name": "CargoBien?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT carga_registrar_fallo(({{ $('Empaquetar').first().json.sesion_id }})::bigint, '{{ String($('Empaquetar').first().json.nombre ?? \"\").replaceAll(\"'\",\"''\") }}') AS ok;",
+        "options": {}
+      },
+      "id": "AnotarNoGuardado",
+      "name": "AnotarNoGuardado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
       "position": [
-        3600,
+        600,
+        620
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chasquiPg0000000001",
+          "name": "Chasqui Postgres"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet s = null;\ntry { s = $('Empaquetar').first().json.sesion_id; } catch (e) {}\nif (!s) { const i = $('Inicio').first().json;\n          s = i.sesion_id ?? i.evento?.sesion_id ?? null; }\nlet chat = null;\ntry { chat = $('Empaquetar').first().json.chat_id; } catch (e) {}\nif (!chat) { try { chat = $('Inicio').first().json.chat_id; } catch (e) {} }\nreturn [{ json: { sesion_id: s, chat_id: chat } }];\n"
+      },
+      "id": "Sesion",
+      "name": "Sesion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3800,
         400
       ]
     },
     {
       "parameters": {
         "resume": "timeInterval",
-        "amount": 8,
+        "amount": 11,
         "unit": "seconds"
       },
       "id": "Esperar",
@@ -555,23 +586,23 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        3800,
-        300
+        4000,
+        400
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT (d.id = (SELECT max(x.id) FROM documentos x WHERE x.sesion_id = d.sesion_id)         AND s.estado = 'recibiendo' AND s.cerrada_en IS NULL) AS preguntar FROM documentos d JOIN sesiones s ON s.id = d.sesion_id WHERE d.id = ({{ $('Resolver').first().json.documento_id }})::bigint;",
+        "query": "SELECT carga_evaluar(({{ $json.sesion_id }})::bigint) AS ev;",
         "options": {}
       },
-      "id": "SigueUltimo",
-      "name": "SigueUltimo",
+      "id": "Evaluar",
+      "name": "Evaluar",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        4000,
-        300
+        4200,
+        400
       ],
       "credentials": {
         "postgres": {
@@ -582,96 +613,15 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "typeValidation": "loose"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "leftValue": "={{ $json.preguntar === true }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ]
-        }
+        "jsCode": "\nconst ev = $input.first().json.ev || {};\nif (!ev.accion || ev.accion === 'nada') return [];\nconst ctx = $('Sesion').first().json;\nreturn [{ json: {\n  accion: ev.accion,\n  ejecucion_id: ev.ejecucion_id ?? null,\n  chat_id: ev.panel?.chat_id ?? ctx.chat_id,\n  panel: { sesion_id: ctx.sesion_id, modo: ev.panel?.modo || 'panel' } } }];\n"
       },
-      "id": "Preguntar?",
-      "name": "Preguntar?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        4200,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla: 'ingesta.todos_archivos', vars: {} }] } }];\n"
-      },
-      "id": "Pregunta",
-      "name": "Pregunta",
+      "id": "Decidir",
+      "name": "Decidir",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         4400,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst r = $('Resolver').first().json.r || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla: r.error ? 'ingesta.error_archivo'\n                                    : 'ingesta.error_no_soportado',\n    vars: { nombre_archivo: r.nombre_archivo || $('Empaquetar').first().json.nombre,\n            motivo: r.error || '', detalle: '' } }] } }];\n"
-      },
-      "id": "RespuestaError",
-      "name": "RespuestaError",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3800,
-        500
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst reg = $input.first().json.reg || {};\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_no_soportado',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           detalle: reg.error ? '\\n\\n' + reg.error : '' } }] } }];\n"
-      },
-      "id": "NoSoportado",
-      "name": "NoSoportado",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1000,
-        620
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nreturn [{ json: { chat_id: $('Inicio').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_descarga',\n    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || '' } }] } }];\n"
-      },
-      "id": "ErrorDescarga",
-      "name": "ErrorDescarga",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        400,
-        620
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst e = $input.first().json.error;\nconst msg = (e?.message || e || '').toString();\nreturn [{ json: { chat_id: $('Empaquetar').first().json.chat_id,\n  respuestas: [{ plantilla:'ingesta.error_guardando',\n    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,\n           detalle: msg ? '\\n\\n<code>' + msg.slice(0, 120) + '</code>' : '' } }] } }];\n"
-      },
-      "id": "ErrorRegistrar",
-      "name": "ErrorRegistrar",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        600,
-        620
+        400
       ]
     },
     {
@@ -687,13 +637,80 @@
         },
         "options": {}
       },
-      "id": "Enviar",
-      "name": "Enviar",
+      "id": "PanelEnviar",
+      "name": "PanelEnviar",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
         4600,
-        400
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.accion === 'analizar' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      },
+      "id": "Analizar?",
+      "name": "Analizar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4600,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst j = $input.first().json;\nreturn [{ json: { tipo: 'ejecutar', chat_id: j.chat_id,\n                  ejecucion_id: j.ejecucion_id } }];\n"
+      },
+      "id": "ArmarEjecutar",
+      "name": "ArmarEjecutar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEjecutar000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "LlamarEjecutar",
+      "name": "LlamarEjecutar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        5000,
+        520
       ],
       "onError": "continueRegularOutput"
     }
@@ -739,7 +756,7 @@
         ],
         [
           {
-            "node": "ErrorDescarga",
+            "node": "AnotarNoBajado",
             "type": "main",
             "index": 0
           }
@@ -757,7 +774,7 @@
         ],
         [
           {
-            "node": "ErrorDescarga",
+            "node": "AnotarNoBajado",
             "type": "main",
             "index": 0
           }
@@ -775,7 +792,7 @@
         ],
         [
           {
-            "node": "ErrorDescarga",
+            "node": "AnotarNoBajado",
             "type": "main",
             "index": 0
           }
@@ -804,7 +821,7 @@
         ],
         [
           {
-            "node": "ErrorRegistrar",
+            "node": "AnotarNoGuardado",
             "type": "main",
             "index": 0
           }
@@ -822,7 +839,7 @@
         ],
         [
           {
-            "node": "NoSoportado",
+            "node": "Sesion",
             "type": "main",
             "index": 0
           }
@@ -1019,25 +1036,40 @@
       "main": [
         [
           {
-            "node": "CargoBien?",
+            "node": "Sesion",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "CargoBien?": {
+    "AnotarNoBajado": {
+      "main": [
+        [
+          {
+            "node": "Sesion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AnotarNoGuardado": {
+      "main": [
+        [
+          {
+            "node": "Sesion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sesion": {
       "main": [
         [
           {
             "node": "Esperar",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "RespuestaError",
             "type": "main",
             "index": 0
           }
@@ -1048,84 +1080,56 @@
       "main": [
         [
           {
-            "node": "SigueUltimo",
+            "node": "Evaluar",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "SigueUltimo": {
+    "Evaluar": {
       "main": [
         [
           {
-            "node": "Preguntar?",
+            "node": "Decidir",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Preguntar?": {
+    "Decidir": {
       "main": [
         [
           {
-            "node": "Pregunta",
+            "node": "PanelEnviar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analizar?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Pregunta": {
+    "Analizar?": {
       "main": [
         [
           {
-            "node": "Enviar",
+            "node": "ArmarEjecutar",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RespuestaError": {
+    "ArmarEjecutar": {
       "main": [
         [
           {
-            "node": "Enviar",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "NoSoportado": {
-      "main": [
-        [
-          {
-            "node": "Enviar",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ErrorDescarga": {
-      "main": [
-        [
-          {
-            "node": "Enviar",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ErrorRegistrar": {
-      "main": [
-        [
-          {
-            "node": "Enviar",
+            "node": "LlamarEjecutar",
             "type": "main",
             "index": 0
           }

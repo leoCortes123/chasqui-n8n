@@ -1,0 +1,2158 @@
+{
+ "_": "Grafo de llamadas del esquema public, generado por bin/gen_estado_sql.sh desde pg_proc.prosrc y desde los nodos Postgres de workflows/wf_*.json. No editar.",
+ "funciones": {
+  "admin_reporte": {
+   "llama_a": [
+    "alias_pendientes",
+    "miles"
+   ],
+   "llamada_por": [
+    "router_h_admin"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "fallas",
+    "movimientos",
+    "productos",
+    "servicios",
+    "sesiones",
+    "v_calidad_matching",
+    "v_consumo_negocio",
+    "v_ejecuciones_fallidas",
+    "v_embudo_servicios",
+    "v_salud_ingesta"
+   ]
+  },
+  "alertas_evaluar": {
+   "llama_a": [
+    "parametro",
+    "recomendaciones_negocio"
+   ],
+   "llamada_por": [
+    "mantenimiento_ciclo"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "alertas_enviadas",
+    "negocios",
+    "recomendaciones",
+    "v_negocios_alertables"
+   ]
+  },
+  "alias_pendientes": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "admin_reporte",
+    "portal_alias_pendientes"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "alias",
+    "mov_visibles",
+    "movimientos",
+    "productos"
+   ]
+  },
+  "b64url": {
+   "llama_a": [],
+   "llamada_por": [
+    "jwt_firmar"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "barra_10": {
+   "llama_a": [],
+   "llamada_por": [
+    "informe_salud_bloque"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "canal_de_chat": {
+   "llama_a": [],
+   "llamada_por": [
+    "carga_panel"
+   ],
+   "llamada_desde": [
+    "n8n:wf_ejecutar.json",
+    "n8n:wf_enviar.json"
+   ],
+   "usa": [
+    "identidades"
+   ]
+  },
+  "carga_arrancar": {
+   "llama_a": [],
+   "llamada_por": [
+    "carga_evaluar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "ejecuciones",
+    "sesiones"
+   ]
+  },
+  "carga_evaluar": {
+   "llama_a": [
+    "carga_arrancar",
+    "carga_hay_con_que",
+    "carga_panel",
+    "carga_resumen",
+    "parametro"
+   ],
+   "llamada_por": [
+    "router_h_recibiendo"
+   ],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "sesiones"
+   ]
+  },
+  "carga_hay_con_que": {
+   "llama_a": [],
+   "llamada_por": [
+    "carga_evaluar",
+    "router_h_recibiendo"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "mov_visibles",
+    "sesiones"
+   ]
+  },
+  "carga_panel": {
+   "llama_a": [
+    "canal_de_chat",
+    "carga_resumen",
+    "miles",
+    "resolver_plantilla"
+   ],
+   "llamada_por": [
+    "carga_evaluar"
+   ],
+   "llamada_desde": [
+    "n8n:wf_enviar.json"
+   ],
+   "usa": [
+    "identidades",
+    "movimientos",
+    "sesiones",
+    "usuarios"
+   ]
+  },
+  "carga_panel_registrar": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_enviar.json"
+   ],
+   "usa": [
+    "sesiones"
+   ]
+  },
+  "carga_registrar_fallo": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "sesiones"
+   ]
+  },
+  "carga_resumen": {
+   "llama_a": [
+    "periodo_es"
+   ],
+   "llamada_por": [
+    "carga_evaluar",
+    "carga_panel"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "movimientos",
+    "sesiones"
+   ]
+  },
+  "cartera_facturar_dian": {
+   "llama_a": [
+    "tercero_obtener"
+   ],
+   "llamada_por": [
+    "cartera_refacturar",
+    "ingesta_parsear_dian"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "facturas",
+    "movimientos",
+    "negocios"
+   ]
+  },
+  "cartera_refacturar": {
+   "llama_a": [
+    "cartera_facturar_dian"
+   ],
+   "llamada_por": [
+    "portal_negocio_guardar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos"
+   ]
+  },
+  "chat_de_usuario": {
+   "llama_a": [],
+   "llamada_por": [
+    "ejecucion_cerrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "identidades",
+    "usuarios"
+   ]
+  },
+  "cifra_norm": {
+   "llama_a": [],
+   "llamada_por": [
+    "cifra_variantes",
+    "validar_cifras"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "cifra_variantes": {
+   "llama_a": [
+    "cifra_norm"
+   ],
+   "llamada_por": [
+    "validar_cifras"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "conocimiento_buscar": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "consulta_iniciar",
+    "contexto_negocio_recuperar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "conocimiento"
+   ]
+  },
+  "conocimiento_guardar": {
+   "llama_a": [],
+   "llamada_por": [
+    "portal_conocimiento_guardar",
+    "recomendacion_accion",
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "conocimiento",
+    "conocimiento_pendiente",
+    "v_conocimiento_faltante"
+   ]
+  },
+  "conocimiento_pendiente_registrar": {
+   "llama_a": [
+    "norm_pregunta"
+   ],
+   "llamada_por": [
+    "consulta_iniciar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "conocimiento_pendiente"
+   ]
+  },
+  "consulta_iniciar": {
+   "llama_a": [
+    "conocimiento_buscar",
+    "conocimiento_pendiente_registrar",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_h_sin_sesion"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "conocimiento",
+    "ejecuciones",
+    "mov_visibles",
+    "movimientos",
+    "sesiones"
+   ]
+  },
+  "contexto_negocio_recuperar": {
+   "llama_a": [
+    "conocimiento_buscar",
+    "hallazgos_comparativo",
+    "intencion_resolver",
+    "perfil_negocio",
+    "recomendaciones_vigentes",
+    "salud_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "servicios:consulta"
+   ],
+   "usa": [
+    "productos",
+    "recomendaciones"
+   ]
+  },
+  "ejecucion_cerrar": {
+   "llama_a": [
+    "chat_de_usuario",
+    "recomendaciones_medir",
+    "recomendaciones_registrar",
+    "snapshot_tomar"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "usa": [
+    "ejecuciones",
+    "fallas",
+    "plantillas",
+    "recomendaciones",
+    "servicios",
+    "sesiones"
+   ]
+  },
+  "ejecucion_preparar": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "usa": [
+    "ejecuciones",
+    "prompts",
+    "servicios",
+    "sesiones",
+    "v_consumo_negocio"
+   ]
+  },
+  "esc_html": {
+   "llama_a": [],
+   "llamada_por": [
+    "informe_render",
+    "informe_salud_bloque",
+    "resolver_plantilla"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "extensiones_aceptadas": {
+   "llama_a": [
+    "parametro"
+   ],
+   "llamada_por": [
+    "router_arranque_servicio"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "formatos_documento"
+   ]
+  },
+  "fmt_decimal": {
+   "llama_a": [],
+   "llamada_por": [
+    "informe_render",
+    "recomendaciones_negocio"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "hallazgos_comparativo": {
+   "llama_a": [
+    "salud_negocio",
+    "snapshot_anterior"
+   ],
+   "llamada_por": [
+    "contexto_negocio_recuperar",
+    "hallazgos_generar"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "hallazgos_compras": {
+   "llama_a": [
+    "parametro",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "servicios:mercado_compras"
+   ],
+   "usa": [
+    "documentos",
+    "mov_visibles",
+    "negocios",
+    "productos",
+    "recomendaciones",
+    "tipos_negocio",
+    "v_deriva_costo"
+   ]
+  },
+  "hallazgos_generar": {
+   "llama_a": [
+    "hallazgos_comparativo",
+    "parametro",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "servicios:ventas_compras"
+   ],
+   "usa": [
+    "mov_visibles",
+    "negocios",
+    "productos",
+    "recomendaciones",
+    "tipos_negocio",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  "informe_base_bloque": {
+   "llama_a": [
+    "miles",
+    "plantilla_cuerpo_srv"
+   ],
+   "llamada_por": [
+    "informe_render"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "facturas",
+    "mov_visibles",
+    "movimientos",
+    "negocios"
+   ]
+  },
+  "informe_estructura_seca": {
+   "llama_a": [
+    "plantilla_cuerpo_srv"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "informe_render": {
+   "llama_a": [
+    "esc_html",
+    "fmt_decimal",
+    "informe_base_bloque",
+    "informe_salud_bloque",
+    "limpiar_marcado",
+    "periodo_es",
+    "plantilla_cuerpo_srv"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "usa": [
+    "productos",
+    "servicios"
+   ]
+  },
+  "informe_salud_bloque": {
+   "llama_a": [
+    "barra_10",
+    "esc_html",
+    "plantilla_cuerpo_srv",
+    "semaforo"
+   ],
+   "llamada_por": [
+    "informe_render"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "informes_periodicos_disparar": {
+   "llama_a": [
+    "parametro"
+   ],
+   "llamada_por": [
+    "mantenimiento_ciclo"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "ejecuciones",
+    "movimientos",
+    "servicios",
+    "sesiones",
+    "v_negocios_informe_periodico"
+   ]
+  },
+  "ingesta_cargar_inventario": {
+   "llama_a": [
+    "ingesta_fecha",
+    "ingesta_marcar_error",
+    "ingesta_num",
+    "match_resolver_producto"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [],
+   "usa": [
+    "conteos_inventario",
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  "ingesta_cargar_tabular": {
+   "llama_a": [
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_marcar_error"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento",
+    "movimientos"
+   ]
+  },
+  "ingesta_cargar_tabular_detalle": {
+   "llama_a": [
+    "ingesta_fecha",
+    "ingesta_marcar_error",
+    "ingesta_num"
+   ],
+   "llamada_por": [
+    "ingesta_cargar_tabular"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "formatos_documento",
+    "movimientos"
+   ]
+  },
+  "ingesta_es_agregado": {
+   "llama_a": [],
+   "llamada_por": [
+    "ingesta_inferir_mapeo_sql",
+    "ingesta_registrar_formato_inferido"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_fecha": {
+   "llama_a": [],
+   "llamada_por": [
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular_detalle"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_huella": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "ingesta_identificar_tabular",
+    "ingesta_registrar_formato_inferido",
+    "ingesta_registrar_formato_resuelto"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_identificar_tabular": {
+   "llama_a": [
+    "ingesta_huella",
+    "ingesta_inferir_mapeo_sql",
+    "ingesta_marcar_error",
+    "ingesta_registrar_formato_resuelto"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  "ingesta_inferir_decimales": {
+   "llama_a": [],
+   "llamada_por": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_inferir_formato_fecha": {
+   "llama_a": [],
+   "llamada_por": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_inferir_mapeo_sql": {
+   "llama_a": [
+    "ingesta_es_agregado",
+    "ingesta_inferir_decimales",
+    "ingesta_inferir_formato_fecha",
+    "ingesta_inferir_tipo",
+    "ingesta_resolver_columnas"
+   ],
+   "llamada_por": [
+    "ingesta_identificar_tabular"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_inferir_tipo": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos"
+   ]
+  },
+  "ingesta_marcar_error": {
+   "llama_a": [],
+   "llamada_por": [
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular",
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_identificar_tabular",
+    "ingesta_parsear_dian",
+    "ingesta_procesar_documento",
+    "ingesta_registrar_documento",
+    "ingesta_registrar_formato_inferido"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos"
+   ]
+  },
+  "ingesta_num": {
+   "llama_a": [
+    "miles"
+   ],
+   "llamada_por": [
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular_detalle"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "ingesta_parsear_dian": {
+   "llama_a": [
+    "cartera_facturar_dian",
+    "ingesta_marcar_error"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "movimientos"
+   ]
+  },
+  "ingesta_procesar_documento": {
+   "llama_a": [
+    "ingesta_marcar_error"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  "ingesta_registrar_documento": {
+   "llama_a": [
+    "ingesta_marcar_error",
+    "parametro"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  "ingesta_registrar_formato_inferido": {
+   "llama_a": [
+    "ingesta_es_agregado",
+    "ingesta_huella",
+    "ingesta_marcar_error"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  "ingesta_registrar_formato_resuelto": {
+   "llama_a": [
+    "ingesta_huella"
+   ],
+   "llamada_por": [
+    "ingesta_identificar_tabular"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  "ingesta_resolver_columnas": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "sinonimos_columna"
+   ]
+  },
+  "ingesta_resumen_documento": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "documentos",
+    "facturas",
+    "movimientos",
+    "negocios",
+    "productos"
+   ]
+  },
+  "ingesta_resumen_sesion": {
+   "llama_a": [
+    "miles",
+    "parametro",
+    "periodo_es"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "facturas",
+    "mov_visibles",
+    "movimientos",
+    "negocios",
+    "sesiones"
+   ]
+  },
+  "intencion_agregados": {
+   "llama_a": [
+    "miles"
+   ],
+   "llamada_por": [
+    "intencion_resolver"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "mov_visibles",
+    "movimientos",
+    "productos",
+    "v_balance_unidades",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  "intencion_detectar": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "intencion_resolver"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "intenciones"
+   ]
+  },
+  "intencion_resolver": {
+   "llama_a": [
+    "intencion_agregados",
+    "intencion_detectar",
+    "norm_texto",
+    "periodo_resolver"
+   ],
+   "llamada_por": [
+    "contexto_negocio_recuperar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "intenciones",
+    "mov_visibles",
+    "movimientos",
+    "productos"
+   ]
+  },
+  "jwt_firmar": {
+   "llama_a": [
+    "b64url"
+   ],
+   "llamada_por": [
+    "portal_sesion_abrir"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "limpiar_marcado": {
+   "llama_a": [],
+   "llamada_por": [
+    "informe_render"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "mantenimiento_ciclo": {
+   "llama_a": [
+    "alertas_evaluar",
+    "informes_periodicos_disparar"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_cron.json"
+   ],
+   "usa": [
+    "ejecuciones",
+    "fallas",
+    "sesiones",
+    "usuarios"
+   ]
+  },
+  "match_confirmar_alias": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "portal_alias_confirmar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "alias",
+    "movimientos"
+   ]
+  },
+  "match_resolver_documento": {
+   "llama_a": [
+    "match_resolver_producto",
+    "norm_texto"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ingesta.json"
+   ],
+   "usa": [
+    "alias",
+    "documentos",
+    "movimientos",
+    "productos"
+   ]
+  },
+  "match_resolver_producto": {
+   "llama_a": [
+    "norm_texto",
+    "parametro"
+   ],
+   "llamada_por": [
+    "ingesta_cargar_inventario",
+    "match_resolver_documento"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "alias",
+    "productos"
+   ]
+  },
+  "mercado_compras_bienvenida": {
+   "llama_a": [
+    "miles",
+    "periodo_es",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_arranque_servicio"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "documentos",
+    "mov_visibles",
+    "productos"
+   ]
+  },
+  "mes_es": {
+   "llama_a": [],
+   "llamada_por": [
+    "periodo_es",
+    "recomendaciones_negocio"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "miles": {
+   "llama_a": [],
+   "llamada_por": [
+    "admin_reporte",
+    "carga_panel",
+    "informe_base_bloque",
+    "ingesta_num",
+    "ingesta_resumen_sesion",
+    "intencion_agregados",
+    "mercado_compras_bienvenida",
+    "pedido_sugerido",
+    "recomendacion_accion",
+    "recomendaciones_negocio",
+    "router_plan",
+    "teclado_recomendacion"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "movimientos_limite_plan": {
+   "llama_a": [
+    "plan_desde"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "trigger:movimientos"
+   ],
+   "usa": [
+    "documentos"
+   ]
+  },
+  "nit_dv": {
+   "llama_a": [],
+   "llamada_por": [
+    "portal_negocio_guardar"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "norm_pregunta": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "conocimiento_pendiente_registrar"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "norm_texto": {
+   "llama_a": [],
+   "llamada_por": [
+    "alias_pendientes",
+    "conocimiento_buscar",
+    "ingesta_huella",
+    "ingesta_inferir_tipo",
+    "ingesta_resolver_columnas",
+    "intencion_detectar",
+    "intencion_resolver",
+    "match_confirmar_alias",
+    "match_resolver_documento",
+    "match_resolver_producto",
+    "norm_pregunta",
+    "periodo_resolver",
+    "portal_factura_guardar",
+    "portal_movimientos_resumen",
+    "router_h_intake",
+    "tercero_obtener"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "pago_registrar": {
+   "llama_a": [],
+   "llamada_por": [
+    "portal_pago_registrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "facturas",
+    "pagos"
+   ]
+  },
+  "parametro": {
+   "llama_a": [],
+   "llamada_por": [
+    "alertas_evaluar",
+    "carga_evaluar",
+    "extensiones_aceptadas",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "informes_periodicos_disparar",
+    "ingesta_registrar_documento",
+    "ingesta_resumen_sesion",
+    "match_resolver_producto",
+    "plan_desde",
+    "recomendaciones_negocio",
+    "router_h_comandos",
+    "router_plan",
+    "router_portal",
+    "salud_negocio",
+    "teclado_markup"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "parametros"
+   ]
+  },
+  "pedido_sugerido": {
+   "llama_a": [
+    "miles",
+    "unidades_es"
+   ],
+   "llamada_por": [
+    "portal_pedido"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "productos",
+    "recomendaciones",
+    "v_proveedor_mas_barato"
+   ]
+  },
+  "perfil_negocio": {
+   "llama_a": [],
+   "llamada_por": [
+    "contexto_negocio_recuperar",
+    "portal_perfil"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "productos",
+    "recomendaciones",
+    "v_perfil_negocio"
+   ]
+  },
+  "periodo_es": {
+   "llama_a": [
+    "mes_es"
+   ],
+   "llamada_por": [
+    "carga_resumen",
+    "informe_render",
+    "ingesta_resumen_sesion",
+    "mercado_compras_bienvenida"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "periodo_resolver": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "intencion_resolver"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "plan_desde": {
+   "llama_a": [
+    "parametro"
+   ],
+   "llamada_por": [
+    "movimientos_limite_plan"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "negocios"
+   ]
+  },
+  "plantilla_cuerpo": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [],
+   "usa": [
+    "plantillas"
+   ]
+  },
+  "plantilla_cuerpo_srv": {
+   "llama_a": [],
+   "llamada_por": [
+    "informe_base_bloque",
+    "informe_estructura_seca",
+    "informe_render",
+    "informe_salud_bloque"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "plantillas"
+   ]
+  },
+  "portal_alias_confirmar": {
+   "llama_a": [
+    "match_confirmar_alias",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "alias",
+    "movimientos",
+    "negocios",
+    "productos"
+   ]
+  },
+  "portal_alias_pendientes": {
+   "llama_a": [
+    "alias_pendientes",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "v_calidad_matching"
+   ]
+  },
+  "portal_cartera": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "facturas",
+    "terceros",
+    "v_cartera_edades",
+    "v_cartera_tercero"
+   ]
+  },
+  "portal_claim": {
+   "llama_a": [],
+   "llamada_por": [
+    "portal_conocimiento_guardar",
+    "portal_cotizacion_guardar",
+    "portal_negocio",
+    "portal_pago_registrar"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "portal_conocimiento": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "conocimiento"
+   ]
+  },
+  "portal_conocimiento_borrar": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "conocimiento",
+    "conocimiento_pendiente"
+   ]
+  },
+  "portal_conocimiento_guardar": {
+   "llama_a": [
+    "conocimiento_guardar",
+    "portal_claim",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "conocimiento",
+    "conocimiento_pendiente"
+   ]
+  },
+  "portal_conteo_guardar": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "conteos_inventario",
+    "productos"
+   ]
+  },
+  "portal_conteos": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "conteos_inventario",
+    "productos"
+   ]
+  },
+  "portal_cotizacion_guardar": {
+   "llama_a": [
+    "portal_claim",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "cotizaciones"
+   ]
+  },
+  "portal_cotizacion_publica": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_anon",
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "cotizaciones",
+    "negocios"
+   ]
+  },
+  "portal_cotizacion_revocar": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "cotizaciones"
+   ]
+  },
+  "portal_cotizaciones": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "cotizaciones"
+   ]
+  },
+  "portal_documentos": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento",
+    "movimientos"
+   ]
+  },
+  "portal_factura_guardar": {
+   "llama_a": [
+    "norm_texto",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "facturas",
+    "terceros"
+   ]
+  },
+  "portal_informe": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "ejecuciones",
+    "servicios"
+   ]
+  },
+  "portal_informes": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "ejecuciones",
+    "servicios"
+   ]
+  },
+  "portal_mov_nombre": {
+   "llama_a": [],
+   "llamada_por": [
+    "portal_movimientos",
+    "portal_movimientos_resumen"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "portal_movimientos": {
+   "llama_a": [
+    "portal_mov_nombre",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento",
+    "movimientos",
+    "productos"
+   ]
+  },
+  "portal_movimientos_resumen": {
+   "llama_a": [
+    "norm_texto",
+    "portal_mov_nombre",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "documentos",
+    "formatos_documento",
+    "movimientos",
+    "productos"
+   ]
+  },
+  "portal_negocio": {
+   "llama_a": [
+    "portal_claim"
+   ],
+   "llamada_por": [
+    "portal_alias_confirmar",
+    "portal_alias_pendientes",
+    "portal_cartera",
+    "portal_conocimiento",
+    "portal_conocimiento_borrar",
+    "portal_conocimiento_guardar",
+    "portal_conteo_guardar",
+    "portal_conteos",
+    "portal_cotizacion_guardar",
+    "portal_cotizacion_revocar",
+    "portal_cotizaciones",
+    "portal_documentos",
+    "portal_factura_guardar",
+    "portal_informe",
+    "portal_informes",
+    "portal_movimientos",
+    "portal_movimientos_resumen",
+    "portal_negocio_guardar",
+    "portal_pago_registrar",
+    "portal_pedido",
+    "portal_pendientes",
+    "portal_perfil",
+    "portal_productos",
+    "portal_recomendacion_accion",
+    "portal_recomendaciones",
+    "portal_snapshots"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "portal_negocio_guardar": {
+   "llama_a": [
+    "cartera_refacturar",
+    "nit_dv",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "facturas",
+    "negocios",
+    "pagos"
+   ]
+  },
+  "portal_pago_registrar": {
+   "llama_a": [
+    "pago_registrar",
+    "portal_claim",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "facturas"
+   ]
+  },
+  "portal_pedido": {
+   "llama_a": [
+    "pedido_sugerido",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": []
+  },
+  "portal_pendientes": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "v_conocimiento_faltante"
+   ]
+  },
+  "portal_perfil": {
+   "llama_a": [
+    "perfil_negocio",
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": []
+  },
+  "portal_productos": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "productos",
+    "v_balance_unidades"
+   ]
+  },
+  "portal_recomendacion_accion": {
+   "llama_a": [
+    "portal_negocio",
+    "recomendacion_accion"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": []
+  },
+  "portal_recomendaciones": {
+   "llama_a": [
+    "portal_negocio",
+    "recomendaciones_vigentes"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "portal_sesion_abrir": {
+   "llama_a": [
+    "jwt_firmar"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_anon"
+   ],
+   "usa": [
+    "portal_tokens",
+    "usuarios"
+   ]
+  },
+  "portal_snapshots": {
+   "llama_a": [
+    "portal_negocio"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "postgrest:portal_usuario"
+   ],
+   "usa": [
+    "productos",
+    "snapshots_negocio"
+   ]
+  },
+  "portal_token_crear": {
+   "llama_a": [],
+   "llamada_por": [
+    "router_portal"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "portal_tokens"
+   ]
+  },
+  "recomendacion_accion": {
+   "llama_a": [
+    "conocimiento_guardar",
+    "miles",
+    "recomendacion_marcar_cierre"
+   ],
+   "llamada_por": [
+    "portal_recomendacion_accion",
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "recomendacion_marcar_cierre": {
+   "llama_a": [
+    "recomendacion_metrica_valor"
+   ],
+   "llamada_por": [
+    "recomendacion_accion",
+    "recomendaciones_registrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "metricas_resultado",
+    "recomendaciones"
+   ]
+  },
+  "recomendacion_metrica_valor": {
+   "llama_a": [],
+   "llamada_por": [
+    "recomendacion_marcar_cierre",
+    "recomendaciones_medir"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "facturas",
+    "mov_visibles",
+    "v_balance_unidades",
+    "v_margen_producto",
+    "v_rotacion_producto"
+   ]
+  },
+  "recomendacion_objeto_evaluable": {
+   "llama_a": [],
+   "llamada_por": [
+    "recomendaciones_registrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "facturas",
+    "mov_visibles",
+    "terceros"
+   ]
+  },
+  "recomendaciones_medir": {
+   "llama_a": [
+    "recomendacion_metrica_valor"
+   ],
+   "llamada_por": [
+    "ejecucion_cerrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "metricas_resultado",
+    "mov_visibles",
+    "recomendaciones"
+   ]
+  },
+  "recomendaciones_negocio": {
+   "llama_a": [
+    "fmt_decimal",
+    "mes_es",
+    "miles",
+    "parametro",
+    "unidades_es"
+   ],
+   "llamada_por": [
+    "alertas_evaluar",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "recomendaciones_registrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "facturas",
+    "mov_visibles",
+    "movimientos",
+    "productos",
+    "snapshots_negocio",
+    "terceros",
+    "v_balance_unidades",
+    "v_cartera_tercero",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_rotacion_producto"
+   ]
+  },
+  "recomendaciones_registrar": {
+   "llama_a": [
+    "recomendacion_marcar_cierre",
+    "recomendacion_objeto_evaluable",
+    "recomendaciones_negocio"
+   ],
+   "llamada_por": [
+    "ejecucion_cerrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "recomendaciones_vigentes": {
+   "llama_a": [],
+   "llamada_por": [
+    "contexto_negocio_recuperar",
+    "portal_recomendaciones"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "resolver_plantilla": {
+   "llama_a": [
+    "esc_html",
+    "teclado_markup"
+   ],
+   "llamada_por": [
+    "carga_panel"
+   ],
+   "llamada_desde": [
+    "n8n:wf_enviar.json"
+   ],
+   "usa": [
+    "plantillas"
+   ]
+  },
+  "router_arranque_servicio": {
+   "llama_a": [
+    "extensiones_aceptadas",
+    "mercado_compras_bienvenida",
+    "router_respuesta",
+    "teclado_tipos_negocio"
+   ],
+   "llamada_por": [
+    "router_h_comandos",
+    "router_h_intake"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "negocios",
+    "servicios"
+   ]
+  },
+  "router_ctx": {
+   "llama_a": [
+    "usuario_de_canal"
+   ],
+   "llamada_por": [
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "servicios",
+    "usuarios"
+   ]
+  },
+  "router_h_admin": {
+   "llama_a": [
+    "admin_reporte",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "fallas"
+   ]
+  },
+  "router_h_comandos": {
+   "llama_a": [
+    "conocimiento_guardar",
+    "parametro",
+    "recomendacion_accion",
+    "router_arranque_servicio",
+    "router_plan",
+    "router_portal",
+    "router_procesar_mensaje",
+    "router_respuesta",
+    "teclado_consentimiento",
+    "teclado_intake",
+    "teclado_modulo",
+    "teclado_recomendacion",
+    "teclado_recomendaciones"
+   ],
+   "llamada_por": [
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "conocimiento",
+    "modulos",
+    "negocios",
+    "recomendaciones",
+    "servicios",
+    "sesiones",
+    "tipos_negocio",
+    "usuarios"
+   ]
+  },
+  "router_h_intake": {
+   "llama_a": [
+    "norm_texto",
+    "router_arranque_servicio",
+    "router_respuesta",
+    "teclado_intake"
+   ],
+   "llamada_por": [
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "servicios",
+    "sesiones"
+   ]
+  },
+  "router_h_recibiendo": {
+   "llama_a": [
+    "carga_evaluar",
+    "carga_hay_con_que",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "servicios",
+    "sesiones"
+   ]
+  },
+  "router_h_sin_sesion": {
+   "llama_a": [
+    "consulta_iniciar",
+    "router_respuesta",
+    "teclado_intake"
+   ],
+   "llamada_por": [
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "servicios",
+    "sesiones"
+   ]
+  },
+  "router_marcar_editables": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_router.json"
+   ],
+   "usa": [
+    "plantillas"
+   ]
+  },
+  "router_plan": {
+   "llama_a": [
+    "miles",
+    "parametro",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "ejecuciones",
+    "negocios",
+    "v_consumo_negocio"
+   ]
+  },
+  "router_portal": {
+   "llama_a": [
+    "parametro",
+    "portal_token_crear",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "router_procesar_mensaje": {
+   "llama_a": [
+    "router_ctx",
+    "router_h_admin",
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_recibiendo",
+    "router_h_sin_sesion",
+    "router_respuesta"
+   ],
+   "llamada_por": [
+    "router_h_comandos"
+   ],
+   "llamada_desde": [
+    "n8n:wf_router.json",
+    "n8n:wf_wa_router.json"
+   ],
+   "usa": [
+    "sesiones"
+   ]
+  },
+  "router_respuesta": {
+   "llama_a": [],
+   "llamada_por": [
+    "consulta_iniciar",
+    "mercado_compras_bienvenida",
+    "router_arranque_servicio",
+    "router_h_admin",
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_recibiendo",
+    "router_h_sin_sesion",
+    "router_plan",
+    "router_portal",
+    "router_procesar_mensaje"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "salud_negocio": {
+   "llama_a": [
+    "parametro"
+   ],
+   "llamada_por": [
+    "contexto_negocio_recuperar",
+    "hallazgos_comparativo",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "snapshot_tomar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "facturas",
+    "mov_visibles",
+    "productos",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_rotacion_producto"
+   ]
+  },
+  "semaforo": {
+   "llama_a": [],
+   "llamada_por": [
+    "informe_salud_bloque"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "snapshot_anterior": {
+   "llama_a": [],
+   "llamada_por": [
+    "hallazgos_comparativo"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "snapshots_negocio"
+   ]
+  },
+  "snapshot_tomar": {
+   "llama_a": [
+    "salud_negocio",
+    "snapshot_umbrales",
+    "snapshot_version"
+   ],
+   "llamada_por": [
+    "ejecucion_cerrar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "mov_visibles",
+    "productos",
+    "recomendaciones",
+    "snapshots_negocio",
+    "v_balance_unidades",
+    "v_calidad_matching",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  "snapshot_umbrales": {
+   "llama_a": [],
+   "llamada_por": [
+    "snapshot_tomar"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "parametros"
+   ]
+  },
+  "snapshot_version": {
+   "llama_a": [],
+   "llamada_por": [
+    "snapshot_tomar",
+    "snapshots_backfill"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "snapshots_backfill": {
+   "llama_a": [
+    "snapshot_version"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [],
+   "usa": [
+    "ejecuciones",
+    "movimientos",
+    "productos",
+    "servicios",
+    "snapshots_negocio"
+   ]
+  },
+  "teclado_consentimiento": {
+   "llama_a": [],
+   "llamada_por": [
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "teclado_intake": {
+   "llama_a": [
+    "teclado_modulo",
+    "teclado_modulos"
+   ],
+   "llamada_por": [
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_sin_sesion"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "modulos"
+   ]
+  },
+  "teclado_markup": {
+   "llama_a": [
+    "parametro"
+   ],
+   "llamada_por": [
+    "resolver_plantilla"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "teclado_modulo": {
+   "llama_a": [],
+   "llamada_por": [
+    "router_h_comandos",
+    "teclado_intake"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "servicios"
+   ]
+  },
+  "teclado_modulos": {
+   "llama_a": [],
+   "llamada_por": [
+    "teclado_intake"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "modulos"
+   ]
+  },
+  "teclado_recomendacion": {
+   "llama_a": [
+    "miles"
+   ],
+   "llamada_por": [
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "teclado_recomendaciones": {
+   "llama_a": [],
+   "llamada_por": [
+    "router_h_comandos"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "recomendaciones"
+   ]
+  },
+  "teclado_tipos_negocio": {
+   "llama_a": [],
+   "llamada_por": [
+    "router_arranque_servicio"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "tipos_negocio"
+   ]
+  },
+  "tercero_obtener": {
+   "llama_a": [
+    "norm_texto"
+   ],
+   "llamada_por": [
+    "cartera_facturar_dian"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "terceros"
+   ]
+  },
+  "unidades_es": {
+   "llama_a": [],
+   "llamada_por": [
+    "pedido_sugerido",
+    "recomendaciones_negocio"
+   ],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "usuario_de_canal": {
+   "llama_a": [],
+   "llamada_por": [
+    "router_ctx",
+    "usuario_de_telegram"
+   ],
+   "llamada_desde": [],
+   "usa": [
+    "identidades",
+    "negocios",
+    "sesiones",
+    "usuarios"
+   ]
+  },
+  "usuario_de_telegram": {
+   "llama_a": [
+    "usuario_de_canal"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [],
+   "usa": []
+  },
+  "validar_cifras": {
+   "llama_a": [
+    "cifra_norm",
+    "cifra_variantes"
+   ],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "usa": [
+    "productos"
+   ]
+  },
+  "wa_payload": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_enviar.json"
+   ],
+   "usa": []
+  },
+  "wa_texto": {
+   "llama_a": [],
+   "llamada_por": [],
+   "llamada_desde": [
+    "n8n:wf_enviar.json"
+   ],
+   "usa": []
+  }
+ }
+}

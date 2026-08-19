@@ -1,0 +1,27 @@
+# Qué NO indexa codebase-memory-mcp, y por qué.
+#
+# La regla es una sola: el grafo debe reflejar el estado VIGENTE. Todo lo que
+# sea historia, foto o material generado que compita con la fuente, se excluye.
+
+# Historia acumulativa. 73 archivos con 263 definiciones de función para 163
+# nombres (router_procesar_mensaje aparece 15 veces). Indexar esto es
+# exactamente el error que db/actual/ existe para evitar.
+db/migraciones/
+
+# Auditoría cerrada, planes superados y el prototipo de julio. No gobiernan
+# nada y no describen el sistema actual.
+docs/historico/
+
+# Exportaciones de n8n: fotos del estado real, no fuente. La fuente son
+# workflows/wf_*.json y sus generadores en bin/.
+workflows/fotos/
+
+# Datos, no código.
+docs/ejemplos/
+respaldos/
+portal/publico/vendor/
+
+# Ruido
+__pycache__/
+*.dump
+.env*

@@ -509,7 +509,7 @@ aprender.
 
 ## 13. Discrepancias con el plan, y qué se hizo
 
-El plan de encargo (`docs/PLAN_DATOS_PRUEBA.md`) describía el sistema con la
+El plan de encargo (`docs/historico/PLAN_DATOS_PRUEBA.md`) describía el sistema con la
 precisión posible antes de implementar. Al implementar aparecieron seis
 diferencias con el código real. En todas se adaptó el generador a la
 implementación, no al revés.

@@ -107,7 +107,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst r = $input.first().json.r || {};\nconst ev = $('Normalizar').first().json.evento;\nconst out = [];\nif ((r.respuestas||[]).length)\n  out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });\nfor (const a of (r.acciones||[]))\n  out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });\nreturn out;\n"
+        "jsCode": "\nconst r = $input.first().json.r || {};\nconst ev = $('Normalizar').first().json.evento;\nconst out = [];\nif ((r.respuestas||[]).length)\n  out.push({ json: { tipo:'enviar', chat_id:r.chat_id, respuestas:r.respuestas } });\nfor (const a of (r.acciones||[])) {\n  // 071: el panel de carga lo dibuja wf_enviar, que espera {panel:{...}}.\n  if (a.tipo === 'panel')\n    out.push({ json: { tipo:'panel', chat_id:r.chat_id,\n      panel: { sesion_id: a.sesion_id, modo: a.modo || 'panel' } } });\n  else\n    out.push({ json: { tipo:a.tipo, chat_id:r.chat_id, ...a, evento: ev } });\n}\nreturn out;\n"
       },
       "id": "Despachar",
       "name": "Despachar",
@@ -178,6 +178,25 @@
                 ]
               },
               "outputKey": "ejecutar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "panel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "panel"
             }
           ]
         },
@@ -249,7 +268,9 @@
           "mappingMode": "defineBelow",
           "value": {}
         },
-        "options": {}
+        "options": {
+          "waitForSubWorkflow": false
+        }
       },
       "id": "LlamarEjecutar",
       "name": "LlamarEjecutar",
@@ -257,29 +278,6 @@
       "typeVersion": 1.2,
       "position": [
         1440,
-        440
-      ],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "wfEnviar00000000001",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {}
-        },
-        "options": {}
-      },
-      "id": "EnviarInforme",
-      "name": "EnviarInforme",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
-      "position": [
-        1660,
         440
       ],
       "onError": "continueRegularOutput"
@@ -381,14 +379,10 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "LlamarEjecutar": {
-      "main": [
+        ],
         [
           {
-            "node": "EnviarInforme",
+            "node": "LlamarEnviar",
             "type": "main",
             "index": 0
           }

@@ -125,7 +125,10 @@ BEGIN
     v_reg := ingesta_registrar_documento(NULL, {neg}, {sql_str(nombre)},
                'text/csv', decode('{contenido}', 'base64'));
     v_doc := (v_reg ->> 'documento_id')::bigint;
-    PERFORM ingesta_identificar_tabular(v_doc, ARRAY[{cols}]);
+    -- La muestra es la que mira Postgres para deducir formato de fecha y
+    -- separador decimal, igual que wf_ingesta: las primeras 100 filas.
+    PERFORM ingesta_identificar_tabular(v_doc, ARRAY[{cols}],
+              {dolar(json.dumps(filas[:100]), 'muestra')}::jsonb);
     IF (SELECT formato_codigo FROM documentos WHERE id = v_doc) IS NULL THEN
         RAISE EXCEPTION 'huella de cabeceras desconocida en %', {sql_str(nombre)};
     END IF;
@@ -167,7 +170,10 @@ BEGIN
     v_reg := ingesta_registrar_documento(NULL, {neg}, {sql_str(nombre)},
                'text/csv', decode('{contenido}', 'base64'));
     v_doc := (v_reg ->> 'documento_id')::bigint;
-    PERFORM ingesta_identificar_tabular(v_doc, ARRAY[{cols}]);
+    -- La muestra es la que mira Postgres para deducir formato de fecha y
+    -- separador decimal, igual que wf_ingesta: las primeras 100 filas.
+    PERFORM ingesta_identificar_tabular(v_doc, ARRAY[{cols}],
+              {dolar(json.dumps(filas[:100]), 'muestra')}::jsonb);
     PERFORM ingesta_cargar_tabular(v_doc, {dolar(json.dumps(filas), 'filas')}::jsonb);
     IF (SELECT estado FROM documentos WHERE id = v_doc) <> 'error' THEN
         RAISE EXCEPTION 'el archivo % debía rechazarse por la compuerta de '

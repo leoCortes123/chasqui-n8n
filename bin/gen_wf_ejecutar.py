@@ -137,6 +137,16 @@ return [{ json: {
 link("Bloqueado?", "ArmarLLM", "main", 1)  # false
 
 # 5. DeepSeek (intento 1)
+#
+# `continueRegularOutput` y NO `continueErrorOutput`: la salida de error estaba
+# SIN CONECTAR, así que un 429 —o cualquier fallo de la API— mataba la ejecución
+# en silencio, sin informe y sin aviso. Con cupo diario de 20 peticiones ese
+# camino se activa seguido, no es un caso de borde.
+#
+# Dejando pasar la respuesta fallida por la salida normal, `Extraer` no encuentra
+# `choices` y marca `invalido: true`, que es el mismo camino que ya existe para
+# una respuesta truncada: reintento y, si tampoco, informe seco. O sea que
+# quedarse sin cupo pasa a entregar el informe determinista en vez de nada.
 def ds_call(name, pos):
     return node(name, "n8n-nodes-base.httpRequest", 4.2, {
         "method": "POST", "url": LLM_URL,
@@ -144,7 +154,10 @@ def ds_call(name, pos):
         "sendBody": True, "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.body) }}",
         "options": {"timeout": 120000}}, pos, {"httpHeaderAuth": DS},
-        {"onError": "continueErrorOutput", "retryOnFail": True, "maxTries": 2})
+        {"onError": "continueRegularOutput", "retryOnFail": True, "maxTries": 2,
+         # Los 429 de cuota piden esperar ~17s. Dos intentos pegados los gastan
+         # los dos contra el mismo rechazo.
+         "waitBetweenTries": 5000})
 nodes.append(ds_call("DeepSeek1", [880, 460]))
 link("ArmarLLM", "DeepSeek1")
 
@@ -366,6 +379,25 @@ const respuestas = partes.map((texto, i) => ({
 return [{ json: { chat_id, respuestas, narrado: c.narrado, partes: partes.length } }];
 """, [4400, 480]))
 link("Cerrar", "RespFinal")
+
+# 11. La entrega la hace wf_ejecutar, no quien lo llamó.
+#
+# Antes el que llamaba (wf_router o wf_ingesta) recibía respuestas[] y recién
+# entonces llamaba a wf_enviar. Con eso, TODA la generación del informe corría
+# dentro de la ejecución del que llamó, y esa ejecución tiene un reloj:
+# EXECUTIONS_TIMEOUT son 300 segundos que empiezan cuando ENTRA EL ARCHIVO, no
+# cuando arranca el análisis. En la segunda prueba de usuario ese reloj llegó a
+# 300 con el informe ya generado —3.411 caracteres, completo, validado— y n8n
+# canceló la cadena en el nodo `Cerrar`. El informe existía y nadie lo recibió.
+#
+# Entregando desde acá, la generación y la entrega viven en la ejecución de
+# wf_ejecutar, que arranca su propio reloj. El que llama puede desentenderse
+# (waitForSubWorkflow: false) y su reloj deja de importar.
+nodes.append(node("EntregarInforme", "n8n-nodes-base.executeWorkflow", 1.2, {
+    "workflowId": {"__rl": True, "value": "wfEnviar00000000001", "mode": "id"},
+    "workflowInputs": {"mappingMode": "defineBelow", "value": {}},
+    "options": {}}, [4620, 480], None, {"onError": "continueRegularOutput"}))
+link("RespFinal", "EntregarInforme")
 
 wf = {"id": "wfEjecutar000000001", "name": "wf_ejecutar",
       "nodes": nodes, "connections": conns,

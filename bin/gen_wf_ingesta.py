@@ -37,7 +37,11 @@ w.node("BajarArchivo", "n8n-nodes-base.telegram", 1.2, {
     "resource": "file",
     "fileId": "={{ $json.evento.file_id }}",
     "additionalFields": {}}, [280, 460], {"telegramApi": TG},
-    {"onError": "continueErrorOutput"})
+    # Con 101 archivos en 28 segundos, un hipo de la API de Telegram no puede
+    # costar un archivo: se reintenta antes de darlo por perdido, y solo si
+    # después de tres intentos no baja se le pide al usuario que lo reenvíe.
+    {"onError": "continueErrorOutput",
+     "retryOnFail": True, "maxTries": 3, "waitBetweenTries": 2000})
 w.link("DeWa?", "BajarArchivo", 1)
 
 # WhatsApp baja en dos pasos: el media id da una URL firmada y efímera, y esa
@@ -151,7 +155,14 @@ w.node("ExtraerHoja", "n8n-nodes-base.extractFromFile", 1, {
     [1600, 300])
 w.link("EsCSV?", "ExtraerHoja", 1)
 
-# Un item por fila -> array + cabeceras + muestra chica para el LLM.
+# Un item por fila -> array + cabeceras + dos muestras.
+#
+# Son DOS y no una a propósito. `muestra` (5 filas) es la que va al prompt si al
+# final hay que llamar al modelo. `muestra_amplia` (100) es la que mira Postgres
+# para deducir el formato de fecha y los separadores: con 5 filas de un archivo
+# que empieza el día 3 no aparece ningún día > 12 y DD/MM vs MM/DD queda
+# indecidible. Con 100 aparece casi siempre, y cuando no, el default latino es
+# el mismo que declaraba el prompt.
 w.code("AgruparFilas", """
 const filas = $input.all().map(i => i.json).filter(f => f && Object.keys(f).length);
 const docId = $('Registrar').first().json.reg.documento_id;
@@ -159,17 +170,25 @@ const docId = $('Registrar').first().json.reg.documento_id;
 const cols = [];
 for (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k)) cols.push(k);
 return [{ json: { documento_id: docId, columnas: cols, filas,
-                  muestra: filas.slice(0, 5) } }];
+                  muestra: filas.slice(0, 5),
+                  muestra_amplia: filas.slice(0, 100) } }];
 """, [1800, 180])
 w.link("ExtraerCSV", "AgruparFilas")
 w.link("ExtraerHoja", "AgruparFilas")
 
-# Identifica el layout por huella y trae de una el prompt de inferencia, para
-# no gastar un nodo extra cuando la huella es nueva.
+# Identifica el layout y trae de una el prompt de inferencia, para no gastar un
+# nodo extra en el caso raro en que haga falta.
+#
+# Desde la 073 esta llamada hace mucho más que buscar la huella: si es nueva,
+# resuelve el mapeo con el diccionario de sinónimos y solo prende
+# `requiere_inferencia` cuando ni la fecha ni el valor se reconocen. Por eso
+# ahora recibe la muestra: sin ver datos no se puede deducir el formato de fecha
+# ni el separador decimal.
 w.pg("Identificar",
      "SELECT ingesta_identificar_tabular( ({{ $json.documento_id }})::bigint, "
      "  ARRAY(SELECT jsonb_array_elements_text("
-     "    '{{ JSON.stringify($json.columnas).replaceAll(\"'\",\"''\") }}'::jsonb))"
+     "    '{{ JSON.stringify($json.columnas).replaceAll(\"'\",\"''\") }}'::jsonb)), "
+     "  '{{ JSON.stringify($json.muestra_amplia).replaceAll(\"'\",\"''\") }}'::jsonb"
      ") AS ident, "
      "(SELECT to_jsonb(p) FROM prompts_tecnicos p "
      "  WHERE p.clave='ingesta.inferir_mapeo' AND p.activo) AS prompt;",
@@ -249,94 +268,122 @@ w.pg("Resolver",
 w.link("CargarTabular", "Resolver")
 w.link("Procesar", "Resolver")
 
-# El éxito ya no contesta archivo por archivo: la confirmación es una sola,
-# cuando el usuario deja de mandar. Los errores sí se avisan al momento.
-w.if_("CargoBien?", "={{ $json.r.estado === 'parseado' }}", [3600, 400])
-w.link("Resolver", "CargoBien?")
+# --- Confluencia de TODOS los caminos -> el panel (071) ----------------------
+# Antes había un mensaje por cada cosa que podía pasarle a un archivo: uno si no
+# se pudo bajar, otro si no se sabía leer, otro si el parseo falló. Con 101
+# archivos eso es una metralleta, y la metralleta produce la misma desconfianza
+# que el error que la 071 vino a arreglar. Ahora todo termina en el mismo lugar:
+# el panel, que los cuenta y los nombra en UN mensaje que se edita.
+#
+# El único camino que sigue necesitando algo aparte es el archivo que no se pudo
+# BAJAR: no deja fila en `documentos` —el hash sale del contenido— así que el
+# panel no tendría con qué contarlo. Se anota en la sesión y el panel lo nombra
+# pidiendo que lo reenvíe. Es el único reenvío que el sistema pide.
+w.pg("AnotarNoBajado",
+     "SELECT carga_registrar_fallo("
+     "({{ $('Inicio').first().json.sesion_id "
+     "?? $('Inicio').first().json.evento?.sesion_id }})::bigint, "
+     "'{{ String($('Inicio').first().json.evento?.file_name ?? \"\")"
+     ".replaceAll(\"'\",\"''\") }}') AS ok;",
+     [400, 620], extra={"onError": "continueRegularOutput"})
+w.link("BajarArchivo", "AnotarNoBajado", 1)
+w.link("WaUrlArchivo", "AnotarNoBajado", 1)
+w.link("WaBajarArchivo", "AnotarNoBajado", 1)
 
-# --- Éxito: debounce -------------------------------------------------------
-# Cada archivo espera unos segundos; al despertar pregunta "¿son todos?" solo
-# si sigue siendo el último documento de la sesión. Si entró otro mientras
-# tanto, esa ejecución más nueva es la que pregunta, y esta se calla.
-w.node("Esperar", "n8n-nodes-base.wait", 1.1,
-       {"resume": "timeInterval", "amount": 8, "unit": "seconds"}, [3800, 300])
-w.link("CargoBien?", "Esperar", 0)
-
-# También se calla si la sesión ya no recibe (el usuario canceló o mandó
-# /listo por texto durante la espera).
-w.pg("SigueUltimo",
-     "SELECT (d.id = (SELECT max(x.id) FROM documentos x WHERE x.sesion_id = d.sesion_id) "
-     "        AND s.estado = 'recibiendo' AND s.cerrada_en IS NULL) AS preguntar "
-     "FROM documentos d JOIN sesiones s ON s.id = d.sesion_id "
-     "WHERE d.id = ({{ $('Resolver').first().json.documento_id }})::bigint;",
-     [4000, 300])
-w.link("Esperar", "SigueUltimo")
-
-w.if_("Preguntar?", "={{ $json.preguntar === true }}", [4200, 300])
-w.link("SigueUltimo", "Preguntar?")
-
-# La respuesta a Sí/No la maneja el router (042): /todos -> resumen único de la
-# sesión con Generar informe/Cancelar; /faltan -> seguir esperando.
-w.code("Pregunta", """
-return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla: 'ingesta.todos_archivos', vars: {} }] } }];
-""", [4400, 300])
-w.link("Preguntar?", "Pregunta", 0)
-
-# --- Falla del archivo: aviso inmediato, ese sí es urgente -------------------
-w.code("RespuestaError", """
-const r = $('Resolver').first().json.r || {};
-return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla: r.error ? 'ingesta.error_archivo'
-                                    : 'ingesta.error_no_soportado',
-    vars: { nombre_archivo: r.nombre_archivo || $('Empaquetar').first().json.nombre,
-            motivo: r.error || '', detalle: '' } }] } }];
-""", [3800, 500])
-w.link("CargoBien?", "RespuestaError", 1)
-
-# --- Ramas de error ----------------------------------------------------------
-# Archivo que no sabemos leer: el motivo lo escribió ingesta_registrar_documento.
-w.code("NoSoportado", """
-const reg = $input.first().json.reg || {};
-return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla:'ingesta.error_no_soportado',
-    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,
-           detalle: reg.error ? '\\n\\n' + reg.error : '' } }] } }];
-""", [1000, 620])
-w.link("Reconocido?", "NoSoportado", 1)   # false
-
-w.code("ErrorDescarga", """
-return [{ json: { chat_id: $('Inicio').first().json.chat_id,
-  respuestas: [{ plantilla:'ingesta.error_descarga',
-    vars:{ nombre_archivo: $('Inicio').first().json.evento?.file_name || '' } }] } }];
-""", [400, 620])
 # El INSERT del documento también puede reventar (una constraint, la base
-# caída). Antes eso mataba la ejecución sin decir nada: el usuario mandaba diez
-# archivos, no recibía una sola respuesta, y al tocar Analizar le contestaban
-# "no cargaste ninguno". Cualquier archivo que no entre se avisa AHORA.
-w.code("ErrorRegistrar", """
-const e = $input.first().json.error;
-const msg = (e?.message || e || '').toString();
-return [{ json: { chat_id: $('Empaquetar').first().json.chat_id,
-  respuestas: [{ plantilla:'ingesta.error_guardando',
-    vars:{ nombre_archivo: $('Empaquetar').first().json.nombre,
-           detalle: msg ? '\\n\\n<code>' + msg.slice(0, 120) + '</code>' : '' } }] } }];
-""", [600, 620])
-w.link("Registrar", "ErrorRegistrar", 1)
+# caída). Ese archivo tampoco quedó guardado, así que se anota igual: antes esto
+# mandaba un mensaje suelto que se perdía entre los demás.
+w.pg("AnotarNoGuardado",
+     "SELECT carga_registrar_fallo("
+     "({{ $('Empaquetar').first().json.sesion_id }})::bigint, "
+     "'{{ String($('Empaquetar').first().json.nombre ?? \"\")"
+     ".replaceAll(\"'\",\"''\") }}') AS ok;",
+     [600, 620], extra={"onError": "continueRegularOutput"})
+w.link("Registrar", "AnotarNoGuardado", 1)
 
-w.link("BajarArchivo", "ErrorDescarga", 1)
-w.link("WaUrlArchivo", "ErrorDescarga", 1)
-w.link("WaBajarArchivo", "ErrorDescarga", 1)
+# El archivo que no sabemos leer y el que falló al parsear SÍ tienen fila en
+# `documentos` (estado 'error'), así que el panel ya los ve: no hay nada que
+# anotar, solo que refrescar.
+w.code("Sesion", """
+let s = null;
+try { s = $('Empaquetar').first().json.sesion_id; } catch (e) {}
+if (!s) { const i = $('Inicio').first().json;
+          s = i.sesion_id ?? i.evento?.sesion_id ?? null; }
+let chat = null;
+try { chat = $('Empaquetar').first().json.chat_id; } catch (e) {}
+if (!chat) { try { chat = $('Inicio').first().json.chat_id; } catch (e) {} }
+return [{ json: { sesion_id: s, chat_id: chat } }];
+""", [3800, 400])
+w.link("Resolver", "Sesion")
+w.link("Reconocido?", "Sesion", 1)      # formato que no sabemos leer
+w.link("AnotarNoBajado", "Sesion")
+w.link("AnotarNoGuardado", "Sesion")
 
-# Enviar la respuesta por wf_enviar.
-w.node("Enviar", "n8n-nodes-base.executeWorkflow", 1.2, {
+# --- El debounce ------------------------------------------------------------
+# Cada archivo espera y después pregunta qué hacer. La forma es la de la 042; lo
+# que cambia es que la decisión ya no vive acá sino en `carga_evaluar`, y que
+# entre las respuestas posibles NO está descartar nada.
+#
+# La espera es un segundo más larga que el silencio que exige la base: si fueran
+# iguales, el redondeo de dos relojes distintos haría que el último archivo
+# despertara justo antes de cumplirlo y nadie arrancara el análisis.
+w.node("Esperar", "n8n-nodes-base.wait", 1.1,
+       {"resume": "timeInterval", "amount": 11, "unit": "seconds"}, [4000, 400])
+w.link("Sesion", "Esperar")
+
+w.pg("Evaluar",
+     "SELECT carga_evaluar(({{ $json.sesion_id }})::bigint) AS ev;",
+     [4200, 400])
+w.link("Esperar", "Evaluar")
+
+# 'nada' = entró un archivo después que yo y esa ejecución más nueva decide.
+w.code("Decidir", """
+const ev = $input.first().json.ev || {};
+if (!ev.accion || ev.accion === 'nada') return [];
+const ctx = $('Sesion').first().json;
+return [{ json: {
+  accion: ev.accion,
+  ejecucion_id: ev.ejecucion_id ?? null,
+  chat_id: ev.panel?.chat_id ?? ctx.chat_id,
+  panel: { sesion_id: ctx.sesion_id, modo: ev.panel?.modo || 'panel' } } }];
+""", [4400, 400])
+w.link("Evaluar", "Decidir")
+
+# El panel se refresca SIEMPRE que haya algo que decir, tanto si solo cambió el
+# contador como si el análisis arranca: en ese caso pasa a "Analizando…" y pierde
+# el botón, que es la señal de que ya no hay que tocar nada.
+w.node("PanelEnviar", "n8n-nodes-base.executeWorkflow", 1.2, {
     "workflowId": {"__rl": True, "value": "wfEnviar00000000001", "mode": "id"},
     "workflowInputs": {"mappingMode":"defineBelow","value":{}},
-    "options": {}}, [4600, 400], None, {"onError":"continueRegularOutput"})
-w.link("Pregunta", "Enviar")
-w.link("RespuestaError", "Enviar")
-w.link("NoSoportado", "Enviar")
-w.link("ErrorDescarga", "Enviar")
-w.link("ErrorRegistrar", "Enviar")
+    "options": {}}, [4600, 300], None, {"onError":"continueRegularOutput"})
+w.link("Decidir", "PanelEnviar")
+
+w.if_("Analizar?", "={{ $json.accion === 'analizar' }}", [4600, 520])
+w.link("Decidir", "Analizar?")
+
+w.code("ArmarEjecutar", """
+const j = $input.first().json;
+return [{ json: { tipo: 'ejecutar', chat_id: j.chat_id,
+                  ejecucion_id: j.ejecucion_id } }];
+""", [4800, 520])
+w.link("Analizar?", "ArmarEjecutar", 0)
+
+# Se dispara y se suelta. `waitForSubWorkflow: False` no es una optimización:
+# es lo único que despega el análisis del reloj de ESTA ejecución.
+#
+# El reloj de wf_ingesta arranca cuando llega el archivo. Con 101 archivos, el
+# último llegó a los 28 segundos, esperó 11 de silencio, y recién ahí empezó un
+# análisis que tarda minutos: los 300 segundos de EXECUTIONS_TIMEOUT se
+# cumplieron con el informe YA GENERADO y n8n canceló la cadena en `Cerrar`.
+# 3.411 caracteres de informe válido a la basura.
+#
+# Soltándolo, wf_ejecutar corre en su propia ejecución con su propio reloj, y
+# entrega él mismo el informe (ver gen_wf_ejecutar.py, nodo EntregarInforme).
+w.node("LlamarEjecutar", "n8n-nodes-base.executeWorkflow", 1.2, {
+    "workflowId": {"__rl": True, "value": "wfEjecutar000000001", "mode": "id"},
+    "workflowInputs": {"mappingMode":"defineBelow","value":{}},
+    "options": {"waitForSubWorkflow": False}}, [5000, 520], None,
+    {"onError":"continueRegularOutput"})
+w.link("ArmarEjecutar", "LlamarEjecutar")
 
 w.dump("workflows/wf_ingesta.json")

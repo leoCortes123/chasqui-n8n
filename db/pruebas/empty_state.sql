@@ -269,7 +269,19 @@ SELECT _chk('router/5 /plan responde con cupo real', 'plan.estado free',
   (SELECT format('%s %s',
      router_procesar_mensaje(_ev('/plan')) #>> '{respuestas,0,plantilla}',
      router_procesar_mensaje(_ev('/plan')) #>> '{respuestas,0,vars,plan}')));
-SELECT _chk('router/6 /portal entrega enlace aunque no haya datos', 'portal.enlace',
+-- /portal depende de una precondición de ENTORNO, no de producto: la URL
+-- pública la escribe bin/registrar-webhook.sh cuando levanta el túnel. El
+-- baseline la instala vacía a propósito (v0 no puede saber en qué dominio va a
+-- vivir), así que la prueba la fija ella misma y comprueba los DOS caminos.
+-- Antes daba por sentada la URL de la máquina donde se corría.
+UPDATE parametros SET valor = to_jsonb('https://ejemplo.test'::text)
+ WHERE clave = 'portal_url_base' AND negocio_id IS NULL;
+SELECT _chk('router/6 con URL configurada, /portal entrega enlace', 'portal.enlace',
+  (router_procesar_mensaje(_ev('/portal')) #>> '{respuestas,0,plantilla}'));
+UPDATE parametros SET valor = '""'::jsonb
+ WHERE clave = 'portal_url_base' AND negocio_id IS NULL;
+SELECT _chk('router/6b sin URL configurada, /portal lo dice en vez de mandar un enlace roto',
+  'portal.sin_url',
   (router_procesar_mensaje(_ev('/portal')) #>> '{respuestas,0,plantilla}'));
 -- La compuerta que importa: una pregunta sobre números que no existen no
 -- arranca una ejecución (no gasta tokens) y avisa por qué.
@@ -383,6 +395,16 @@ SELECT _chk('aisla/6 y el perfil no le presta el periodo del vecino', '<NULL>',
 SELECT _sin_error('barrido/salud_negocio',        format('salud_negocio(%s)', :neg));
 SELECT _sin_error('barrido/hallazgos_generar',    format('hallazgos_generar(%s)', :neg));
 SELECT _sin_error('barrido/hallazgos_compras',    format('hallazgos_compras(%s)', :neg));
+-- Y las mismas por la firma que usa producción. `ejecucion_preparar` despacha
+-- SIEMPRE `%I(bigint, jsonb)` leyendo `servicios.funcion_hallazgos`, así que las
+-- llamadas de un argumento de arriba prueban una función que el runtime nunca
+-- invoca. Para `hallazgos_generar` da igual —su envoltorio delega y ya—, pero el
+-- de `hallazgos_compras` agrega salud, recomendaciones y tipo_negocio, que es
+-- justo lo que ve el prompt de mercado_compras y no estaba cubierto por nada.
+SELECT _sin_error('barrido/hallazgos_generar despachado',
+  format($$hallazgos_generar(%s, '{}'::jsonb)$$, :neg));
+SELECT _sin_error('barrido/hallazgos_compras despachado',
+  format($$hallazgos_compras(%s, '{}'::jsonb)$$, :neg));
 SELECT _sin_error('barrido/contexto_negocio',
   format($$contexto_negocio_recuperar(%s, '{"pregunta":"¿cuánto vendí?"}'::jsonb)$$, :neg));
 SELECT _sin_error('barrido/perfil_negocio',       format('perfil_negocio(%s)', :neg));

@@ -11,7 +11,7 @@ que usa un usuario real y en el orden en que las usa.
         ↓  productos creados / alias resueltos
     /listo → análisis                      (ejecucion_preparar → ejecucion_cerrar)
         ↓  snapshot + recomendaciones
-    segundo periodo, formato desconocido    (el sistema aprende el layout)
+    segundo periodo, otro layout            (el diccionario lo resuelve solo)
         ↓  comparativo contra el snapshot anterior
     tercer periodo, fuera de la ventana free
         ↓  el plan crece y la historia aparece sola
@@ -42,6 +42,7 @@ import json
 import pathlib
 import subprocess
 import sys
+import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from datos_prueba_comun import RAIZ, env, psql, psql_json  # noqa: E402
@@ -161,7 +162,8 @@ def ingerir_ventas(e, neg, sesion, ruta, mapeo):
                      {sesion}, {neg}, {sql_str(ruta.name)}, 'text/csv',
                      decode('{contenido}', 'base64')) AS r)
       SELECT (SELECT r FROM reg) || ingesta_identificar_tabular(
-               ((SELECT r FROM reg) ->> 'documento_id')::bigint, ARRAY[{cols}])""")
+               ((SELECT r FROM reg) ->> 'documento_id')::bigint, ARRAY[{cols}],
+               {dolar(json.dumps(filas[:100]), 'muestra')}::jsonb)""")
     doc = ident["documento_id"]
 
     if ident.get("requiere_inferencia"):
@@ -330,8 +332,17 @@ def fase_periodo(e, neg, p, n_periodo, con_llm):
 
     doc_v, ident, carga = ingerir_ventas(e, neg, sesion,
                                          HISTORIAL / p["ventas"], p["mapeo"])
-    chk(fase, f"{p['nombre']}: {'formato nuevo aprendido' if p['mapeo'] else 'formato reconocido'}",
-        bool(p["mapeo"]), bool(ident.get("requiere_inferencia")))
+    # La 073 cambió lo que hay que medir acá. Antes, un layout desconocido
+    # obligaba a gastar una llamada al modelo y esta prueba comprobaba que la
+    # inferencia se pidiera. Hoy el diccionario de sinónimos resuelve los tres
+    # layouts del historial sin salir de Postgres: `requiere_inferencia` en
+    # false es el comportamiento correcto, y que vuelva a true es la regresión.
+    # `p["mapeo"]` sigue en los escenarios como red por si un layout futuro sí
+    # necesita al modelo; el camino que lo usa está unas líneas más arriba.
+    chk(fase, f"{p['nombre']}: el formato se resuelve sin llamar al modelo",
+        False, bool(ident.get("requiere_inferencia")))
+    chk(fase, f"{p['nombre']}: el formato queda registrado en el documento",
+        "t", psql(e, f"SELECT formato_codigo IS NOT NULL FROM documentos WHERE id = {doc_v}"))
     chk(fase, f"{p['nombre']}: el CSV de ventas se carga", "parseado",
         psql(e, f"SELECT estado FROM documentos WHERE id = {doc_v}"))
 
@@ -368,6 +379,19 @@ def fase_periodo(e, neg, p, n_periodo, con_llm):
           f"resolver, {m['alias_pendientes']} alias pendientes)")
 
     # --- el análisis --------------------------------------------------------
+    # La 071 le quitó a /listo el poder de arrancar por sí solo: deja la marca
+    # `analisis_pedido_en` y el análisis lo dispara `carga_evaluar` cuando
+    # pasaron `carga_silencio_segundos` sin que entre un archivo nuevo. Fue lo
+    # que evitó que 38 archivos abrieran 38 ejecuciones.
+    #
+    # En producción ese silencio se cumple solo: entre el último archivo y el
+    # /listo de una persona pasan segundos de sobra. Acá los archivos entran en
+    # menos de un segundo, así que hay que esperarlo de verdad — si no, esta
+    # prueba mediría el comportamiento anterior a la 071 y lo llamaría falla.
+    silencio = int(float(psql(
+        e, "SELECT (parametro(NULL,'carga_silencio_segundos'))::text::numeric")))
+    time.sleep(silencio + 1)
+
     r = router(e, "/listo")
     ej = accion(r, "ejecutar")
     chk(fase, f"{p['nombre']}: /listo abre la ejecución", True, ej is not None)

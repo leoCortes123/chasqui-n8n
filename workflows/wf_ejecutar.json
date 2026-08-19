@@ -175,7 +175,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://opencode.ai/zen/v1/chat/completions",
+        "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -199,9 +199,10 @@
           "name": "DeepSeek Header"
         }
       },
-      "onError": "continueErrorOutput",
+      "onError": "continueRegularOutput",
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -316,7 +317,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://opencode.ai/zen/v1/chat/completions",
+        "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -340,9 +341,10 @@
           "name": "DeepSeek Header"
         }
       },
-      "onError": "continueErrorOutput",
+      "onError": "continueRegularOutput",
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -555,6 +557,29 @@
         4400,
         480
       ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wfEnviar00000000001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "EntregarInforme",
+      "name": "EntregarInforme",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4620,
+        480
+      ],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -866,6 +891,17 @@
         [
           {
             "node": "RespFinal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RespFinal": {
+      "main": [
+        [
+          {
+            "node": "EntregarInforme",
             "type": "main",
             "index": 0
           }
