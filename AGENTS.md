@@ -102,7 +102,21 @@ python3 bin/prueba_ciclo_vida.py     # E2E de un negocio por las rutas reales
 bash bin/impacto.sh <función>        # quién la llama y a quién llama
 bash bin/verificar.sh                # invariantes estructurales del repo
 bash bin/verificar.sh --rapido       # sin los bancos SQL
+bash bin/limpiar_negocio.sh          # borrar los datos de una prueba y empezar de cero
 ```
+
+## Limpiar entre pruebas
+
+Los datos de las pruebas son generados. Cuando se pide limpiar la base para
+probar desde cero, se corre `bash bin/limpiar_negocio.sh` y nada más: no se
+pregunta el alcance, no se hace respaldo, no se ofrecen variantes. El script ya
+sabe qué es dato de prueba y qué es Chasqui, y deja el negocio, el usuario y su
+identidad de Telegram en pie para que la próxima carga entre por el mismo chat.
+
+Si la base está ocupada, el script se rinde a los 15 segundos y dice quién la
+tiene. **Se espera y se repite.** Nunca se matan procesos ni conexiones para
+ganar un minuto: una corrida de n8n o un banco a medio correr, muertos por la
+mitad, dejan un estado que después hay que adivinar.
 
 ## Cómo se instala y cómo se cambia
 
