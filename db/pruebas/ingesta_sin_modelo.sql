@@ -262,7 +262,9 @@ SELECT ingesta_cargar_tabular(:d4,
 
 SELECT _chk('cierre/3 CERO movimientos insertados', '0',
   (SELECT count(*)::text FROM movimientos WHERE documento_id = :d4));
-SELECT _chk('cierre/4 el documento queda en error', 'error',
+-- La 075 separó el descarte deliberado del error: rechazar un agregado es una
+-- decisión del sistema, no una falla, y no dispara aviso.
+SELECT _chk('cierre/4 el documento queda descartado, no en error', 'descartado',
   (SELECT estado::text FROM documentos WHERE id = :d4));
 SELECT _chk('cierre/5 y el motivo explica el doble conteo', 'si',
   CASE WHEN (SELECT error FROM documentos WHERE id = :d4) LIKE '%dos veces%'

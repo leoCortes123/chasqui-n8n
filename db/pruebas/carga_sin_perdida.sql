@@ -122,8 +122,12 @@ SELECT _chk('una sola ejecución creada', '1',
 -- ===========================================================================
 -- SILENCIO SIN BOTÓN: solo se refresca el panel
 -- ===========================================================================
+-- `panel_pedido_en` se limpia a propósito: el caso anterior salió por una rama
+-- que la anota (075), y entrar acá con un panel "en vuelo" de hace un segundo
+-- haría que la compuerta devuelva 'nada' y este caso mediría otra cosa.
 UPDATE sesiones SET estado = 'recibiendo', paso = 'cargar_archivos',
-                    analisis_pedido_en = NULL WHERE id = :ses;
+                    analisis_pedido_en = NULL, panel_pedido_en = NULL,
+                    panel_mensaje_id = NULL WHERE id = :ses;
 DELETE FROM ejecuciones WHERE sesion_id = :ses;
 
 SELECT _chk('silencio sin botón -> panel', 'panel',
@@ -131,6 +135,40 @@ SELECT _chk('silencio sin botón -> panel', 'panel',
 
 SELECT _chk('panel no arrancó nada', 'recibiendo',
   (SELECT estado::text FROM sesiones WHERE id = :ses));
+
+-- ===========================================================================
+-- PANEL EN VUELO (075 y 076): el lock que no tenía banco
+-- ===========================================================================
+-- El bug medido en la sesión 40 (101 archivos, 2026-08-19): seis ejecuciones de
+-- wf_ingesta despertaron dentro de la misma ventana de 0,76 s, las seis vieron
+-- el mismo silencio y las seis crearon un panel. El usuario vio cuatro. La 075
+-- serializa `carga_evaluar` con un advisory lock y anota `panel_pedido_en`;
+-- mientras el panel está pedido y Telegram no devolvió el message_id con el que
+-- se edita, nadie pide otro.
+UPDATE sesiones SET panel_pedido_en = now(), panel_mensaje_id = NULL
+ WHERE id = :ses;
+SELECT _chk('panel en vuelo -> no se crea un segundo panel', 'nada',
+  carga_evaluar(:ses) ->> 'accion');
+
+-- Y la marca no puede ser una trampa permanente: si Telegram nunca contesta,
+-- pasados `carga_panel_en_vuelo_segundos` (30) el panel se vuelve a intentar.
+-- Sin esta aserción, un panel en vuelo eterno dejaría la carga muda para
+-- siempre y el banco no lo vería.
+UPDATE sesiones SET panel_pedido_en = now() - interval '31 seconds'
+ WHERE id = :ses;
+SELECT _chk('panel en vuelo vencido -> se reintenta', 'panel',
+  carga_evaluar(:ses) ->> 'accion');
+
+-- Con el message_id ya escrito la compuerta no aplica: el panel se edita en su
+-- lugar, que es lo que pide INGESTA-002 —un mensaje que se edita, no uno por
+-- archivo—.
+UPDATE sesiones SET panel_pedido_en = now(), panel_mensaje_id = 4242
+ WHERE id = :ses;
+SELECT _chk('panel ya publicado -> se refresca, no se duplica', 'panel',
+  carga_evaluar(:ses) ->> 'accion');
+
+UPDATE sesiones SET panel_pedido_en = NULL, panel_mensaje_id = NULL
+ WHERE id = :ses;
 
 -- ===========================================================================
 -- EL PANEL CUENTA LO QUE ENTRÓ
