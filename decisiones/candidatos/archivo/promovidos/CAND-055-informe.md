@@ -8,11 +8,11 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/055_impacto_tipado.sql]
+implementada_en: [agent-context/history/migraciones/055_impacto_tipado.sql]
 afecta:
   - recomendaciones_negocio
   - validar_cifras
-procedencia: cabecera de docs/historico/migraciones/055_impacto_tipado.sql, commit 01ad4d8 2026-08-15
+procedencia: cabecera de agent-context/history/migraciones/055_impacto_tipado.sql, commit 01ad4d8 2026-08-15
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

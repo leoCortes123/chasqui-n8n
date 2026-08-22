@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-001, INGESTA-002, PRODUCTO-001]
-implementada_en: [docs/historico/migraciones/017_ingesta_tabular.sql, docs/historico/migraciones/073_ingesta_sin_modelo.sql]
+implementada_en: [agent-context/history/migraciones/017_ingesta_tabular.sql, agent-context/history/migraciones/073_ingesta_sin_modelo.sql]
 afecta: [ingesta_identificar_tabular, ingesta_huella, ingesta_inferir_mapeo_sql, ingesta_registrar_formato_inferido, ingesta_cargar_tabular]
 procedencia: cabeceras de las migraciones 017 y 073 y la memoria del 2026-07-25 (CAND-017, CAND-073, ingesta-aprende-formatos), promovidas el 2026-08-19
 ---

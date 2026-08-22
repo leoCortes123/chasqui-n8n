@@ -1,0 +1,29 @@
+// Espejo de architecture/components.md. Si difieren, manda el .md.
+flowchart TB
+    subgraph n8n["n8n (transporte únicamente)"]
+        R["wf_router"] --> ENV["wf_enviar<br/>(única salida)"]
+        R -->|"ingerir"| I["wf_ingesta"]
+        R -->|"ejecutar"| E["wf_ejecutar"]
+        I --> ENV
+        I -.->|"fin de silencio"| E
+        CRON["wf_cron 5min"] --> ENV
+        CRON --> E
+        ERR["wf_error"] --> ENV
+    end
+    subgraph pg["Postgres (todo el comportamiento)"]
+        RT["router_* (máquina de estados)"]
+        CG["carga_* / ingesta_* / match_*"]
+        AN["hallazgos_* · salud · recomendaciones_*<br/>informe_render · validar_cifras"]
+        MEM["snapshots · conocimiento"]
+        PORTAL["portal_* (RPC JWT)"]
+        CONT["12 tablas de contenido<br/>plantillas·prompts·parametros·servicios"]
+    end
+    LLM["LLM"]
+    R --> RT
+    I --> CG
+    E --> AN
+    AN --> MEM
+    E -->|"redacción"| LLM
+    PGRST2["PostgREST"] --> PORTAL
+    ENV --> CONT
+    RT --> CONT

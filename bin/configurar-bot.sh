@@ -15,7 +15,7 @@
 #     el de todos, y uno por cada chat de admin con los comandos de operación
 #     agregados. Un usuario común no ve /salud ni /embudo: no existen para él;
 #   * el botón de menú en modo `commands`. Cuando el portal sea Mini App, este
-#     es el lugar donde pasa a ser `web_app` (ver docs/TELEGRAM_UX.md).
+#     es el lugar donde pasa a ser `web_app` (ver agent-context/product/telegram-ux.md).
 #
 # El menú de comandos es lo único de la conversación que Telegram no deja poner
 # como botón dentro de un mensaje; todo lo demás se toca. Los comandos siguen

@@ -6,6 +6,7 @@
 # de harness, se pierde la comodidad de que salga solo, no el contenido.
 set -uo pipefail
 cd "$(dirname "$0")/.."
+shopt -s nullglob
 
 echo "=== CHASQUI — contrato de trabajo ==="
 echo
@@ -14,7 +15,9 @@ echo
 echo "  db/actual/  = cómo está HOY (una definición por objeto)"
 echo "  db/migraciones/ = historia; NO es el estado actual"
 echo "  decisiones/ = qué GOBIERNA"
-echo "  docs/historico/ = no gobierna nada"
+echo "  agent-context/ = la documentación: mapas, contratos, invariantes"
+echo "  pedidos/ = los cambios EN CURSO; un cambio empieza acá, no en el código"
+echo "  agent-context/history/ = por qué llegó a ser así; no es el presente"
 echo
 echo "Protocolo: dominio -> decisiones vigentes -> código -> impacto ->"
 echo "reportar contradicciones -> proponer. La consulta va ANTES de leer código."
@@ -41,7 +44,7 @@ fi
 # si esto ya es v0, si hay que aplicar las 73 viejas, si la base tiene datos.
 echo "--- Dónde está el proyecto ---"
 echo "  Esto YA es Chasqui v0. La instalación de esta máquina se hizo desde"
-echo "  db/base/ el 2026-08-19. NO se aplican las 73 de docs/historico/migraciones/."
+echo "  db/base/ el 2026-08-19. NO se aplican las 73 de agent-context/history/migraciones/."
 PROX=$(ls db/migraciones/[0-9][0-9][0-9]_*.sql 2>/dev/null | tail -1        | sed -E 's|.*/([0-9]{3})_.*|\1|')
 PROX=$(printf '%03d' $(( 10#${PROX:-073} + 1 )))
 echo "  La próxima migración es la $PROX, en db/migraciones/."
@@ -57,10 +60,27 @@ if [ -f .env ] && docker compose ps --status running --services 2>/dev/null | gr
     echo "  La base tiene $NEG negocio(s) cargado(s)."
   fi
 fi
-echo
+# ── Pedidos en curso ─────────────────────────────────────────────────────────
+# Existe porque un cambio a medio aplicar no puede depender de que alguien se
+# acuerde de buscarlo: la sesión que lo abandonó ya se cerró.
+P_ABIERTOS=(pedidos/[0-9]*.md)
+if [ ${#P_ABIERTOS[@]} -gt 0 ]; then
+  echo "--- Pedidos en curso (bash bin/pedidos.sh) ---"
+  for f in "${P_ABIERTOS[@]}"; do
+    EST=$(sed -n 's/^estado: *//p' "$f" | head -1 | tr -d ' ')
+    TIT=$(sed -n 's/^titulo: *//p' "$f" | head -1)
+    PEND=$(grep -c '^- \[ \]' "$f" || true)
+    printf '  %-11s %s — %s' "$EST" "$(basename "$f" .md)" "$TIT"
+    [ "${PEND:-0}" -gt 0 ] && printf ' (%s tarea(s) pendiente(s))' "$PEND"
+    printf '\n'
+  done
+  echo "  Un pedido 'aprobado' con tareas pendientes se sigue, no se vuelve a proponer."
+  echo
+fi
 if [ -f db/actual/MANIFIESTO.txt ]; then
   echo "--- Estado del código ---"
   sed -n '3,5p' db/actual/MANIFIESTO.txt | sed 's/^/  /'
 fi
 echo
-echo "Consulta: decisiones/INDICE.md · db/actual/INDICE.md · bash bin/impacto.sh <función>"
+echo "Consulta: decisiones/INDICE.md · db/actual/INDICE.md · agent-context/README.md"
+echo "Cambiar algo: la skill /pedido lo escribe en pedidos/. Ver bash bin/pedidos.sh"

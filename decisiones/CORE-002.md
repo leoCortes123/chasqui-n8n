@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-003]
-implementada_en: [docs/historico/migraciones/053_historia_completa.sql]
+implementada_en: [agent-context/history/migraciones/053_historia_completa.sql]
 afecta: [movimientos_limite_plan, mov_visibles]
 procedencia: R-II de AGENTS.md; hallazgo H1 de la auditoría de agosto de 2026
 ---

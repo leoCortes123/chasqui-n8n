@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/071_carga_sin_perdida.sql]
+implementada_en: [agent-context/history/migraciones/071_carga_sin_perdida.sql]
 afecta:
   - carga_arrancar
   - carga_evaluar
@@ -19,7 +19,7 @@ afecta:
   - carga_resumen
   - router_h_recibiendo
   - router_procesar_mensaje
-procedencia: cabecera de docs/historico/migraciones/071_carga_sin_perdida.sql, commit sin commit (migración aún no versionada)
+procedencia: cabecera de agent-context/history/migraciones/071_carga_sin_perdida.sql, commit sin commit (migración aún no versionada)
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

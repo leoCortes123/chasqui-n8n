@@ -13,9 +13,9 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [PRODUCTO-002]
-implementada_en: [docs/historico/migraciones/033_portal.sql]
+implementada_en: [agent-context/history/migraciones/033_portal.sql]
 afecta: [portal_negocio, portal_informe, portal_recomendaciones, jwt_firmar]
-procedencia: docs/GUIA_TECNICA.md §5.10 y §12; lecciones rescatadas de la memoria de Claude (decisiones/candidatos/desde_memoria/portal-chasqui-postgrest.md y default-privileges-y-cache-postgrest.md) el 2026-08-18
+procedencia: agent-context/operations/guia-tecnica.md §5.10 y §12; lecciones rescatadas de la memoria de Claude (decisiones/candidatos/desde_memoria/portal-chasqui-postgrest.md y default-privileges-y-cache-postgrest.md) el 2026-08-18
 ---
 
 ## Problema medido

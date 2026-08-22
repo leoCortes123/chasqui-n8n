@@ -8,13 +8,13 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/067_alertas.sql]
+implementada_en: [agent-context/history/migraciones/067_alertas.sql]
 afecta:
   - IF   # ya no existe en db/actual/
   - alertas_evaluar
   - mantenimiento_ciclo
   - v_negocios_alertables   # ya no existe en db/actual/
-procedencia: cabecera de docs/historico/migraciones/067_alertas.sql, commit e606c05 2026-08-15
+procedencia: cabecera de agent-context/history/migraciones/067_alertas.sql, commit e606c05 2026-08-15
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

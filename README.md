@@ -11,7 +11,8 @@ Agregar un servicio es SQL (INSERT), no abrir el editor de n8n.
 **Esto es v0 y la instalación de esta máquina ya está en v0.** No hay que
 "pasarse" a nada, no hay que aplicar las 73 migraciones viejas y no hay una base
 alterna: la base `chasqui` se instaló desde `db/base/` el 2026-08-19, tiene las
-73 selladas más la `074`, el producto completo (82 plantillas, 3 servicios, 34
+73 selladas más la `074`, la `075` y la `076`, el producto completo (82
+plantillas, 3 servicios, 35
 parámetros) y **cero datos de negocio**.
 
 Está así a propósito, para hacer pruebas de usuario sobre una instalación
@@ -20,11 +21,11 @@ idéntica a la que recibiría un cliente nuevo. Lo que sigue no se decide otra v
 | | |
 |---|---|
 | instalar desde cero | `bash bin/migrar.sh` sobre base vacía: aplica `db/base/` y sigue en la `074` |
-| el próximo cambio de SQL | migración `075` en `db/migraciones/` |
-| las 73 viejas | `docs/historico/migraciones/`. **No se aplican ni se consultan para saber cómo funciona algo** |
+| el próximo cambio de SQL | migración `077` en `db/migraciones/`, y empieza por un pedido |
+| las 73 viejas | `agent-context/history/migraciones/`. **No se aplican ni se consultan para saber cómo funciona algo** |
 | cómo funciona algo hoy | `db/actual/` |
-| qué gobierna | `decisiones/` — 18 decisiones vigentes |
-| volver a dejar la base limpia | `db/limpiar_datos.sql` (borra datos de negocio, conserva el producto) |
+| qué gobierna | `decisiones/` — 20 decisiones vigentes |
+| volver a dejar la base limpia | `bash bin/limpiar_negocio.sh` y nada más |
 
 ### Arrancar una prueba de usuario
 
@@ -43,14 +44,30 @@ negocio y usuario solos — no hay que sembrar nada a mano.
 
 | Quieres… | Abre |
 |---|---|
-| trabajar en el proyecto (humano) | `docs/GUIA_TRABAJO.md` |
+| pedir un cambio | la skill `/pedido` — el humano no edita el repo a mano (`PROCESO-001`) |
+| ver qué cambios están en curso | `bash bin/pedidos.sh` · `pedidos/README.md` |
+| trabajar en el proyecto (humano) | `GUIA_TRABAJO.md` |
 | trabajar en el proyecto (agente de código) | `AGENTS.md` |
+| la documentación del sistema | `agent-context/README.md` |
 | saber qué existe hoy: funciones, vistas, tablas | `db/actual/INDICE.md` |
-| entender cómo está construido y por qué | `docs/GUIA_TECNICA.md` |
 | qué gobierna y qué se descartó | `decisiones/INDICE.md` |
-| qué ve el usuario final | `docs/GUIA_FUNCIONAL.md` |
+| qué ve el usuario final | `agent-context/product/guia-funcional.md` |
+| cómo está construido y por qué | `agent-context/operations/guia-tecnica.md` |
+| qué falta | `ROADMAP.md` |
 
-`docs/historico/` no gobierna nada: es la auditoría cerrada y el prototipo viejo.
+Cuatro registros y no se mezclan (`DOCS-001`):
+
+| Pregunta | Responde |
+|---|---|
+| ¿qué debe ser? | `decisiones/` — normativo |
+| ¿cómo está hoy? | `db/actual/` — generado del catálogo vivo |
+| ¿cómo funciona, en prosa? | `agent-context/` — describe, no gobierna |
+| ¿qué se está cambiando? | `pedidos/` — los cambios en curso |
+
+La quinta pregunta —*¿por qué llegó a ser así?*— la responde
+`agent-context/history/`: las 73 migraciones selladas, las auditorías y los
+planes ya ejecutados. Es parte de la documentación y no gobierna nada.
+`ejemplos/` son fixtures de prueba.
 
 ## Arquitectura
 
@@ -136,7 +153,7 @@ docker compose exec -e N8N_RUNNERS_BROKER_PORT=5699 n8n n8n execute --id wfEjecu
 
 ## Archivos de ejemplo
 
-`docs/ejemplos/` tiene los archivos numerados en el orden en que se le mandan al bot:
+`ejemplos/` tiene los archivos numerados en el orden en que se le mandan al bot:
 
 | Archivo | Qué prueba |
 |---|---|
@@ -172,10 +189,10 @@ INSERT INTO formatos_documento (...) VALUES (...);   -- solo si querés fijar el
 INSERT INTO prompts (servicio_codigo, sistema, usuario, ...) VALUES ('nuevo', ...);
 ```
 
-El botón del servicio aparece solo: el menú se arma con `teclado_servicios()`
-leyendo `servicios WHERE activo`. El prompt sí tiene un contrato que respetar —debe
+El botón del servicio aparece solo: el menú se arma con `teclado_intake()`
+leyendo los servicios activos del módulo. El prompt sí tiene un contrato que respetar —debe
 devolver el JSON que espera `informe_render`— y el teclado tope 6 botones; el
-detalle está en `docs/GUIA_TECNICA.md` §6.4 y §11.
+detalle está en `agent-context/operations/guia-tecnica.md` §6.4 y §11.
 
 ## Respaldo
 
@@ -183,6 +200,6 @@ detalle está en `docs/GUIA_TECNICA.md` §6.4 y §11.
 
 ## Riesgo abierto
 
-Los fixtures DIAN (`docs/ejemplos/`) son sintéticos (anexo técnico 1.9). Los totales
+Los fixtures DIAN (`ejemplos/`) son sintéticos (anexo técnico 1.9). Los totales
 cuadran contra los propios fixtures, **no contra XML real de cliente**. Re-verificar
 en cuanto haya facturas reales antes de dar la ingesta por confiable.

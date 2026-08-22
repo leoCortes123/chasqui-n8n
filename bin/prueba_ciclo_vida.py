@@ -19,7 +19,7 @@ que usa un usuario real y en el orden en que las usa.
 Qué es «ruta real» acá y qué no:
 
   * SÍ lo es toda la lógica: el router decide la sesión, `ingesta_*` registra y
-    parsea los archivos reales de `docs/ejemplos/historial_6meses/`,
+    parsea los archivos reales de `ejemplos/historial_6meses/`,
     `ejecucion_preparar` arma el prompt y `ejecucion_cerrar` deja snapshot y
     recomendaciones. No hay un solo INSERT directo en `movimientos`,
     `productos` ni `snapshots_negocio`.
@@ -47,7 +47,7 @@ import time
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from datos_prueba_comun import RAIZ, env, psql, psql_json  # noqa: E402
 
-HISTORIAL = RAIZ / "docs" / "ejemplos" / "historial_6meses"
+HISTORIAL = RAIZ / "ejemplos" / "historial_6meses"
 
 # El usuario de Telegram con el que se hace toda la prueba. Es el identificador
 # por el que se limpia: el negocio lo nombra el router ("Mi negocio") y

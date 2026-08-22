@@ -8,14 +8,14 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/069_cartera_liquidez.sql]
+implementada_en: [agent-context/history/migraciones/069_cartera_liquidez.sql]
 afecta:
   - portal_factura_guardar
   - recomendacion_metrica_valor
   - recomendacion_objeto_evaluable
   - recomendaciones_negocio
   - salud_negocio
-procedencia: cabecera de docs/historico/migraciones/069_cartera_liquidez.sql, commit 6bb2183 2026-08-15
+procedencia: cabecera de agent-context/history/migraciones/069_cartera_liquidez.sql, commit 6bb2183 2026-08-15
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

@@ -8,14 +8,14 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/051_consentimiento_y_plan_free.sql]
+implementada_en: [agent-context/history/migraciones/051_consentimiento_y_plan_free.sql]
 afecta:
   - ingesta_resumen_sesion
   - movimientos_limite_plan
   - plan_desde
   - router_procesar_mensaje
   - teclado_consentimiento
-procedencia: cabecera de docs/historico/migraciones/051_consentimiento_y_plan_free.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/051_consentimiento_y_plan_free.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

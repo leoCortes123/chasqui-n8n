@@ -1,0 +1,37 @@
+sequenceDiagram
+    autonumber
+    participant X as quien dispara<br/>(router / ingesta / cron)
+    participant E as wf_ejecutar
+    participant PG as Postgres
+    participant M as LLM
+    participant S as wf_enviar
+
+    X->>E: {ejecucion_id, chat_id} (waitForSubWorkflow=false)
+    E->>PG: canal_de_chat(chat_id)
+    opt canal = telegram
+        E->>S: sendChatAction typing
+    end
+    E->>PG: ejecucion_preparar(ejecucion_id)
+    Note over PG: 1) cupo contra v_consumo_negocio (bloquea sin gastar tokens)<br/>2) contexto de la sesión<br/>3) EXECUTE servicios.funcion_hallazgos(negocio, contexto)<br/>4) prompt activo (uq_prompt_activo)<br/>5) UPDATE ejecuciones: hallazgos, estado='procesando'
+    alt bloqueada por cupo o sin prompt/función
+        E->>S: ejecucion.bloqueada_cupo / ejecucion.fallida
+    else
+        E->>M: POST /chat/completions (json_object, retry 2×5s)
+        M-->>E: {titular, hallazgos[], acciones[]}
+        E->>PG: informe_render(estructura, hallazgos, servicio)
+        E->>PG: validar_cifras(texto_renderizado, hallazgos)
+        alt ok
+            Note over E: narrado=true
+        else truncado/JSON inválido/cifra no presente en hallazgos
+            E->>M: segundo intento (mismo body)
+            E->>PG: render + validar
+            alt sigue mal
+                E->>PG: informe_estructura_seca → informe_render
+                Note over E: narrado=false — entrega válida, no degradación<br/>el usuario ve el bloque informe.sin_narracion
+            end
+        end
+        E->>PG: ejecucion_cerrar(id,'completada',{texto,tokens})
+        Note over PG: snapshot_tomar · recomendaciones_registrar ·<br/>recomendaciones_medir (c/u en BEGIN/EXCEPTION→fallas)
+        Note over E: RespFinal (JS): trocea a 3800 y elige plantilla por posición
+        E->>S: EntregarInforme (wf_ejecutar entrega; nadie más espera este workflow)
+    end

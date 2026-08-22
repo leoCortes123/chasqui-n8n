@@ -1,0 +1,43 @@
+%% Contexto — actores externos, Chasqui y sistemas externos.
+%% Verificado contra docker-compose.yml, bin/gen_wf_*.py y el catálogo vivo
+%% de Postgres el 2026-08-19. Nada de lo dibujado es aspiracional.
+flowchart LR
+    subgraph Actores
+        DUENO["Dueño de pyme<br/>(usuario final)"]
+        ADMIN["Admin<br/>(usuarios.rol = 'admin')"]
+    end
+
+    subgraph Externos_entrada["Sistemas externos — entrada"]
+        TG["Telegram Bot API"]
+        WA["WhatsApp Cloud API<br/>(Meta Graph v23.0)<br/>SIN credenciales hoy"]
+    end
+
+    subgraph CHASQUI["Chasqui"]
+        PROXY["Caddy :80<br/>/webhook · /api · /portal"]
+        N8N["n8n 2.31.5<br/>7 workflows"]
+        PG[("PostgreSQL 16<br/>base 'chasqui'<br/>34 tablas · 22 vistas<br/>160 funciones")]
+        PGRST["PostgREST v12.2.12"]
+        HTML["portal/publico/<br/>HTML plano"]
+    end
+
+    subgraph Externos_salida["Sistemas externos — salida"]
+        LLM["Proxy OpenAI-compatible<br/>generativelanguage.googleapis.com<br/>modelo gemini-3.5-flash-lite"]
+        CF["cloudflared<br/>quick tunnel (perfil local)"]
+    end
+
+    DUENO -->|"mensajes, botones, archivos"| TG
+    DUENO -.->|"canal generado, no operativo"| WA
+    ADMIN -->|"/salud /embudo /fallas /consumo /matching /pendientes"| TG
+    TG -->|"POST webhook + secreto en cabecera"| PROXY
+    WA -.->|"POST webhook, ruta secreta"| PROXY
+    DUENO -->|"enlace de un solo uso -> JWT 12 h"| PROXY
+
+    PROXY --> N8N
+    PROXY --> PGRST
+    PROXY --> HTML
+    N8N <--> PG
+    PGRST --> PG
+    N8N -->|"HTTPS, solo hallazgos ya calculados"| LLM
+    N8N -->|"sendMessage / editMessageText / pinChatMessage"| TG
+    N8N -.->|"Graph API /messages"| WA
+    CF --> PROXY

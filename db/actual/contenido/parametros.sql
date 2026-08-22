@@ -36,8 +36,8 @@ INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'subidas_
 INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'teclado_max_filas', '6');
 INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'ventas_minimas_historicas', '3');
 INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'zona_horaria', '"America/Bogota"');
-INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'portal_url_base', '""');  -- entorno: la escribe bin/registrar-webhook.sh
 INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'carga_panel_en_vuelo_segundos', '30');
+INSERT INTO public.parametros (negocio_id, clave, valor) VALUES (NULL, 'portal_url_base', '""');  -- entorno: la escribe bin/registrar-webhook.sh
 
 
 

@@ -13,9 +13,9 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-004]
-implementada_en: [docs/historico/migraciones/008_ejecucion_operacion.sql, docs/historico/migraciones/009_fix_validar_cifras.sql, docs/historico/migraciones/026_fix_cifras_miles.sql, docs/historico/migraciones/047_informe_prescriptivo.sql, docs/historico/migraciones/055_impacto_tipado.sql]
+implementada_en: [agent-context/history/migraciones/008_ejecucion_operacion.sql, agent-context/history/migraciones/009_fix_validar_cifras.sql, agent-context/history/migraciones/026_fix_cifras_miles.sql, agent-context/history/migraciones/047_informe_prescriptivo.sql, agent-context/history/migraciones/055_impacto_tipado.sql]
 afecta: [validar_cifras, informe_render, hallazgos_generar, recomendaciones_negocio]
-procedencia: R-I de AGENTS.md, originalmente docs/historico/AUDITORIA_2026-08.md §0
+procedencia: R-I de AGENTS.md, originalmente agent-context/history/auditorias/2026-08.md §0
 ---
 
 ## Problema medido

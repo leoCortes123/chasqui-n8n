@@ -534,7 +534,7 @@ por su chat. El usuario solo ve lenguaje humano.
 El mismo Chasqui atiende por WhatsApp: la conversación, los botones y los
 informes son los mismos, porque el cerebro es uno solo. Está implementado y
 **esperando credenciales de Meta** para activarse. Los detalles del alta están en
-`docs/WHATSAPP.md`.
+`agent-context/product/whatsapp.md`.
 
 ---
 

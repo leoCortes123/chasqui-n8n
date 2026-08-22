@@ -85,8 +85,8 @@ titulo "3. migraciones commiteadas inmutables"
 if [ ! -d db/base ]; then falla "falta db/base/: el baseline es la instalación"; fi
 # --diff-filter=M: sólo contenido modificado. Un archivo movido o borrado no es
 # una violación — las 73 originales se archivaron a propósito en
-# docs/historico/migraciones/ al crear el baseline.
-MODIF=$(git diff --name-only --diff-filter=M HEAD -- db/migraciones/ docs/historico/migraciones/ db/base/ 2>/dev/null)
+# agent-context/history/migraciones/ al crear el baseline.
+MODIF=$(git diff --name-only --diff-filter=M HEAD -- db/migraciones/ agent-context/history/migraciones/ db/base/ 2>/dev/null)
 if [ -z "$MODIF" ]; then
   ok "ninguna migración ni archivo de base modificado"
 else
@@ -95,7 +95,7 @@ fi
 
 # ── 4. Numeración de migraciones secuencial y sin huecos ─────────────────────
 # Arranca en 074: de la 001 a la 073 las absorbió db/base/ (Chasqui v0) y están
-# archivadas en docs/historico/migraciones/.
+# archivadas en agent-context/history/migraciones/.
 titulo "4. numeración de migraciones (desde 074)"
 ESPERADO=74
 HUECOS=0
@@ -229,6 +229,76 @@ else
     ok "ninguna llamada queda sin candidata única"
   else
     while read -r a; do [ -n "$a" ] && falla "$a"; done <<< "$AMBIGUAS"
+  fi
+fi
+
+# ── 10. Todo cambio pasó por un pedido, y ningún pedido quedó a medias ───────
+# El protocolo de AGENTS.md se ejecutaba entero dentro de una conversación: la
+# clasificación, las decisiones citadas y la propuesta morían con la sesión, y
+# un cambio a medio aplicar no dejaba rastro que alguien pudiera encontrar
+# después. pedidos/ es ese razonamiento escrito a archivo; esto es lo que lo
+# hace obligatorio en vez de opcional.
+#
+# La regla arranca en la 077: las 074-076 son anteriores a pedidos/.
+PEDIDO_MIN=077
+titulo "10. pedidos coherentes"
+if [ ! -d pedidos ]; then
+  omitido "no existe pedidos/"
+else
+  P_MAL=0
+  declare -A P_IDS=()
+  MIGS_CUBIERTAS=""
+  for f in pedidos/[0-9]*.md pedidos/archivo/[0-9]*.md; do
+    BASE=$(basename "$f" .md)
+    ID=$(sed -n 's/^id: *//p' "$f" | head -1 | tr -d ' ')
+    EST=$(sed -n 's/^estado: *//p' "$f" | head -1 | tr -d ' ')
+    MIG=$(sed -n 's/^migracion: *//p' "$f" | head -1 | tr -d ' ')
+    ARCHIVADO=0; [[ "$f" == pedidos/archivo/* ]] && ARCHIVADO=1
+
+    case "$EST" in
+      propuesto|aprobado|aplicado|descartado) ;;
+      *) falla "$BASE: estado '$EST' no es propuesto/aprobado/aplicado/descartado"; P_MAL=1 ;;
+    esac
+    if [ "$ARCHIVADO" -eq 1 ] && [[ "$EST" == propuesto || "$EST" == aprobado ]]; then
+      falla "$BASE: está en pedidos/archivo/ pero sigue $EST"; P_MAL=1
+    fi
+    if [ "$ARCHIVADO" -eq 0 ] && [[ "$EST" == aplicado || "$EST" == descartado ]]; then
+      falla "$BASE: está $EST y sigue en pedidos/ — va a pedidos/archivo/"; P_MAL=1
+    fi
+    if [ -z "$ID" ] || [ "$ID" != "P-${BASE%%-*}" ]; then
+      falla "$BASE: id '$ID' no coincide con el nombre del archivo (esperado P-${BASE%%-*})"; P_MAL=1
+    fi
+    if [ -n "${P_IDS[$ID]:-}" ]; then
+      falla "$BASE: id $ID repetido (ya lo usa ${P_IDS[$ID]})"; P_MAL=1
+    fi
+    P_IDS[$ID]="$BASE"
+
+    if [ "$EST" = "aplicado" ]; then
+      PEND=$(grep -c '^- \[ \]' "$f" || true)
+      if [ "${PEND:-0}" -gt 0 ]; then
+        falla "$BASE: aplicado con $PEND tarea(s) sin tildar"; P_MAL=1
+      fi
+    fi
+    if [ -n "$MIG" ] && [ "$MIG" != "null" ]; then
+      MIGS_CUBIERTAS="$MIGS_CUBIERTAS $MIG"
+      if [ ! -f "db/migraciones/$MIG" ]; then
+        falla "$BASE: declara la migración $MIG, que no existe en db/migraciones/"; P_MAL=1
+      fi
+    fi
+  done
+
+  for m in db/migraciones/[0-9][0-9][0-9]_*.sql; do
+    NUM=$(basename "$m" | cut -c1-3)
+    [ "$((10#$NUM))" -lt "$((10#$PEDIDO_MIN))" ] && continue
+    case " $MIGS_CUBIERTAS " in
+      *" $(basename "$m") "*) ;;
+      *) falla "$(basename "$m"): ninguna migración desde la $PEDIDO_MIN entra sin un pedido que la nombre"; P_MAL=1 ;;
+    esac
+  done
+
+  if [ "$P_MAL" -eq 0 ]; then
+    P_AB=(pedidos/[0-9]*.md); P_AR=(pedidos/archivo/[0-9]*.md)
+    ok "${#P_AB[@]} abierto(s), ${#P_AR[@]} archivado(s); ninguna migración sin pedido"
   fi
 fi
 

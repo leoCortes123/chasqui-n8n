@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/017_ingesta_tabular.sql]
+implementada_en: [agent-context/history/migraciones/017_ingesta_tabular.sql]
 afecta:
   - ingesta_cargar_tabular
   - ingesta_fecha
@@ -20,7 +20,7 @@ afecta:
   - ingesta_registrar_formato_inferido
   - ingesta_resumen_documento
   - prompts_tecnicos   # ya no existe en db/actual/
-procedencia: cabecera de docs/historico/migraciones/017_ingesta_tabular.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/017_ingesta_tabular.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

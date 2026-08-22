@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [INGESTA-001, CORE-002]
-implementada_en: [docs/historico/migraciones/071_carga_sin_perdida.sql]
+implementada_en: [agent-context/history/migraciones/071_carga_sin_perdida.sql]
 afecta: [carga_evaluar, carga_panel, carga_resumen, router_h_recibiendo]
 procedencia: cabecera de la migración 071 (CAND-071), promovida el 2026-08-19
 ---

@@ -19,25 +19,25 @@ El razonamiento original de cada una sigue en la cabecera de su migración.
 
 | migración | de qué trata |
 |---|---|
-| [`003_semillas.sql`](../../docs/historico/migraciones/003_semillas.sql) | semillas de contenido |
-| [`007_fix_mapeo_pos.sql`](../../docs/historico/migraciones/007_fix_mapeo_pos.sql) | mapeo POS genérico |
-| [`010_prompt_pdf_ventas.sql`](../../docs/historico/migraciones/010_prompt_pdf_ventas.sql) | prompt de ventas_compras |
-| [`011_modelo_deepseek_v4.sql`](../../docs/historico/migraciones/011_modelo_deepseek_v4.sql) | renombre de modelos |
-| [`013_plantillas_router.sql`](../../docs/historico/migraciones/013_plantillas_router.sql) | textos del router |
-| [`018_plantillas_ingesta.sql`](../../docs/historico/migraciones/018_plantillas_ingesta.sql) | mensajes de ingesta |
-| [`020_informe_en_chat.sql`](../../docs/historico/migraciones/020_informe_en_chat.sql) | informe como texto en chat |
-| [`021_informe_texto_plano.sql`](../../docs/historico/migraciones/021_informe_texto_plano.sql) | informe en texto plano |
-| [`022_plantillas_html.sql`](../../docs/historico/migraciones/022_plantillas_html.sql) | mensajes a HTML |
-| [`024_router_botones.sql`](../../docs/historico/migraciones/024_router_botones.sql) | conversación a botonazos |
-| [`025_informe_estructurado.sql`](../../docs/historico/migraciones/025_informe_estructurado.sql) | informe con forma de ficha |
-| [`027_teclado_plano.sql`](../../docs/historico/migraciones/027_teclado_plano.sql) | teclado plano |
-| [`028_prompt_cifras_cupo.sql`](../../docs/historico/migraciones/028_prompt_cifras_cupo.sql) | ajustes de prompt |
-| [`031_estructura_seca_en_sql.sql`](../../docs/historico/migraciones/031_estructura_seca_en_sql.sql) | estructura seca en SQL |
-| [`032_entrega_por_servicio.sql`](../../docs/historico/migraciones/032_entrega_por_servicio.sql) | entrega por servicio |
-| [`042_confirmar_carga.sql`](../../docs/historico/migraciones/042_confirmar_carga.sql) | confirmar carga una vez |
-| [`045_menu_modulos.sql`](../../docs/historico/migraciones/045_menu_modulos.sql) | primera pantalla: menú de módulos |
-| [`046_conversacion_directa.sql`](../../docs/historico/migraciones/046_conversacion_directa.sql) | entrada simplificada |
-| [`048_formatos_reales.sql`](../../docs/historico/migraciones/048_formatos_reales.sql) | formatos reales en el mensaje |
-| [`049_boton_analizar_en_carga.sql`](../../docs/historico/migraciones/049_boton_analizar_en_carga.sql) | botón analizar en el menú |
-| [`052_aviso_ia_en_consulta.sql`](../../docs/historico/migraciones/052_aviso_ia_en_consulta.sql) | aviso de IA en consulta |
-| [`070_menus_que_no_saturan.sql`](../../docs/historico/migraciones/070_menus_que_no_saturan.sql) | un menú reemplaza al anterior |
+| [`003_semillas.sql`](../../agent-context/history/migraciones/003_semillas.sql) | semillas de contenido |
+| [`007_fix_mapeo_pos.sql`](../../agent-context/history/migraciones/007_fix_mapeo_pos.sql) | mapeo POS genérico |
+| [`010_prompt_pdf_ventas.sql`](../../agent-context/history/migraciones/010_prompt_pdf_ventas.sql) | prompt de ventas_compras |
+| [`011_modelo_deepseek_v4.sql`](../../agent-context/history/migraciones/011_modelo_deepseek_v4.sql) | renombre de modelos |
+| [`013_plantillas_router.sql`](../../agent-context/history/migraciones/013_plantillas_router.sql) | textos del router |
+| [`018_plantillas_ingesta.sql`](../../agent-context/history/migraciones/018_plantillas_ingesta.sql) | mensajes de ingesta |
+| [`020_informe_en_chat.sql`](../../agent-context/history/migraciones/020_informe_en_chat.sql) | informe como texto en chat |
+| [`021_informe_texto_plano.sql`](../../agent-context/history/migraciones/021_informe_texto_plano.sql) | informe en texto plano |
+| [`022_plantillas_html.sql`](../../agent-context/history/migraciones/022_plantillas_html.sql) | mensajes a HTML |
+| [`024_router_botones.sql`](../../agent-context/history/migraciones/024_router_botones.sql) | conversación a botonazos |
+| [`025_informe_estructurado.sql`](../../agent-context/history/migraciones/025_informe_estructurado.sql) | informe con forma de ficha |
+| [`027_teclado_plano.sql`](../../agent-context/history/migraciones/027_teclado_plano.sql) | teclado plano |
+| [`028_prompt_cifras_cupo.sql`](../../agent-context/history/migraciones/028_prompt_cifras_cupo.sql) | ajustes de prompt |
+| [`031_estructura_seca_en_sql.sql`](../../agent-context/history/migraciones/031_estructura_seca_en_sql.sql) | estructura seca en SQL |
+| [`032_entrega_por_servicio.sql`](../../agent-context/history/migraciones/032_entrega_por_servicio.sql) | entrega por servicio |
+| [`042_confirmar_carga.sql`](../../agent-context/history/migraciones/042_confirmar_carga.sql) | confirmar carga una vez |
+| [`045_menu_modulos.sql`](../../agent-context/history/migraciones/045_menu_modulos.sql) | primera pantalla: menú de módulos |
+| [`046_conversacion_directa.sql`](../../agent-context/history/migraciones/046_conversacion_directa.sql) | entrada simplificada |
+| [`048_formatos_reales.sql`](../../agent-context/history/migraciones/048_formatos_reales.sql) | formatos reales en el mensaje |
+| [`049_boton_analizar_en_carga.sql`](../../agent-context/history/migraciones/049_boton_analizar_en_carga.sql) | botón analizar en el menú |
+| [`052_aviso_ia_en_consulta.sql`](../../agent-context/history/migraciones/052_aviso_ia_en_consulta.sql) | aviso de IA en consulta |
+| [`070_menus_que_no_saturan.sql`](../../agent-context/history/migraciones/070_menus_que_no_saturan.sql) | un menú reemplaza al anterior |

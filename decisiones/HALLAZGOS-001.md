@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-001, CORE-004, DATOS-001, INFORME-001]
-implementada_en: [docs/historico/migraciones/069_cartera_liquidez.sql]
+implementada_en: [agent-context/history/migraciones/069_cartera_liquidez.sql]
 afecta: [salud_negocio, hallazgos_generar, recomendaciones_negocio]
 procedencia: cabecera de la migración 069 (CAND-069), promovida el 2026-08-19
 ---

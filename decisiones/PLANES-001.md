@@ -13,7 +13,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-002, PRODUCTO-001]
-implementada_en: [docs/historico/migraciones/050_negocio_automatico.sql, docs/historico/migraciones/051_consentimiento_y_plan_free.sql]
+implementada_en: [agent-context/history/migraciones/050_negocio_automatico.sql, agent-context/history/migraciones/051_consentimiento_y_plan_free.sql]
 afecta: [usuario_de_canal, plan_desde, mov_visibles, router_procesar_mensaje]
 procedencia: cabeceras de las migraciones 050 y 051 (CAND-050, CAND-051), promovidas el 2026-08-19
 ---

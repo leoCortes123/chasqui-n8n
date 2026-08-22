@@ -1,0 +1,17 @@
+// Espejo de architecture/context.md (ahí está la versión embebida renderizable).
+// Si difieren, manda el .md.
+flowchart LR
+    DUENO["Dueño de pyme"] --> TG["Telegram Bot API"]
+    ADMIN["Admin"] --> TG
+    DUENO -.->|"no operativo"| WA["WhatsApp Cloud API"]
+    TG --> PROXY["Caddy :80"]
+    WA -.-> PROXY
+    DUENO -->|"token un-uso"| PROXY
+    PROXY --> N8N["n8n · 7 workflows"]
+    PROXY --> PGRST["PostgREST"]
+    PROXY --> HTML["portal/publico"]
+    N8N <--> PG[("PostgreSQL 16<br/>34 tablas · 22 vistas · 160 funciones")]
+    PGRST --> PG
+    N8N -->|"solo hallazgos ya calculados"| LLM["LLM (proxy OpenAI-compat)"]
+    N8N --> TG
+    N8N -.-> WA

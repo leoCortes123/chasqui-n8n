@@ -17,9 +17,9 @@ import zipfile
 import xml.etree.ElementTree as ET
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-GENERADOS = RAIZ / "docs" / "ejemplos" / "generados"
+GENERADOS = RAIZ / "ejemplos" / "generados"
 MANIFIESTOS = GENERADOS / "manifests"
-FUENTE = RAIZ / "docs" / "ejemplos" / "fuente"
+FUENTE = RAIZ / "ejemplos" / "fuente"
 
 # El prefijo con el que se reconocen —y se borran— los negocios generados.
 PREFIJO = "PRUEBA GEN "

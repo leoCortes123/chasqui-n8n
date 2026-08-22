@@ -1,5 +1,9 @@
 # Telegram como interfaz: herramientas evaluadas y plan
 
+> **Vigencia.** Documento descriptivo: registra qué ofrece la Bot API y qué se
+> decidió con cada cosa. No gobierna —eso es `decisiones/`— y si contradice a
+> `db/actual/`, manda `db/actual/`. Revisado el 2026-08-22.
+
 Filosofía: Telegram (y ahora WhatsApp, ver `WHATSAPP.md`) es la interfaz de
 usuario. Prioridad: **máxima accesibilidad** — el usuario no escribe comandos,
 todo se toca. Los teclados inline se definen en `plantillas.teclado`
@@ -58,29 +62,16 @@ Tres decisiones detrás de esa forma:
 4. **Deep links** (`t.me/<bot>?start=...`): base para el QR impreso de
    onboarding. Ya funciona porque `/start` es un comando más.
 
-## Fase siguiente
+## Ideas sin decisión escrita
 
-5. **Mini App para el portal** (decisión tomada: vía principal). Botón `web_app`
-   en el menú y en los teclados, que abre el portal DENTRO de Telegram;
-   autenticación validando `initData` (HMAC con el token del bot) en una
-   variante de `portal_sesion_abrir` — sin magic link de 15 minutos, sin
-   navegador. El magic link queda de respaldo para escritorio. El nodo de
-   Telegram de n8n sí declara `web_app.url` en los botones, así que el envío no
-   es el problema; lo es la validación de `initData`, que necesita el token del
-   bot dentro de Postgres o de n8n. `setChatMenuButton` pasa de `commands` a
-   `web_app` en `bin/configurar-bot.sh`.
-6. **Edición de mensajes** (`editMessageText` / `editMessageReplyMarkup`):
-   wizard en un solo mensaje (entrar a un módulo edita el mensaje en vez de
-   apilar otro), retirar los teclados ya usados, e **informe paginado** con
-   `◀️ ▶️` en lugar de tres mensajes seguidos.
-7. **Botones con color y emoji custom** (Bot API 9.4: `style`,
-   `icon_custom_emoji_id`): `Analizar` primario, `Cancelar` destructivo. Son
-   campos extra en el JSONB de `plantillas.teclado`; el nodo de n8n no los
-   declara, así que llegan junto con el punto 8.
-8. **Rich Messages** (Bot API 10.1: tablas, encabezados, galerías): candidato
-   para el informe; requiere HTTP Request contra `api.telegram.org` (el nodo
-   Telegram no lo soporta), y eso significa meter `TELEGRAM_BOT_TOKEN` en el
-   contenedor de n8n. Evaluar al rediseñar el informe.
+Lo que estaba acá como «fase siguiente» se limpió el 2026-08-22: el punto 6
+(edición de mensajes) **ya está implementado** desde la `070` —el panel de carga
+se edita en su lugar (`INGESTA-002`)—, y lo que seguía pendiente pasó a
+`ROADMAP.md`, que es el único registro de lo abierto.
+
+Nada de lo que quede escrito acá gobierna: una idea entra al sistema por una
+decisión en `decisiones/` y un pedido en `pedidos/`, nunca por un párrafo de este
+archivo (`PROCESO-001`).
 
 ## Descartadas
 

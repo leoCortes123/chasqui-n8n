@@ -19,7 +19,7 @@ jsonb_build_object('vars','{}'::jsonb) -- {"vars": {}}    objeto
 Rompió el router de Chasqui: `jsonb_each_text` sobre `'"{}"'::jsonb` aborta con
 *cannot call jsonb_each_text on a non-object*, y en JS `for (const a of "[]")` itera
 caracteres en silencio en vez de un array vacío. Arreglado en
-`docs/historico/migraciones/016_fix_jsonb_literales.sql` (literales + `resolver_plantilla` blindada
+`agent-context/history/migraciones/016_fix_jsonb_literales.sql` (literales + `resolver_plantilla` blindada
 con `jsonb_typeof(p_vars) = 'object'`). Las migraciones 012/014/015 quedaron con el
 literal malo a propósito: no se editan migraciones ya aplicadas.
 

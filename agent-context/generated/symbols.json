@@ -1,0 +1,3496 @@
+{
+ "_": "Generado por bin/gen_agent_context.py. No editar a mano. llamada_por/llama_a salen de db/actual/grafo.json; entry_points lista workflows n8n o scripts que la invocan externamente.",
+ "count": 160,
+ "functions": [
+  {
+   "symbol": "carga_arrancar",
+   "type": "function",
+   "args": "`p_sesion_id bigint`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/carga_arrancar.sql",
+   "overloads": [
+    "db/actual/funciones/carga_arrancar.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "carga_evaluar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "ejecuciones",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "carga_evaluar",
+   "type": "function",
+   "args": "`p_sesion_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/carga_evaluar.sql",
+   "overloads": [
+    "db/actual/funciones/carga_evaluar.sql"
+   ],
+   "calls": [
+    "carga_arrancar",
+    "carga_hay_con_que",
+    "carga_panel",
+    "carga_resumen",
+    "parametro"
+   ],
+   "called_by_sql": [
+    "router_h_recibiendo"
+   ],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "ejecuciones",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "carga_hay_con_que",
+   "type": "function",
+   "args": "`p_sesion_id bigint`",
+   "returns": "`boolean`",
+   "file": "db/actual/funciones/carga_hay_con_que.sql",
+   "overloads": [
+    "db/actual/funciones/carga_hay_con_que.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "carga_evaluar",
+    "router_h_recibiendo"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "mov_visibles",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "carga_panel",
+   "type": "function",
+   "args": "`p_sesion_id bigint, p_modo text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/carga_panel.sql",
+   "overloads": [
+    "db/actual/funciones/carga_panel.sql"
+   ],
+   "calls": [
+    "canal_de_chat",
+    "carga_resumen",
+    "miles",
+    "resolver_plantilla"
+   ],
+   "called_by_sql": [
+    "carga_evaluar"
+   ],
+   "entry_points": [
+    "n8n:wf_enviar.json"
+   ],
+   "tables_used": [
+    "identidades",
+    "movimientos",
+    "sesiones",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "carga_panel_registrar",
+   "type": "function",
+   "args": "`p_sesion_id bigint, p_mensaje_id bigint`",
+   "returns": "`void`",
+   "file": "db/actual/funciones/carga_panel_registrar.sql",
+   "overloads": [
+    "db/actual/funciones/carga_panel_registrar.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_enviar.json"
+   ],
+   "tables_used": [
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "carga_registrar_fallo",
+   "type": "function",
+   "args": "`p_sesion_id bigint, p_nombre text`",
+   "returns": "`void`",
+   "file": "db/actual/funciones/carga_registrar_fallo.sql",
+   "overloads": [
+    "db/actual/funciones/carga_registrar_fallo.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "carga_resumen",
+   "type": "function",
+   "args": "`p_sesion_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/carga_resumen.sql",
+   "overloads": [
+    "db/actual/funciones/carga_resumen.sql"
+   ],
+   "calls": [
+    "periodo_es"
+   ],
+   "called_by_sql": [
+    "carga_evaluar",
+    "carga_panel"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "movimientos",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "conocimiento_buscar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_texto text, p_limite integer, p_umbral numeric`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/conocimiento_buscar.sql",
+   "overloads": [
+    "db/actual/funciones/conocimiento_buscar.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "consulta_iniciar",
+    "contexto_negocio_recuperar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "conocimiento"
+   ]
+  },
+  {
+   "symbol": "conocimiento_guardar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_tipo text, p_titulo text, p_contenido text, p_clave text, p_datos jsonb, p_origen text, p_usuario_id bigint, p_pendiente_id bigint`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/conocimiento_guardar.sql",
+   "overloads": [
+    "db/actual/funciones/conocimiento_guardar.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "portal_conocimiento_guardar",
+    "recomendacion_accion",
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "conocimiento",
+    "conocimiento_pendiente",
+    "v_conocimiento_faltante"
+   ]
+  },
+  {
+   "symbol": "conocimiento_pendiente_registrar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_pregunta text`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/conocimiento_pendiente_registrar.sql",
+   "overloads": [
+    "db/actual/funciones/conocimiento_pendiente_registrar.sql"
+   ],
+   "calls": [
+    "norm_pregunta"
+   ],
+   "called_by_sql": [
+    "consulta_iniciar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "conocimiento_pendiente"
+   ]
+  },
+  {
+   "symbol": "hallazgos_comparativo",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/hallazgos_comparativo.sql",
+   "overloads": [
+    "db/actual/funciones/hallazgos_comparativo.sql"
+   ],
+   "calls": [
+    "salud_negocio",
+    "snapshot_anterior"
+   ],
+   "called_by_sql": [
+    "contexto_negocio_recuperar",
+    "hallazgos_generar"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "hallazgos_compras",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/hallazgos_compras__p_negocio_id_bigint.sql",
+   "overloads": [
+    "db/actual/funciones/hallazgos_compras__p_negocio_id_bigint.sql",
+    "db/actual/funciones/hallazgos_compras__p_negocio_id_bigint_p_contexto_jsonb.sql"
+   ],
+   "calls": [
+    "parametro",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "servicios:mercado_compras"
+   ],
+   "tables_used": [
+    "documentos",
+    "mov_visibles",
+    "negocios",
+    "productos",
+    "recomendaciones",
+    "tipos_negocio",
+    "v_deriva_costo"
+   ]
+  },
+  {
+   "symbol": "hallazgos_compras",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_contexto jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/hallazgos_compras__p_negocio_id_bigint_p_contexto_jsonb.sql",
+   "overloads": [
+    "db/actual/funciones/hallazgos_compras__p_negocio_id_bigint.sql",
+    "db/actual/funciones/hallazgos_compras__p_negocio_id_bigint_p_contexto_jsonb.sql"
+   ],
+   "calls": [
+    "parametro",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "servicios:mercado_compras"
+   ],
+   "tables_used": [
+    "documentos",
+    "mov_visibles",
+    "negocios",
+    "productos",
+    "recomendaciones",
+    "tipos_negocio",
+    "v_deriva_costo"
+   ]
+  },
+  {
+   "symbol": "hallazgos_generar",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/hallazgos_generar__p_negocio_id_bigint.sql",
+   "overloads": [
+    "db/actual/funciones/hallazgos_generar__p_negocio_id_bigint.sql",
+    "db/actual/funciones/hallazgos_generar__p_negocio_id_bigint_p_contexto_jsonb.sql"
+   ],
+   "calls": [
+    "hallazgos_comparativo",
+    "parametro",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "servicios:ventas_compras"
+   ],
+   "tables_used": [
+    "mov_visibles",
+    "negocios",
+    "productos",
+    "recomendaciones",
+    "tipos_negocio",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "hallazgos_generar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_contexto jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/hallazgos_generar__p_negocio_id_bigint_p_contexto_jsonb.sql",
+   "overloads": [
+    "db/actual/funciones/hallazgos_generar__p_negocio_id_bigint.sql",
+    "db/actual/funciones/hallazgos_generar__p_negocio_id_bigint_p_contexto_jsonb.sql"
+   ],
+   "calls": [
+    "hallazgos_comparativo",
+    "parametro",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "servicios:ventas_compras"
+   ],
+   "tables_used": [
+    "mov_visibles",
+    "negocios",
+    "productos",
+    "recomendaciones",
+    "tipos_negocio",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "informe_base_bloque",
+   "type": "function",
+   "args": "`p_hallazgos jsonb, p_servicio text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/informe_base_bloque.sql",
+   "overloads": [
+    "db/actual/funciones/informe_base_bloque.sql"
+   ],
+   "calls": [
+    "miles",
+    "plantilla_cuerpo_srv"
+   ],
+   "called_by_sql": [
+    "informe_render"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "facturas",
+    "mov_visibles",
+    "movimientos",
+    "negocios"
+   ]
+  },
+  {
+   "symbol": "informe_estructura_seca",
+   "type": "function",
+   "args": "`p_hallazgos jsonb, p_servicio text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/informe_estructura_seca.sql",
+   "overloads": [
+    "db/actual/funciones/informe_estructura_seca.sql"
+   ],
+   "calls": [
+    "plantilla_cuerpo_srv"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "informe_render",
+   "type": "function",
+   "args": "`p_estructura jsonb, p_hallazgos jsonb, p_servicio text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/informe_render.sql",
+   "overloads": [
+    "db/actual/funciones/informe_render.sql"
+   ],
+   "calls": [
+    "esc_html",
+    "fmt_decimal",
+    "informe_base_bloque",
+    "informe_salud_bloque",
+    "limpiar_marcado",
+    "periodo_es",
+    "plantilla_cuerpo_srv"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "tables_used": [
+    "productos",
+    "servicios"
+   ]
+  },
+  {
+   "symbol": "informe_salud_bloque",
+   "type": "function",
+   "args": "`p_salud jsonb, p_servicio text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/informe_salud_bloque.sql",
+   "overloads": [
+    "db/actual/funciones/informe_salud_bloque.sql"
+   ],
+   "calls": [
+    "barra_10",
+    "esc_html",
+    "plantilla_cuerpo_srv",
+    "semaforo"
+   ],
+   "called_by_sql": [
+    "informe_render"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_cargar_inventario",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_filas jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_cargar_inventario.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_cargar_inventario.sql"
+   ],
+   "calls": [
+    "ingesta_fecha",
+    "ingesta_marcar_error",
+    "ingesta_num",
+    "match_resolver_producto"
+   ],
+   "called_by_sql": [],
+   "entry_points": [],
+   "tables_used": [
+    "conteos_inventario",
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "ingesta_cargar_tabular",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_filas jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_cargar_tabular.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_cargar_tabular.sql"
+   ],
+   "calls": [
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_marcar_descartado"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento",
+    "movimientos"
+   ]
+  },
+  {
+   "symbol": "ingesta_cargar_tabular_detalle",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_filas jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_cargar_tabular_detalle.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_cargar_tabular_detalle.sql"
+   ],
+   "calls": [
+    "ingesta_fecha",
+    "ingesta_marcar_error",
+    "ingesta_num"
+   ],
+   "called_by_sql": [
+    "ingesta_cargar_tabular"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "formatos_documento",
+    "movimientos"
+   ]
+  },
+  {
+   "symbol": "ingesta_es_agregado",
+   "type": "function",
+   "args": "`p_columnas jsonb`",
+   "returns": "`boolean`",
+   "file": "db/actual/funciones/ingesta_es_agregado.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_es_agregado.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ingesta_inferir_mapeo_sql",
+    "ingesta_registrar_formato_inferido"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_fecha",
+   "type": "function",
+   "args": "`p_valor jsonb, p_formato text`",
+   "returns": "`date`",
+   "file": "db/actual/funciones/ingesta_fecha.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_fecha.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular_detalle"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_huella",
+   "type": "function",
+   "args": "`p_columnas text[]`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/ingesta_huella.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_huella.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "ingesta_identificar_tabular",
+    "ingesta_registrar_formato_inferido",
+    "ingesta_registrar_formato_resuelto"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_identificar_tabular",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_columnas text[], p_muestra jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_identificar_tabular.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_identificar_tabular.sql"
+   ],
+   "calls": [
+    "ingesta_huella",
+    "ingesta_inferir_mapeo_sql",
+    "ingesta_marcar_error",
+    "ingesta_registrar_formato_resuelto"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "ingesta_inferir_decimales",
+   "type": "function",
+   "args": "`p_muestra jsonb, p_columnas jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_inferir_decimales.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_inferir_decimales.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_inferir_formato_fecha",
+   "type": "function",
+   "args": "`p_muestra jsonb, p_columna text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/ingesta_inferir_formato_fecha.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_inferir_formato_fecha.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_inferir_mapeo_sql",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_columnas text[], p_muestra jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_inferir_mapeo_sql.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_inferir_mapeo_sql.sql"
+   ],
+   "calls": [
+    "ingesta_es_agregado",
+    "ingesta_inferir_decimales",
+    "ingesta_inferir_formato_fecha",
+    "ingesta_inferir_tipo",
+    "ingesta_resolver_columnas"
+   ],
+   "called_by_sql": [
+    "ingesta_identificar_tabular"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_inferir_tipo",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_columnas text[]`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/ingesta_inferir_tipo.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_inferir_tipo.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos"
+   ]
+  },
+  {
+   "symbol": "ingesta_marcar_descartado",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_motivo text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_marcar_descartado.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_marcar_descartado.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ingesta_cargar_tabular"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos"
+   ]
+  },
+  {
+   "symbol": "ingesta_marcar_error",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_error text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_marcar_error.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_marcar_error.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_identificar_tabular",
+    "ingesta_parsear_dian",
+    "ingesta_procesar_documento",
+    "ingesta_registrar_documento",
+    "ingesta_registrar_formato_inferido"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos"
+   ]
+  },
+  {
+   "symbol": "ingesta_num",
+   "type": "function",
+   "args": "`p_valor jsonb, p_decimal text, p_miles text`",
+   "returns": "`numeric`",
+   "file": "db/actual/funciones/ingesta_num.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_num.sql"
+   ],
+   "calls": [
+    "miles"
+   ],
+   "called_by_sql": [
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular_detalle"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "ingesta_parsear_dian",
+   "type": "function",
+   "args": "`p_documento_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_parsear_dian.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_parsear_dian.sql"
+   ],
+   "calls": [
+    "cartera_facturar_dian",
+    "ingesta_marcar_error"
+   ],
+   "called_by_sql": [],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "movimientos"
+   ]
+  },
+  {
+   "symbol": "ingesta_procesar_documento",
+   "type": "function",
+   "args": "`p_documento_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_procesar_documento.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_procesar_documento.sql"
+   ],
+   "calls": [
+    "ingesta_marcar_error"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "ingesta_registrar_documento",
+   "type": "function",
+   "args": "`p_sesion_id bigint, p_negocio_id bigint, p_nombre_archivo text, p_mime text, p_contenido bytea`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_registrar_documento.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_registrar_documento.sql"
+   ],
+   "calls": [
+    "ingesta_marcar_error",
+    "parametro"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "ingesta_registrar_formato_inferido",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_columnas text[], p_mapeo jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_registrar_formato_inferido.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_registrar_formato_inferido.sql"
+   ],
+   "calls": [
+    "ingesta_es_agregado",
+    "ingesta_huella",
+    "ingesta_marcar_error"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "ingesta_registrar_formato_resuelto",
+   "type": "function",
+   "args": "`p_documento_id bigint, p_columnas text[], p_mapeo jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_registrar_formato_resuelto.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_registrar_formato_resuelto.sql"
+   ],
+   "calls": [
+    "ingesta_huella"
+   ],
+   "called_by_sql": [
+    "ingesta_identificar_tabular"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "ingesta_resolver_columnas",
+   "type": "function",
+   "args": "`p_columnas text[]`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_resolver_columnas.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_resolver_columnas.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "ingesta_inferir_mapeo_sql"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "sinonimos_columna"
+   ]
+  },
+  {
+   "symbol": "ingesta_resumen_documento",
+   "type": "function",
+   "args": "`p_documento_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_resumen_documento.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_resumen_documento.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "documentos",
+    "facturas",
+    "movimientos",
+    "negocios",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "ingesta_resumen_sesion",
+   "type": "function",
+   "args": "`p_sesion_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ingesta_resumen_sesion.sql",
+   "overloads": [
+    "db/actual/funciones/ingesta_resumen_sesion.sql"
+   ],
+   "calls": [
+    "miles",
+    "parametro",
+    "periodo_es"
+   ],
+   "called_by_sql": [],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "facturas",
+    "mov_visibles",
+    "movimientos",
+    "negocios",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "intencion_agregados",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_metrica text, p_desde date, p_hasta date, p_producto bigint, p_proveedor text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/intencion_agregados.sql",
+   "overloads": [
+    "db/actual/funciones/intencion_agregados.sql"
+   ],
+   "calls": [
+    "miles"
+   ],
+   "called_by_sql": [
+    "intencion_resolver"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "mov_visibles",
+    "movimientos",
+    "productos",
+    "v_balance_unidades",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "intencion_detectar",
+   "type": "function",
+   "args": "`p_texto text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/intencion_detectar.sql",
+   "overloads": [
+    "db/actual/funciones/intencion_detectar.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "intencion_resolver"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "intenciones"
+   ]
+  },
+  {
+   "symbol": "intencion_resolver",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_texto text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/intencion_resolver.sql",
+   "overloads": [
+    "db/actual/funciones/intencion_resolver.sql"
+   ],
+   "calls": [
+    "intencion_agregados",
+    "intencion_detectar",
+    "norm_texto",
+    "periodo_resolver"
+   ],
+   "called_by_sql": [
+    "contexto_negocio_recuperar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "intenciones",
+    "mov_visibles",
+    "movimientos",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "match_confirmar_alias",
+   "type": "function",
+   "args": "`p_alias_id bigint, p_producto_id bigint`",
+   "returns": "`void`",
+   "file": "db/actual/funciones/match_confirmar_alias.sql",
+   "overloads": [
+    "db/actual/funciones/match_confirmar_alias.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "portal_alias_confirmar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "alias",
+    "movimientos"
+   ]
+  },
+  {
+   "symbol": "match_resolver_documento",
+   "type": "function",
+   "args": "`p_documento_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/match_resolver_documento.sql",
+   "overloads": [
+    "db/actual/funciones/match_resolver_documento.sql"
+   ],
+   "calls": [
+    "match_resolver_producto",
+    "norm_texto"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ingesta.json"
+   ],
+   "tables_used": [
+    "alias",
+    "documentos",
+    "movimientos",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "match_resolver_producto",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_texto text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/match_resolver_producto.sql",
+   "overloads": [
+    "db/actual/funciones/match_resolver_producto.sql"
+   ],
+   "calls": [
+    "norm_texto",
+    "parametro"
+   ],
+   "called_by_sql": [
+    "ingesta_cargar_inventario",
+    "match_resolver_documento"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "alias",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "portal_alias_confirmar",
+   "type": "function",
+   "args": "`p_alias_id bigint, p_producto_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_alias_confirmar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_alias_confirmar.sql"
+   ],
+   "calls": [
+    "match_confirmar_alias",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "alias",
+    "movimientos",
+    "negocios",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "portal_alias_pendientes",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_alias_pendientes.sql",
+   "overloads": [
+    "db/actual/funciones/portal_alias_pendientes.sql"
+   ],
+   "calls": [
+    "alias_pendientes",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "v_calidad_matching"
+   ]
+  },
+  {
+   "symbol": "portal_cartera",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_cartera.sql",
+   "overloads": [
+    "db/actual/funciones/portal_cartera.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "facturas",
+    "terceros",
+    "v_cartera_edades",
+    "v_cartera_tercero"
+   ]
+  },
+  {
+   "symbol": "portal_claim",
+   "type": "function",
+   "args": "`p_clave text`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/portal_claim.sql",
+   "overloads": [
+    "db/actual/funciones/portal_claim.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "portal_conocimiento_guardar",
+    "portal_cotizacion_guardar",
+    "portal_negocio",
+    "portal_pago_registrar"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "portal_conocimiento",
+   "type": "function",
+   "args": "`p_tipo text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_conocimiento.sql",
+   "overloads": [
+    "db/actual/funciones/portal_conocimiento.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "conocimiento"
+   ]
+  },
+  {
+   "symbol": "portal_conocimiento_borrar",
+   "type": "function",
+   "args": "`p_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_conocimiento_borrar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_conocimiento_borrar.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "conocimiento",
+    "conocimiento_pendiente"
+   ]
+  },
+  {
+   "symbol": "portal_conocimiento_guardar",
+   "type": "function",
+   "args": "`p_titulo text, p_tipo text, p_contenido text, p_clave text, p_datos jsonb, p_id bigint, p_pendiente_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_conocimiento_guardar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_conocimiento_guardar.sql"
+   ],
+   "calls": [
+    "conocimiento_guardar",
+    "portal_claim",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "conocimiento",
+    "conocimiento_pendiente"
+   ]
+  },
+  {
+   "symbol": "portal_conteo_guardar",
+   "type": "function",
+   "args": "`p_producto_id bigint, p_unidades numeric, p_fecha date`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_conteo_guardar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_conteo_guardar.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "conteos_inventario",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "portal_conteos",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_conteos.sql",
+   "overloads": [
+    "db/actual/funciones/portal_conteos.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "conteos_inventario",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "portal_cotizacion_guardar",
+   "type": "function",
+   "args": "`p_items jsonb, p_cliente text, p_notas text, p_vigente_hasta date`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_cotizacion_guardar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_cotizacion_guardar.sql"
+   ],
+   "calls": [
+    "portal_claim",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "cotizaciones"
+   ]
+  },
+  {
+   "symbol": "portal_cotizacion_publica",
+   "type": "function",
+   "args": "`p_token text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_cotizacion_publica.sql",
+   "overloads": [
+    "db/actual/funciones/portal_cotizacion_publica.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_anon",
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "cotizaciones",
+    "negocios"
+   ]
+  },
+  {
+   "symbol": "portal_cotizacion_revocar",
+   "type": "function",
+   "args": "`p_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_cotizacion_revocar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_cotizacion_revocar.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "cotizaciones"
+   ]
+  },
+  {
+   "symbol": "portal_cotizaciones",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_cotizaciones.sql",
+   "overloads": [
+    "db/actual/funciones/portal_cotizaciones.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "cotizaciones"
+   ]
+  },
+  {
+   "symbol": "portal_documentos",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_documentos.sql",
+   "overloads": [
+    "db/actual/funciones/portal_documentos.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento",
+    "movimientos"
+   ]
+  },
+  {
+   "symbol": "portal_factura_guardar",
+   "type": "function",
+   "args": "`p_tercero text, p_total numeric, p_vencimiento date, p_numero text, p_emision date, p_nit text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_factura_guardar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_factura_guardar.sql"
+   ],
+   "calls": [
+    "norm_texto",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "facturas",
+    "terceros"
+   ]
+  },
+  {
+   "symbol": "portal_informe",
+   "type": "function",
+   "args": "`p_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_informe.sql",
+   "overloads": [
+    "db/actual/funciones/portal_informe.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "ejecuciones",
+    "servicios"
+   ]
+  },
+  {
+   "symbol": "portal_informes",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_informes.sql",
+   "overloads": [
+    "db/actual/funciones/portal_informes.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "ejecuciones",
+    "servicios"
+   ]
+  },
+  {
+   "symbol": "portal_mov_nombre",
+   "type": "function",
+   "args": "`p_raw jsonb, p_mapeo jsonb`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/portal_mov_nombre.sql",
+   "overloads": [
+    "db/actual/funciones/portal_mov_nombre.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "portal_movimientos",
+    "portal_movimientos_resumen"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "portal_movimientos",
+   "type": "function",
+   "args": "`p_tipo text, p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_movimientos.sql",
+   "overloads": [
+    "db/actual/funciones/portal_movimientos.sql"
+   ],
+   "calls": [
+    "portal_mov_nombre",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento",
+    "movimientos",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "portal_movimientos_resumen",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_movimientos_resumen.sql",
+   "overloads": [
+    "db/actual/funciones/portal_movimientos_resumen.sql"
+   ],
+   "calls": [
+    "norm_texto",
+    "portal_mov_nombre",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "documentos",
+    "formatos_documento",
+    "movimientos",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "portal_negocio",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/portal_negocio.sql",
+   "overloads": [
+    "db/actual/funciones/portal_negocio.sql"
+   ],
+   "calls": [
+    "portal_claim"
+   ],
+   "called_by_sql": [
+    "portal_alias_confirmar",
+    "portal_alias_pendientes",
+    "portal_cartera",
+    "portal_conocimiento",
+    "portal_conocimiento_borrar",
+    "portal_conocimiento_guardar",
+    "portal_conteo_guardar",
+    "portal_conteos",
+    "portal_cotizacion_guardar",
+    "portal_cotizacion_revocar",
+    "portal_cotizaciones",
+    "portal_documentos",
+    "portal_factura_guardar",
+    "portal_informe",
+    "portal_informes",
+    "portal_movimientos",
+    "portal_movimientos_resumen",
+    "portal_negocio_guardar",
+    "portal_pago_registrar",
+    "portal_pedido",
+    "portal_pendientes",
+    "portal_perfil",
+    "portal_productos",
+    "portal_recomendacion_accion",
+    "portal_recomendaciones",
+    "portal_snapshots"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "portal_negocio_guardar",
+   "type": "function",
+   "args": "`p_nit text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_negocio_guardar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_negocio_guardar.sql"
+   ],
+   "calls": [
+    "cartera_refacturar",
+    "nit_dv",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "facturas",
+    "negocios",
+    "pagos"
+   ]
+  },
+  {
+   "symbol": "portal_pago_registrar",
+   "type": "function",
+   "args": "`p_factura_id bigint, p_valor numeric, p_fecha date, p_medio text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_pago_registrar.sql",
+   "overloads": [
+    "db/actual/funciones/portal_pago_registrar.sql"
+   ],
+   "calls": [
+    "pago_registrar",
+    "portal_claim",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "facturas"
+   ]
+  },
+  {
+   "symbol": "portal_pedido",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_pedido.sql",
+   "overloads": [
+    "db/actual/funciones/portal_pedido.sql"
+   ],
+   "calls": [
+    "pedido_sugerido",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": []
+  },
+  {
+   "symbol": "portal_pendientes",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_pendientes.sql",
+   "overloads": [
+    "db/actual/funciones/portal_pendientes.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "v_conocimiento_faltante"
+   ]
+  },
+  {
+   "symbol": "portal_perfil",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_perfil.sql",
+   "overloads": [
+    "db/actual/funciones/portal_perfil.sql"
+   ],
+   "calls": [
+    "perfil_negocio",
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": []
+  },
+  {
+   "symbol": "portal_productos",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_productos.sql",
+   "overloads": [
+    "db/actual/funciones/portal_productos.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "productos",
+    "v_balance_unidades"
+   ]
+  },
+  {
+   "symbol": "portal_recomendacion_accion",
+   "type": "function",
+   "args": "`p_id bigint, p_accion text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_recomendacion_accion.sql",
+   "overloads": [
+    "db/actual/funciones/portal_recomendacion_accion.sql"
+   ],
+   "calls": [
+    "portal_negocio",
+    "recomendacion_accion"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": []
+  },
+  {
+   "symbol": "portal_recomendaciones",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_recomendaciones.sql",
+   "overloads": [
+    "db/actual/funciones/portal_recomendaciones.sql"
+   ],
+   "calls": [
+    "portal_negocio",
+    "recomendaciones_vigentes"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "portal_sesion_abrir",
+   "type": "function",
+   "args": "`p_token text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_sesion_abrir.sql",
+   "overloads": [
+    "db/actual/funciones/portal_sesion_abrir.sql"
+   ],
+   "calls": [
+    "jwt_firmar"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_anon"
+   ],
+   "tables_used": [
+    "portal_tokens",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "portal_snapshots",
+   "type": "function",
+   "args": "`p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/portal_snapshots.sql",
+   "overloads": [
+    "db/actual/funciones/portal_snapshots.sql"
+   ],
+   "calls": [
+    "portal_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "postgrest:portal_usuario"
+   ],
+   "tables_used": [
+    "productos",
+    "snapshots_negocio"
+   ]
+  },
+  {
+   "symbol": "portal_token_crear",
+   "type": "function",
+   "args": "`p_usuario_id bigint, p_minutos integer`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/portal_token_crear.sql",
+   "overloads": [
+    "db/actual/funciones/portal_token_crear.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "router_portal"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "portal_tokens"
+   ]
+  },
+  {
+   "symbol": "recomendacion_accion",
+   "type": "function",
+   "args": "`p_reco_id bigint, p_negocio_id bigint, p_accion text, p_usuario_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/recomendacion_accion.sql",
+   "overloads": [
+    "db/actual/funciones/recomendacion_accion.sql"
+   ],
+   "calls": [
+    "conocimiento_guardar",
+    "miles",
+    "recomendacion_marcar_cierre"
+   ],
+   "called_by_sql": [
+    "portal_recomendacion_accion",
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "recomendacion_marcar_cierre",
+   "type": "function",
+   "args": "`p_reco_id bigint`",
+   "returns": "`void`",
+   "file": "db/actual/funciones/recomendacion_marcar_cierre.sql",
+   "overloads": [
+    "db/actual/funciones/recomendacion_marcar_cierre.sql"
+   ],
+   "calls": [
+    "recomendacion_metrica_valor"
+   ],
+   "called_by_sql": [
+    "recomendacion_accion",
+    "recomendaciones_registrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "metricas_resultado",
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "recomendacion_metrica_valor",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_clave text, p_metrica text, p_desde date`",
+   "returns": "`numeric`",
+   "file": "db/actual/funciones/recomendacion_metrica_valor.sql",
+   "overloads": [
+    "db/actual/funciones/recomendacion_metrica_valor.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "recomendacion_marcar_cierre",
+    "recomendaciones_medir"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "facturas",
+    "mov_visibles",
+    "v_balance_unidades",
+    "v_margen_producto",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "recomendacion_objeto_evaluable",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_clave text`",
+   "returns": "`boolean`",
+   "file": "db/actual/funciones/recomendacion_objeto_evaluable.sql",
+   "overloads": [
+    "db/actual/funciones/recomendacion_objeto_evaluable.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "recomendaciones_registrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "facturas",
+    "mov_visibles",
+    "terceros"
+   ]
+  },
+  {
+   "symbol": "recomendaciones_medir",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/recomendaciones_medir.sql",
+   "overloads": [
+    "db/actual/funciones/recomendaciones_medir.sql"
+   ],
+   "calls": [
+    "recomendacion_metrica_valor"
+   ],
+   "called_by_sql": [
+    "ejecucion_cerrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "metricas_resultado",
+    "mov_visibles",
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "recomendaciones_negocio",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_registro boolean`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/recomendaciones_negocio.sql",
+   "overloads": [
+    "db/actual/funciones/recomendaciones_negocio.sql"
+   ],
+   "calls": [
+    "fmt_decimal",
+    "mes_es",
+    "miles",
+    "parametro",
+    "unidades_es"
+   ],
+   "called_by_sql": [
+    "alertas_evaluar",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "recomendaciones_registrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "facturas",
+    "mov_visibles",
+    "movimientos",
+    "productos",
+    "snapshots_negocio",
+    "terceros",
+    "v_balance_unidades",
+    "v_cartera_tercero",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "recomendaciones_registrar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_ejecucion_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/recomendaciones_registrar.sql",
+   "overloads": [
+    "db/actual/funciones/recomendaciones_registrar.sql"
+   ],
+   "calls": [
+    "recomendacion_marcar_cierre",
+    "recomendacion_objeto_evaluable",
+    "recomendaciones_negocio"
+   ],
+   "called_by_sql": [
+    "ejecucion_cerrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "recomendaciones_vigentes",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/recomendaciones_vigentes.sql",
+   "overloads": [
+    "db/actual/funciones/recomendaciones_vigentes.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "contexto_negocio_recuperar",
+    "portal_recomendaciones"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "router_arranque_servicio",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_chat_id bigint, p_servicio text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_arranque_servicio.sql",
+   "overloads": [
+    "db/actual/funciones/router_arranque_servicio.sql"
+   ],
+   "calls": [
+    "extensiones_aceptadas",
+    "mercado_compras_bienvenida",
+    "router_respuesta",
+    "teclado_tipos_negocio"
+   ],
+   "called_by_sql": [
+    "router_h_comandos",
+    "router_h_intake"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "negocios",
+    "servicios"
+   ]
+  },
+  {
+   "symbol": "router_ctx",
+   "type": "function",
+   "args": "`p_evento jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_ctx.sql",
+   "overloads": [
+    "db/actual/funciones/router_ctx.sql"
+   ],
+   "calls": [
+    "usuario_de_canal"
+   ],
+   "called_by_sql": [
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "servicios",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "router_h_admin",
+   "type": "function",
+   "args": "`p_ctx jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_h_admin.sql",
+   "overloads": [
+    "db/actual/funciones/router_h_admin.sql"
+   ],
+   "calls": [
+    "admin_reporte",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "fallas"
+   ]
+  },
+  {
+   "symbol": "router_h_comandos",
+   "type": "function",
+   "args": "`p_ctx jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_h_comandos.sql",
+   "overloads": [
+    "db/actual/funciones/router_h_comandos.sql"
+   ],
+   "calls": [
+    "conocimiento_guardar",
+    "parametro",
+    "recomendacion_accion",
+    "router_arranque_servicio",
+    "router_plan",
+    "router_portal",
+    "router_procesar_mensaje",
+    "router_respuesta",
+    "teclado_consentimiento",
+    "teclado_intake",
+    "teclado_modulo",
+    "teclado_recomendacion",
+    "teclado_recomendaciones"
+   ],
+   "called_by_sql": [
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "conocimiento",
+    "modulos",
+    "negocios",
+    "recomendaciones",
+    "servicios",
+    "sesiones",
+    "tipos_negocio",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "router_h_intake",
+   "type": "function",
+   "args": "`p_ctx jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_h_intake.sql",
+   "overloads": [
+    "db/actual/funciones/router_h_intake.sql"
+   ],
+   "calls": [
+    "norm_texto",
+    "router_arranque_servicio",
+    "router_respuesta",
+    "teclado_intake"
+   ],
+   "called_by_sql": [
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "servicios",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "router_h_recibiendo",
+   "type": "function",
+   "args": "`p_ctx jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_h_recibiendo.sql",
+   "overloads": [
+    "db/actual/funciones/router_h_recibiendo.sql"
+   ],
+   "calls": [
+    "carga_evaluar",
+    "carga_hay_con_que",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "servicios",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "router_h_sin_sesion",
+   "type": "function",
+   "args": "`p_ctx jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_h_sin_sesion.sql",
+   "overloads": [
+    "db/actual/funciones/router_h_sin_sesion.sql"
+   ],
+   "calls": [
+    "consulta_iniciar",
+    "router_respuesta",
+    "teclado_intake"
+   ],
+   "called_by_sql": [
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "servicios",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "router_marcar_editables",
+   "type": "function",
+   "args": "`p_res jsonb, p_evento jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_marcar_editables.sql",
+   "overloads": [
+    "db/actual/funciones/router_marcar_editables.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_router.json"
+   ],
+   "tables_used": [
+    "plantillas"
+   ]
+  },
+  {
+   "symbol": "router_plan",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_chat_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_plan.sql",
+   "overloads": [
+    "db/actual/funciones/router_plan.sql"
+   ],
+   "calls": [
+    "miles",
+    "parametro",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "ejecuciones",
+    "negocios",
+    "v_consumo_negocio"
+   ]
+  },
+  {
+   "symbol": "router_portal",
+   "type": "function",
+   "args": "`p_usuario_id bigint, p_chat_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_portal.sql",
+   "overloads": [
+    "db/actual/funciones/router_portal.sql"
+   ],
+   "calls": [
+    "parametro",
+    "portal_token_crear",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "router_procesar_mensaje",
+   "type": "function",
+   "args": "`p_evento jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_procesar_mensaje.sql",
+   "overloads": [
+    "db/actual/funciones/router_procesar_mensaje.sql"
+   ],
+   "calls": [
+    "router_ctx",
+    "router_h_admin",
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_recibiendo",
+    "router_h_sin_sesion",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_h_comandos"
+   ],
+   "entry_points": [
+    "n8n:wf_router.json",
+    "n8n:wf_wa_router.json"
+   ],
+   "tables_used": [
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "router_respuesta",
+   "type": "function",
+   "args": "`p_chat bigint, p_plantilla text, p_vars jsonb, p_teclado jsonb, p_acciones jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/router_respuesta.sql",
+   "overloads": [
+    "db/actual/funciones/router_respuesta.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "consulta_iniciar",
+    "mercado_compras_bienvenida",
+    "router_arranque_servicio",
+    "router_h_admin",
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_recibiendo",
+    "router_h_sin_sesion",
+    "router_plan",
+    "router_portal",
+    "router_procesar_mensaje"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "snapshot_anterior",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_antes_de date`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/snapshot_anterior.sql",
+   "overloads": [
+    "db/actual/funciones/snapshot_anterior.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "hallazgos_comparativo"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "snapshots_negocio"
+   ]
+  },
+  {
+   "symbol": "snapshot_tomar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_origen text, p_ejecucion_id bigint`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/snapshot_tomar.sql",
+   "overloads": [
+    "db/actual/funciones/snapshot_tomar.sql"
+   ],
+   "calls": [
+    "salud_negocio",
+    "snapshot_umbrales",
+    "snapshot_version"
+   ],
+   "called_by_sql": [
+    "ejecucion_cerrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "mov_visibles",
+    "productos",
+    "recomendaciones",
+    "snapshots_negocio",
+    "v_balance_unidades",
+    "v_calidad_matching",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_pareto_utilidad",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "snapshot_umbrales",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/snapshot_umbrales.sql",
+   "overloads": [
+    "db/actual/funciones/snapshot_umbrales.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "snapshot_tomar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "parametros"
+   ]
+  },
+  {
+   "symbol": "snapshot_version",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`integer`",
+   "file": "db/actual/funciones/snapshot_version.sql",
+   "overloads": [
+    "db/actual/funciones/snapshot_version.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "snapshot_tomar",
+    "snapshots_backfill"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "teclado_consentimiento",
+   "type": "function",
+   "args": "`p_contexto text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_consentimiento.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_consentimiento.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "teclado_intake",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_intake.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_intake.sql"
+   ],
+   "calls": [
+    "teclado_modulo",
+    "teclado_modulos"
+   ],
+   "called_by_sql": [
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_sin_sesion"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "modulos"
+   ]
+  },
+  {
+   "symbol": "teclado_markup",
+   "type": "function",
+   "args": "`p_teclado jsonb, p_vars jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_markup.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_markup.sql"
+   ],
+   "calls": [
+    "parametro"
+   ],
+   "called_by_sql": [
+    "resolver_plantilla"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "teclado_modulo",
+   "type": "function",
+   "args": "`p_codigo text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_modulo.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_modulo.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "router_h_comandos",
+    "teclado_intake"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "servicios"
+   ]
+  },
+  {
+   "symbol": "teclado_modulos",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_modulos.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_modulos.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "teclado_intake"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "modulos"
+   ]
+  },
+  {
+   "symbol": "teclado_recomendacion",
+   "type": "function",
+   "args": "`p_reco_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_recomendacion.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_recomendacion.sql"
+   ],
+   "calls": [
+    "miles"
+   ],
+   "called_by_sql": [
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "teclado_recomendaciones",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_recomendaciones.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_recomendaciones.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "router_h_comandos"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "teclado_tipos_negocio",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/teclado_tipos_negocio.sql",
+   "overloads": [
+    "db/actual/funciones/teclado_tipos_negocio.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "router_arranque_servicio"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "tipos_negocio"
+   ]
+  },
+  {
+   "symbol": "admin_reporte",
+   "type": "function",
+   "args": "`p_cmd text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/admin_reporte.sql",
+   "overloads": [
+    "db/actual/funciones/admin_reporte.sql"
+   ],
+   "calls": [
+    "alias_pendientes",
+    "miles"
+   ],
+   "called_by_sql": [
+    "router_h_admin"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "fallas",
+    "movimientos",
+    "productos",
+    "servicios",
+    "sesiones",
+    "v_calidad_matching",
+    "v_consumo_negocio",
+    "v_ejecuciones_fallidas",
+    "v_embudo_servicios",
+    "v_salud_ingesta"
+   ]
+  },
+  {
+   "symbol": "alertas_evaluar",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/alertas_evaluar.sql",
+   "overloads": [
+    "db/actual/funciones/alertas_evaluar.sql"
+   ],
+   "calls": [
+    "parametro",
+    "recomendaciones_negocio"
+   ],
+   "called_by_sql": [
+    "mantenimiento_ciclo"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "alertas_enviadas",
+    "negocios",
+    "recomendaciones",
+    "v_negocios_alertables"
+   ]
+  },
+  {
+   "symbol": "alias_pendientes",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_limite integer`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/alias_pendientes.sql",
+   "overloads": [
+    "db/actual/funciones/alias_pendientes.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "admin_reporte",
+    "portal_alias_pendientes"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "alias",
+    "mov_visibles",
+    "movimientos",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "b64url",
+   "type": "function",
+   "args": "`p bytea`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/b64url.sql",
+   "overloads": [
+    "db/actual/funciones/b64url.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "jwt_firmar"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "barra_10",
+   "type": "function",
+   "args": "`p_valor numeric`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/barra_10.sql",
+   "overloads": [
+    "db/actual/funciones/barra_10.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "informe_salud_bloque"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "canal_de_chat",
+   "type": "function",
+   "args": "`p_chat_id bigint`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/canal_de_chat.sql",
+   "overloads": [
+    "db/actual/funciones/canal_de_chat.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "carga_panel"
+   ],
+   "entry_points": [
+    "n8n:wf_ejecutar.json",
+    "n8n:wf_enviar.json"
+   ],
+   "tables_used": [
+    "identidades"
+   ]
+  },
+  {
+   "symbol": "cartera_facturar_dian",
+   "type": "function",
+   "args": "`p_documento_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/cartera_facturar_dian.sql",
+   "overloads": [
+    "db/actual/funciones/cartera_facturar_dian.sql"
+   ],
+   "calls": [
+    "tercero_obtener"
+   ],
+   "called_by_sql": [
+    "cartera_refacturar",
+    "ingesta_parsear_dian"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "facturas",
+    "movimientos",
+    "negocios"
+   ]
+  },
+  {
+   "symbol": "cartera_refacturar",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`void`",
+   "file": "db/actual/funciones/cartera_refacturar.sql",
+   "overloads": [
+    "db/actual/funciones/cartera_refacturar.sql"
+   ],
+   "calls": [
+    "cartera_facturar_dian"
+   ],
+   "called_by_sql": [
+    "portal_negocio_guardar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos"
+   ]
+  },
+  {
+   "symbol": "chat_de_usuario",
+   "type": "function",
+   "args": "`p_usuario_id bigint`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/chat_de_usuario.sql",
+   "overloads": [
+    "db/actual/funciones/chat_de_usuario.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "ejecucion_cerrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "identidades",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "cifra_norm",
+   "type": "function",
+   "args": "`p_num text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/cifra_norm.sql",
+   "overloads": [
+    "db/actual/funciones/cifra_norm.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "cifra_variantes",
+    "validar_cifras"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "cifra_variantes",
+   "type": "function",
+   "args": "`p_num text`",
+   "returns": "`text[]`",
+   "file": "db/actual/funciones/cifra_variantes.sql",
+   "overloads": [
+    "db/actual/funciones/cifra_variantes.sql"
+   ],
+   "calls": [
+    "cifra_norm"
+   ],
+   "called_by_sql": [
+    "validar_cifras"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "consulta_iniciar",
+   "type": "function",
+   "args": "`p_usuario_id bigint, p_negocio_id bigint, p_chat_id bigint, p_pregunta text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/consulta_iniciar.sql",
+   "overloads": [
+    "db/actual/funciones/consulta_iniciar.sql"
+   ],
+   "calls": [
+    "conocimiento_buscar",
+    "conocimiento_pendiente_registrar",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_h_sin_sesion"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "conocimiento",
+    "ejecuciones",
+    "mov_visibles",
+    "movimientos",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "contexto_negocio_recuperar",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_contexto jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/contexto_negocio_recuperar.sql",
+   "overloads": [
+    "db/actual/funciones/contexto_negocio_recuperar.sql"
+   ],
+   "calls": [
+    "conocimiento_buscar",
+    "hallazgos_comparativo",
+    "intencion_resolver",
+    "perfil_negocio",
+    "recomendaciones_vigentes",
+    "salud_negocio"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "servicios:consulta"
+   ],
+   "tables_used": [
+    "productos",
+    "recomendaciones"
+   ]
+  },
+  {
+   "symbol": "ejecucion_cerrar",
+   "type": "function",
+   "args": "`p_ejecucion_id bigint, p_estado text, p_resultado jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ejecucion_cerrar.sql",
+   "overloads": [
+    "db/actual/funciones/ejecucion_cerrar.sql"
+   ],
+   "calls": [
+    "chat_de_usuario",
+    "recomendaciones_medir",
+    "recomendaciones_registrar",
+    "snapshot_tomar"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "tables_used": [
+    "ejecuciones",
+    "fallas",
+    "plantillas",
+    "recomendaciones",
+    "servicios",
+    "sesiones"
+   ]
+  },
+  {
+   "symbol": "ejecucion_preparar",
+   "type": "function",
+   "args": "`p_ejecucion_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/ejecucion_preparar.sql",
+   "overloads": [
+    "db/actual/funciones/ejecucion_preparar.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "tables_used": [
+    "ejecuciones",
+    "prompts",
+    "servicios",
+    "sesiones",
+    "v_consumo_negocio"
+   ]
+  },
+  {
+   "symbol": "esc_html",
+   "type": "function",
+   "args": "`p_texto text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/esc_html.sql",
+   "overloads": [
+    "db/actual/funciones/esc_html.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "informe_render",
+    "informe_salud_bloque",
+    "resolver_plantilla"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "extensiones_aceptadas",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/extensiones_aceptadas.sql",
+   "overloads": [
+    "db/actual/funciones/extensiones_aceptadas.sql"
+   ],
+   "calls": [
+    "parametro"
+   ],
+   "called_by_sql": [
+    "router_arranque_servicio"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "formatos_documento"
+   ]
+  },
+  {
+   "symbol": "fmt_decimal",
+   "type": "function",
+   "args": "`p_num numeric`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/fmt_decimal.sql",
+   "overloads": [
+    "db/actual/funciones/fmt_decimal.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "informe_render",
+    "recomendaciones_negocio"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "informes_periodicos_disparar",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/informes_periodicos_disparar.sql",
+   "overloads": [
+    "db/actual/funciones/informes_periodicos_disparar.sql"
+   ],
+   "calls": [
+    "parametro"
+   ],
+   "called_by_sql": [
+    "mantenimiento_ciclo"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "ejecuciones",
+    "movimientos",
+    "servicios",
+    "sesiones",
+    "v_negocios_informe_periodico"
+   ]
+  },
+  {
+   "symbol": "jwt_firmar",
+   "type": "function",
+   "args": "`p_payload jsonb, p_secreto text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/jwt_firmar.sql",
+   "overloads": [
+    "db/actual/funciones/jwt_firmar.sql"
+   ],
+   "calls": [
+    "b64url"
+   ],
+   "called_by_sql": [
+    "portal_sesion_abrir"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "limpiar_marcado",
+   "type": "function",
+   "args": "`p_texto text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/limpiar_marcado.sql",
+   "overloads": [
+    "db/actual/funciones/limpiar_marcado.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "informe_render"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "mantenimiento_ciclo",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/mantenimiento_ciclo.sql",
+   "overloads": [
+    "db/actual/funciones/mantenimiento_ciclo.sql"
+   ],
+   "calls": [
+    "alertas_evaluar",
+    "informes_periodicos_disparar"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_cron.json"
+   ],
+   "tables_used": [
+    "ejecuciones",
+    "fallas",
+    "sesiones",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "mercado_compras_bienvenida",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_chat_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/mercado_compras_bienvenida.sql",
+   "overloads": [
+    "db/actual/funciones/mercado_compras_bienvenida.sql"
+   ],
+   "calls": [
+    "miles",
+    "periodo_es",
+    "router_respuesta"
+   ],
+   "called_by_sql": [
+    "router_arranque_servicio"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "documentos",
+    "mov_visibles",
+    "productos"
+   ]
+  },
+  {
+   "symbol": "mes_es",
+   "type": "function",
+   "args": "`p_fecha date`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/mes_es.sql",
+   "overloads": [
+    "db/actual/funciones/mes_es.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "periodo_es",
+    "recomendaciones_negocio"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "miles",
+   "type": "function",
+   "args": "`p numeric`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/miles.sql",
+   "overloads": [
+    "db/actual/funciones/miles.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "admin_reporte",
+    "carga_panel",
+    "informe_base_bloque",
+    "ingesta_num",
+    "ingesta_resumen_sesion",
+    "intencion_agregados",
+    "mercado_compras_bienvenida",
+    "pedido_sugerido",
+    "recomendacion_accion",
+    "recomendaciones_negocio",
+    "router_plan",
+    "teclado_recomendacion"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "movimientos_limite_plan",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`trigger`",
+   "file": "db/actual/funciones/movimientos_limite_plan.sql",
+   "overloads": [
+    "db/actual/funciones/movimientos_limite_plan.sql"
+   ],
+   "calls": [
+    "plan_desde"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "trigger:movimientos"
+   ],
+   "tables_used": [
+    "documentos"
+   ]
+  },
+  {
+   "symbol": "nit_dv",
+   "type": "function",
+   "args": "`p_nit text`",
+   "returns": "`integer`",
+   "file": "db/actual/funciones/nit_dv.sql",
+   "overloads": [
+    "db/actual/funciones/nit_dv.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "portal_negocio_guardar"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "norm_pregunta",
+   "type": "function",
+   "args": "`p text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/norm_pregunta.sql",
+   "overloads": [
+    "db/actual/funciones/norm_pregunta.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "conocimiento_pendiente_registrar"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "norm_texto",
+   "type": "function",
+   "args": "`p text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/norm_texto.sql",
+   "overloads": [
+    "db/actual/funciones/norm_texto.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "alias_pendientes",
+    "conocimiento_buscar",
+    "ingesta_huella",
+    "ingesta_inferir_tipo",
+    "ingesta_resolver_columnas",
+    "intencion_detectar",
+    "intencion_resolver",
+    "match_confirmar_alias",
+    "match_resolver_documento",
+    "match_resolver_producto",
+    "norm_pregunta",
+    "periodo_resolver",
+    "portal_factura_guardar",
+    "portal_movimientos_resumen",
+    "router_h_intake",
+    "tercero_obtener"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "pago_registrar",
+   "type": "function",
+   "args": "`p_factura_id bigint, p_valor numeric, p_fecha date, p_medio text, p_origen text, p_usuario_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/pago_registrar.sql",
+   "overloads": [
+    "db/actual/funciones/pago_registrar.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "portal_pago_registrar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "facturas",
+    "pagos"
+   ]
+  },
+  {
+   "symbol": "parametro",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_clave text`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/parametro.sql",
+   "overloads": [
+    "db/actual/funciones/parametro.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "alertas_evaluar",
+    "carga_evaluar",
+    "extensiones_aceptadas",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "informes_periodicos_disparar",
+    "ingesta_registrar_documento",
+    "ingesta_resumen_sesion",
+    "match_resolver_producto",
+    "plan_desde",
+    "recomendaciones_negocio",
+    "router_h_comandos",
+    "router_plan",
+    "router_portal",
+    "salud_negocio",
+    "teclado_markup"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "parametros"
+   ]
+  },
+  {
+   "symbol": "pedido_sugerido",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/pedido_sugerido.sql",
+   "overloads": [
+    "db/actual/funciones/pedido_sugerido.sql"
+   ],
+   "calls": [
+    "miles",
+    "unidades_es"
+   ],
+   "called_by_sql": [
+    "portal_pedido"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "productos",
+    "recomendaciones",
+    "v_proveedor_mas_barato"
+   ]
+  },
+  {
+   "symbol": "perfil_negocio",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/perfil_negocio.sql",
+   "overloads": [
+    "db/actual/funciones/perfil_negocio.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "contexto_negocio_recuperar",
+    "portal_perfil"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "productos",
+    "recomendaciones",
+    "v_perfil_negocio"
+   ]
+  },
+  {
+   "symbol": "periodo_es",
+   "type": "function",
+   "args": "`p_desde date, p_hasta date`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/periodo_es.sql",
+   "overloads": [
+    "db/actual/funciones/periodo_es.sql"
+   ],
+   "calls": [
+    "mes_es"
+   ],
+   "called_by_sql": [
+    "carga_resumen",
+    "informe_render",
+    "ingesta_resumen_sesion",
+    "mercado_compras_bienvenida"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "periodo_resolver",
+   "type": "function",
+   "args": "`p_texto text, p_defecto text, p_hasta date`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/periodo_resolver.sql",
+   "overloads": [
+    "db/actual/funciones/periodo_resolver.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "intencion_resolver"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "plan_desde",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`date`",
+   "file": "db/actual/funciones/plan_desde.sql",
+   "overloads": [
+    "db/actual/funciones/plan_desde.sql"
+   ],
+   "calls": [
+    "parametro"
+   ],
+   "called_by_sql": [
+    "movimientos_limite_plan"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "negocios"
+   ]
+  },
+  {
+   "symbol": "plantilla_cuerpo",
+   "type": "function",
+   "args": "`p_clave text, p_defecto text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/plantilla_cuerpo.sql",
+   "overloads": [
+    "db/actual/funciones/plantilla_cuerpo.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [],
+   "tables_used": [
+    "plantillas"
+   ]
+  },
+  {
+   "symbol": "plantilla_cuerpo_srv",
+   "type": "function",
+   "args": "`p_clave text, p_servicio text, p_defecto text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/plantilla_cuerpo_srv.sql",
+   "overloads": [
+    "db/actual/funciones/plantilla_cuerpo_srv.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "informe_base_bloque",
+    "informe_estructura_seca",
+    "informe_render",
+    "informe_salud_bloque"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "plantillas"
+   ]
+  },
+  {
+   "symbol": "resolver_plantilla",
+   "type": "function",
+   "args": "`p_clave text, p_vars jsonb, p_teclado jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/resolver_plantilla.sql",
+   "overloads": [
+    "db/actual/funciones/resolver_plantilla.sql"
+   ],
+   "calls": [
+    "esc_html",
+    "teclado_markup"
+   ],
+   "called_by_sql": [
+    "carga_panel"
+   ],
+   "entry_points": [
+    "n8n:wf_enviar.json"
+   ],
+   "tables_used": [
+    "plantillas"
+   ]
+  },
+  {
+   "symbol": "salud_negocio",
+   "type": "function",
+   "args": "`p_negocio_id bigint`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/salud_negocio.sql",
+   "overloads": [
+    "db/actual/funciones/salud_negocio.sql"
+   ],
+   "calls": [
+    "parametro"
+   ],
+   "called_by_sql": [
+    "contexto_negocio_recuperar",
+    "hallazgos_comparativo",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "snapshot_tomar"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "facturas",
+    "mov_visibles",
+    "productos",
+    "v_deriva_costo",
+    "v_margen_producto",
+    "v_rotacion_producto"
+   ]
+  },
+  {
+   "symbol": "semaforo",
+   "type": "function",
+   "args": "`p_valor numeric`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/semaforo.sql",
+   "overloads": [
+    "db/actual/funciones/semaforo.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "informe_salud_bloque"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "snapshots_backfill",
+   "type": "function",
+   "args": "`—`",
+   "returns": "`integer`",
+   "file": "db/actual/funciones/snapshots_backfill.sql",
+   "overloads": [
+    "db/actual/funciones/snapshots_backfill.sql"
+   ],
+   "calls": [
+    "snapshot_version"
+   ],
+   "called_by_sql": [],
+   "entry_points": [],
+   "tables_used": [
+    "ejecuciones",
+    "movimientos",
+    "productos",
+    "servicios",
+    "snapshots_negocio"
+   ]
+  },
+  {
+   "symbol": "tercero_obtener",
+   "type": "function",
+   "args": "`p_negocio_id bigint, p_nit text, p_nombre text`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/tercero_obtener.sql",
+   "overloads": [
+    "db/actual/funciones/tercero_obtener.sql"
+   ],
+   "calls": [
+    "norm_texto"
+   ],
+   "called_by_sql": [
+    "cartera_facturar_dian"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "terceros"
+   ]
+  },
+  {
+   "symbol": "unidades_es",
+   "type": "function",
+   "args": "`p_n numeric`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/unidades_es.sql",
+   "overloads": [
+    "db/actual/funciones/unidades_es.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "pedido_sugerido",
+    "recomendaciones_negocio"
+   ],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "usuario_de_canal",
+   "type": "function",
+   "args": "`p_canal text, p_evento jsonb`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/usuario_de_canal.sql",
+   "overloads": [
+    "db/actual/funciones/usuario_de_canal.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [
+    "router_ctx",
+    "usuario_de_telegram"
+   ],
+   "entry_points": [],
+   "tables_used": [
+    "identidades",
+    "negocios",
+    "sesiones",
+    "usuarios"
+   ]
+  },
+  {
+   "symbol": "usuario_de_telegram",
+   "type": "function",
+   "args": "`p_evento jsonb`",
+   "returns": "`bigint`",
+   "file": "db/actual/funciones/usuario_de_telegram.sql",
+   "overloads": [
+    "db/actual/funciones/usuario_de_telegram.sql"
+   ],
+   "calls": [
+    "usuario_de_canal"
+   ],
+   "called_by_sql": [],
+   "entry_points": [],
+   "tables_used": []
+  },
+  {
+   "symbol": "validar_cifras",
+   "type": "function",
+   "args": "`p_texto text, p_hallazgos jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/validar_cifras.sql",
+   "overloads": [
+    "db/actual/funciones/validar_cifras.sql"
+   ],
+   "calls": [
+    "cifra_norm",
+    "cifra_variantes"
+   ],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_ejecutar.json"
+   ],
+   "tables_used": [
+    "productos"
+   ]
+  },
+  {
+   "symbol": "wa_payload",
+   "type": "function",
+   "args": "`p_para text, p_texto text, p_markup jsonb`",
+   "returns": "`jsonb`",
+   "file": "db/actual/funciones/wa_payload.sql",
+   "overloads": [
+    "db/actual/funciones/wa_payload.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_enviar.json"
+   ],
+   "tables_used": []
+  },
+  {
+   "symbol": "wa_texto",
+   "type": "function",
+   "args": "`p_html text`",
+   "returns": "`text`",
+   "file": "db/actual/funciones/wa_texto.sql",
+   "overloads": [
+    "db/actual/funciones/wa_texto.sql"
+   ],
+   "calls": [],
+   "called_by_sql": [],
+   "entry_points": [
+    "n8n:wf_enviar.json"
+   ],
+   "tables_used": []
+  }
+ ]
+}

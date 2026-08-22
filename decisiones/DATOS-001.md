@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-001, HALLAZGOS-001]
-implementada_en: [docs/historico/migraciones/054_inventario_declarado.sql]
+implementada_en: [agent-context/history/migraciones/054_inventario_declarado.sql]
 afecta: [v_balance_unidades, salud_negocio, portal_conteo_guardar, recomendaciones_negocio]
 procedencia: cabecera de la migración 054 (CAND-054), promovida el 2026-08-19
 ---

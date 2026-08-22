@@ -11,7 +11,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-002, CORE-004]
-implementada_en: [docs/historico/migraciones/059_recomendaciones_persistentes.sql, docs/historico/migraciones/066_resultado.sql]
+implementada_en: [agent-context/history/migraciones/059_recomendaciones_persistentes.sql, agent-context/history/migraciones/066_resultado.sql]
 afecta: [recomendaciones_vigentes, recomendaciones_negocio, metricas_resultado]
 procedencia: R-III de AGENTS.md
 ---

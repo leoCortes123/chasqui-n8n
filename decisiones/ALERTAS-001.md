@@ -13,7 +13,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-003, INFORME-001]
-implementada_en: [docs/historico/migraciones/067_alertas.sql]
+implementada_en: [agent-context/history/migraciones/067_alertas.sql]
 afecta: [mantenimiento_ciclo, alertas_enviadas, recomendaciones_negocio]
 procedencia: cabecera de la migración 067 (CAND-067), promovida el 2026-08-19
 ---

@@ -12,8 +12,8 @@ UBL 2.1 parseables por `ingesta_parsear_dian`. Quien los mete a la base es
 la base ni sabe de ella.
 
     python3 bin/gen_datos_prueba.py \\
-      --input docs/ejemplos/fuente/online_retail_II.xlsx \\
-      --output docs/ejemplos/generados \\
+      --input ejemplos/fuente/online_retail_II.xlsx \\
+      --output ejemplos/generados \\
       --profile medium --seed 20260815
 
 Atribución: Chen, D. (2019). Online Retail II. UCI Machine Learning Repository.
@@ -1067,7 +1067,7 @@ def main():
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input", type=pathlib.Path,
-                   default=RAIZ / "docs/ejemplos/fuente/online_retail_II.xlsx")
+                   default=RAIZ / "ejemplos/fuente/online_retail_II.xlsx")
     p.add_argument("--output", type=pathlib.Path, default=GENERADOS)
     p.add_argument("--profile", choices=sorted(PERFILES), default="medium")
     p.add_argument("--seed", type=int, default=20260815)

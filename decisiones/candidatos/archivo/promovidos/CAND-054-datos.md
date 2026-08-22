@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/054_inventario_declarado.sql]
+implementada_en: [agent-context/history/migraciones/054_inventario_declarado.sql]
 afecta:
   - IF   # ya no existe en db/actual/
   - informe_salud_bloque
@@ -20,7 +20,7 @@ afecta:
   - salud_negocio
   - v_balance_unidades   # ya no existe en db/actual/
   - v_rotacion_producto   # ya no existe en db/actual/
-procedencia: cabecera de docs/historico/migraciones/054_inventario_declarado.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/054_inventario_declarado.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

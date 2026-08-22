@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CONTENIDO-001, MIGRACION-001]
-implementada_en: [docs/historico/migraciones/056_router_modular.sql]
+implementada_en: [agent-context/history/migraciones/056_router_modular.sql]
 afecta: [router_procesar_mensaje, router_ctx, router_h_recibiendo, usuario_de_canal]
 procedencia: cabecera de la migración 056 (CAND-056), promovida el 2026-08-19
 ---

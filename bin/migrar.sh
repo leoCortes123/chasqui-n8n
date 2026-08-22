@@ -4,7 +4,7 @@
 #   1. Si la base está vacía, aplica db/base/ — el Chasqui v0: esquema completo
 #      más el contenido del sistema (plantillas, prompts, parámetros, servicios).
 #      Reemplaza a las 73 migraciones que lo construyeron, archivadas en
-#      docs/historico/migraciones/, y las sella como aplicadas.
+#      agent-context/history/migraciones/, y las sella como aplicadas.
 #   2. Después aplica db/migraciones/*.sql, que arranca en la 074.
 #
 # Cada migración corre en una sola transacción junto con su registro: si falla,

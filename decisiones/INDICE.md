@@ -2,7 +2,7 @@
 
 Generado por `bin/gen_indice_decisiones.py`. **No editar a mano.**
 
-18 decisiones (18 vigentes, 0 superadas o descartadas) · 0 candidatos sin promover en `candidatos/`
+20 decisiones (20 vigentes, 0 superadas o descartadas) · 0 candidatos sin promover en `candidatos/`
 
 ## alertas
 
@@ -36,6 +36,12 @@ Generado por `bin/gen_indice_decisiones.py`. **No editar a mano.**
 | id | estado | título | invariantes |
 |---|---|---|---|
 | [`DATOS-001`](DATOS-001.md) | ✅ vigente | El stock declara de dónde salió y lo estimado no se disfraza de dato | 3 |
+
+## documentacion
+
+| id | estado | título | invariantes |
+|---|---|---|---|
+| [`DOCS-001`](DOCS-001.md) | ✅ vigente | La documentación descriptiva vive en una sola capa, agent-context/, y docs/ deja de existir | 3 |
 
 ## entrega
 
@@ -79,6 +85,12 @@ Generado por `bin/gen_indice_decisiones.py`. **No editar a mano.**
 | id | estado | título | invariantes |
 |---|---|---|---|
 | [`PORTAL-001`](PORTAL-001.md) | ✅ vigente | Ninguna función es pública por defecto y el negocio sale del JWT | 4 |
+
+## proceso
+
+| id | estado | título | invariantes |
+|---|---|---|---|
+| [`PROCESO-001`](PROCESO-001.md) | ✅ vigente | Un cambio empieza por un pedido escrito, no por una conversación | 5 |
 
 ## producto
 

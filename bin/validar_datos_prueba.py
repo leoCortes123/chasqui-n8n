@@ -14,7 +14,7 @@ Dos trabajos en un solo paso, porque comparten la misma lectura de los archivos:
      SQL de Chasqui: si el oráculo repitiera la misma consulta, un mismo error
      pasaría las dos pruebas y no probaríamos nada.
 
-Escribe `docs/ejemplos/generados/manifests/oracle.json` y devuelve código 1 si
+Escribe `ejemplos/generados/manifests/oracle.json` y devuelve código 1 si
 algo falla.
 
     python3 bin/validar_datos_prueba.py

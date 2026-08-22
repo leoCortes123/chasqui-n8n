@@ -4,7 +4,7 @@ Acá vive **qué debe ser Chasqui**: decisiones de producto y de arquitectura,
 reglas de negocio, restricciones, invariantes, alternativas descartadas y las
 relaciones entre unas y otras.
 
-No es documentación descriptiva — eso es `docs/`. No es historia — eso es
+No es documentación descriptiva — eso es `agent-context/`. No es historia — eso es
 `db/migraciones/` y git. Es lo que gobierna: un cambio que contradice una
 decisión vigente no se hace, se discute.
 

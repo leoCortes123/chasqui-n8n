@@ -2,6 +2,13 @@
 
 Documento de referencia para quien opera, mantiene o extiende el sistema.
 
+> **Vigencia (2026-08-22).** Describe el diseño hasta la migración `070`. **No
+> conoce las 071–076**: el panel único de carga (`carga_evaluar`, `carga_panel`,
+> el estado `descartado`, el lock de panel) no está acá. Para el mecanismo actual
+> de carga y arranque del análisis manda `db/actual/` y los mapas de
+> `agent-context/domains/`; esta guía sigue siendo la mejor fuente del *porqué*
+> de lo anterior. Describe, no gobierna (`DOCS-001`).
+
 ---
 
 ## 1. Tesis de diseño
@@ -75,7 +82,7 @@ migrar; un `pg_dump` cubre todo.
 | `PORTAL_DB_PASSWORD` | Contraseña del rol `authenticator` con el que se conecta PostgREST. La pone `bin/preparar-portal.sh`. |
 | `PORTAL_JWT_SECRET` | Secreto con el que `portal_sesion_abrir` firma el JWT **y** con el que PostgREST lo verifica. No se guarda en la base: viaja como `app.settings.jwt_secret`. |
 | `PROXY_PORT` | Puerto local del proxy (`127.0.0.1:8080` por defecto). La base pública del portal **no** es una variable de entorno: es el parámetro `portal_url_base` de la base, que es quien arma el enlace de `/portal`. |
-| `WA_*` | Bloque de WhatsApp Cloud API (`WA_PHONE_NUMBER_ID`, `WA_ACCESS_TOKEN`, `WA_VERIFY_TOKEN`, `WA_WEBHOOK_PATH`…). Ver `docs/WHATSAPP.md`. |
+| `WA_*` | Bloque de WhatsApp Cloud API (`WA_PHONE_NUMBER_ID`, `WA_ACCESS_TOKEN`, `WA_VERIFY_TOKEN`, `WA_WEBHOOK_PATH`…). Ver `agent-context/product/whatsapp.md`. |
 
 n8n está configurado con `EXECUTIONS_DATA_SAVE_ON_SUCCESS=none`,
 `SAVE_ON_ERROR=all`, `PRUNE=true`, `MAX_AGE=168` (7 días): solo guarda los
@@ -422,7 +429,7 @@ módulo no abre sesión: es un menú. La sesión empieza al tocar un servicio, y
 `svc:` ya no necesita un intake abierto (antes solo funcionaba dentro de
 `/nueva`). Antes de pedir archivos, `router_arranque_servicio` pregunta la
 naturaleza del negocio si todavía no se sabe. El diseño completo está en
-`docs/TELEGRAM_UX.md`.
+`agent-context/product/telegram-ux.md`.
 
 Pasos que el router ya no pregunta (migración 024):
 
@@ -520,7 +527,7 @@ sería mentir—.
 que el valor no lo pone el modelo.
 
 **Niveles 2 y 3** (comparar contra precios oficiales tipo SIPSA, y contra el
-resto de negocios anonimizados) están en `docs/historico/PLAN_PRODUCCION.md`. El contrato
+resto de negocios anonimizados) están en `agent-context/history/planes/PLAN_PRODUCCION.md`. El contrato
 de `recomendaciones_negocio` no cambia: cambia de dónde sale el comparativo.
 
 ---
@@ -549,7 +556,7 @@ ser el `AttachedDocument`, un contenedor donde el `Invoice` real va embebido com
 
 Requisito verificado: este Postgres tiene libxml (`xpath()` y `XMLTABLE` funcionan).
 
-> **Riesgo abierto:** los fixtures de `docs/ejemplos/` son sintéticos (anexo técnico
+> **Riesgo abierto:** los fixtures de `ejemplos/` son sintéticos (anexo técnico
 > 1.9 de la DIAN). Los totales cuadran contra los propios fixtures, **no contra un
 > XML real de cliente**. Re-verificar en cuanto haya facturas reales.
 
@@ -1211,7 +1218,7 @@ botones (más de eso va como lista desplegable), `*negrita*` en vez de HTML
 Meta no manda cabecera secreta como Telegram: hoy la defensa es la ruta con
 sufijo aleatorio (`WA_WEBHOOK_PATH`) más el filtro por `phone_number_id`;
 verificar `X-Hub-Signature-256` sigue pendiente. Alta y credenciales, en
-`docs/WHATSAPP.md`.
+`agent-context/product/whatsapp.md`.
 
 ---
 
@@ -1366,8 +1373,8 @@ facturas UBL 2.1; `bin/cargar_datos_prueba.py` los mete **por la ruta real de
 ingesta**; `bin/validar_datos_prueba.py` calcula un oráculo independiente;
 `db/pruebas/escenarios_generados.sql` compara). El dataset se adapta a Chasqui y
 nunca al revés: lo que no se puede representar por las rutas que existen queda
-declarado como limitación. Manual completo en `docs/TEST_DATA_GENERATOR.md`, el
-diseño en `docs/historico/PLAN_DATOS_PRUEBA.md`.
+declarado como limitación. Manual completo en `agent-context/operations/datos-de-prueba.md`, el
+diseño en `agent-context/history/planes/PLAN_DATOS_PRUEBA.md`.
 
 `bin/prueba_ciclo_vida.py` es el complemento de `empty_state`: prueba que un
 negocio vacío pueda **moverse** a operando —primera factura, primer CSV,

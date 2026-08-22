@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    participant U as Usuario
+    participant TG as Telegram
+    participant R as wf_router
+    participant PG as Postgres
+    participant I as wf_ingesta
+    participant LLM as LLM
+    participant E as wf_enviar
+    participant X as wf_ejecutar
+
+    U->>TG: archivo
+    TG->>R: webhook (secreto en cabecera)
+    R->>PG: router_marcar_editables(router_procesar_mensaje(ev), ev)
+    Note over PG: tiene_doc=true → acción {tipo:'ingerir', sesion_id}<br/>incluso con sesión 'procesando' (INGESTA-002)
+    R->>I: executeWorkflow (espera)
+    I->>TG: getFile + descarga (3 reintentos, 2 s)
+    alt no baja
+        I->>PG: carga_registrar_fallo(sesion, nombre)
+        Note over PG: sesiones.contexto.descargas_fallidas<br/>ÚNICO caso que pide reenviar
+    end
+    I->>PG: ingesta_registrar_documento(...) → bytea SIEMPRE inserta<br/>ON CONFLICT (negocio_id,hash) reasigna sesión
+    alt clase='documento' (dian_xml)
+        I->>PG: ingesta_procesar_documento → ingesta_parsear_dian (XMLTABLE)<br/>+ cartera_facturar_dian → facturas + terceros
+    else tabular
+        I->>I: DetectarSeparador/ExtraerCSV/ExtraerHoja → AgruparFilas<br/>(muestra 5 / amplia 100)
+        I->>PG: ingesta_identificar_tabular(doc, columnas, muestra_amplia)
+        alt huella conocida
+            PG-->>I: origen='cache', requiere_inferencia=false
+        else diccionario resuelve fecha y valor
+            PG->>PG: ingesta_inferir_mapeo_sql → registrar_formato_resuelto
+        else ni fecha ni valor
+            I->>LLM: sólo nombres de columna + 5 filas
+            LLM-->>I: JSON de mapeo (nunca cifras)
+            I->>PG: ingesta_registrar_formato_inferido
+        end
+        I->>PG: ingesta_cargar_tabular → compuerta ≤20% nulos;<br/>falla ⇒ estado error, cero filas
+    end
+    I->>PG: match_resolver_documento + ingesta_resumen_documento
+    I->>I: Esperar 11 s (> carga_silencio_segundos=10)
+    I->>PG: carga_evaluar(sesion) — advisory lock por sesión
+    alt 'panel'
+        I->>E: refrescar panel (se edita en su lugar)
+    else 'analizar'
+        I->>E: panel modo analizando
+        I->>X: waitForSubWorkflow=false
+    else 'nada'
+        Note over I: otra ejecución más nueva decide
+    end

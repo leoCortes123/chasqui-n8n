@@ -35,13 +35,13 @@ docker, NIT con dígito de verificación y normalización de salida.
 ```bash
 # 0. una sola vez: bajar el dataset y dejarlo donde el generador lo busca
 #    https://archive.ics.uci.edu/dataset/502/online+retail+ii
-mkdir -p docs/ejemplos/fuente
-mv ~/Descargas/online_retail_II.xlsx docs/ejemplos/fuente/
+mkdir -p ejemplos/fuente
+mv ~/Descargas/online_retail_II.xlsx ejemplos/fuente/
 
 # 1. generar
 python3 bin/gen_datos_prueba.py \
-  --input docs/ejemplos/fuente/online_retail_II.xlsx \
-  --output docs/ejemplos/generados \
+  --input ejemplos/fuente/online_retail_II.xlsx \
+  --output ejemplos/generados \
   --profile medium --seed 20260815
 
 # 2. validar y calcular el oráculo  (falla con código 1 si algo no cuadra)
@@ -135,7 +135,7 @@ Sin eso, `margen_cae` y la medición de resultados son inalcanzables.
 ## 4. Estructura de salida
 
 ```
-docs/ejemplos/
+ejemplos/
   fuente/                       ← UCI original + cache (gitignored)
   generados/                    ← gitignored salvo manifests/
     <escenario>/
@@ -301,7 +301,7 @@ puede verlo aunque el costo se esté disparando.
 
 ## 8. El oráculo
 
-`docs/ejemplos/generados/manifests/oracle.json` se calcula **en Python desde los
+`ejemplos/generados/manifests/oracle.json` se calcula **en Python desde los
 archivos generados**, implementando cada umbral desde su definición y no
 traduciendo el SQL de Chasqui. Si el oráculo repitiera la misma consulta, un
 mismo error pasaría las dos pruebas.
@@ -462,7 +462,7 @@ existe. Es esperable y no afecta al análisis, que ya quedó guardado en
 Estas carpetas son anteriores al generador, no se tocan y siguen siendo el banco
 manual de la ingesta.
 
-### `docs/ejemplos/dian_oficiales/` — 13 facturas del set oficial DIAN
+### `ejemplos/dian_oficiales/` — 13 facturas del set oficial DIAN
 
 Único corpus **no sintético** del repositorio, y la referencia estructural del
 emisor UBL. Cubre factura genérica, de servicios, de combustible, de transporte
@@ -474,7 +474,7 @@ Sirven para comprobar que `ingesta_parsear_dian` no se rompe con las variantes
 que la DIAN admite: `CreditNote` y `DebitNote` tienen su propia raíz y su propio
 nombre de línea, y el parser los despacha por `local-name(/*)`.
 
-### `docs/ejemplos/historial_6meses/` — el banco de la inferencia de formatos
+### `ejemplos/historial_6meses/` — el banco de la inferencia de formatos
 
 Seis meses de un mismo negocio ficticio: 6 compras UBL y 6 ventas CSV sobre un
 catálogo compartido de 26 productos colombianos, con variantes de escritura
@@ -499,7 +499,7 @@ entran al dataset generado: cada huella nueva es una llamada al modelo.
 > punto y coma sino comas; el que usa `;` es el de mayo. Se renombró a
 > `ventas_202606_pos_decimal_punto.csv`, que es lo que de verdad lo distingue.
 
-### `docs/ejemplos/01..05`
+### `ejemplos/01..05`
 
 Casos sueltos de la ingesta: factura simple, factura adjunta con CDATA, factura
 de 4 productos con EAN, ventas en formato conocido y ventas en formato a
@@ -509,7 +509,7 @@ aprender.
 
 ## 13. Discrepancias con el plan, y qué se hizo
 
-El plan de encargo (`docs/historico/PLAN_DATOS_PRUEBA.md`) describía el sistema con la
+El plan de encargo (`agent-context/history/planes/PLAN_DATOS_PRUEBA.md`) describía el sistema con la
 precisión posible antes de implementar. Al implementar aparecieron seis
 diferencias con el código real. En todas se adaptó el generador a la
 implementación, no al revés.

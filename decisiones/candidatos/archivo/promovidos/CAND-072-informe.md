@@ -8,11 +8,11 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/072_informe_declara_base.sql]
+implementada_en: [agent-context/history/migraciones/072_informe_declara_base.sql]
 afecta:
   - informe_base_bloque
   - informe_render
-procedencia: cabecera de docs/historico/migraciones/072_informe_declara_base.sql, commit sin commit (migración aún no versionada)
+procedencia: cabecera de agent-context/history/migraciones/072_informe_declara_base.sql, commit sin commit (migración aún no versionada)
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

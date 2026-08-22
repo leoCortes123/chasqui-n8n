@@ -11,7 +11,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [PORTAL-001]
-implementada_en: [docs/historico/migraciones/047_informe_prescriptivo.sql]
+implementada_en: [agent-context/history/migraciones/047_informe_prescriptivo.sql]
 afecta: [informe_render, portal_informe, portal_informes]
 procedencia: instrucción del usuario, sesión del 2026-07-26; rescatada de la memoria de Claude (decisiones/candidatos/desde_memoria/entrega-portal-no-pdf.md) el 2026-08-18
 ---

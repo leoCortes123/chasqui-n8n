@@ -1,0 +1,601 @@
+{
+ "_": "Generado por bin/gen_agent_context.py. Referencias estaticas: quien menciona cada tabla/vista segun grafo.json, y que funciones llama cada workflow n8n directamente. No distingue lectura de escritura.",
+ "objects": {
+  "alertas_enviadas": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "alertas_evaluar"
+   ]
+  },
+  "alias": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "alias_pendientes",
+    "match_confirmar_alias",
+    "match_resolver_documento",
+    "match_resolver_producto",
+    "portal_alias_confirmar"
+   ]
+  },
+  "conocimiento": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "conocimiento_buscar",
+    "conocimiento_guardar",
+    "consulta_iniciar",
+    "portal_conocimiento",
+    "portal_conocimiento_borrar",
+    "portal_conocimiento_guardar",
+    "router_h_comandos"
+   ]
+  },
+  "conocimiento_pendiente": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "conocimiento_guardar",
+    "conocimiento_pendiente_registrar",
+    "portal_conocimiento_borrar",
+    "portal_conocimiento_guardar"
+   ]
+  },
+  "conteos_inventario": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "ingesta_cargar_inventario",
+    "portal_conteo_guardar",
+    "portal_conteos"
+   ]
+  },
+  "cotizaciones": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "portal_cotizacion_guardar",
+    "portal_cotizacion_publica",
+    "portal_cotizacion_revocar",
+    "portal_cotizaciones"
+   ]
+  },
+  "documentos": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "carga_hay_con_que",
+    "carga_resumen",
+    "cartera_facturar_dian",
+    "cartera_refacturar",
+    "hallazgos_compras",
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular",
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_identificar_tabular",
+    "ingesta_inferir_tipo",
+    "ingesta_marcar_descartado",
+    "ingesta_marcar_error",
+    "ingesta_parsear_dian",
+    "ingesta_procesar_documento",
+    "ingesta_registrar_documento",
+    "ingesta_registrar_formato_inferido",
+    "ingesta_registrar_formato_resuelto",
+    "ingesta_resumen_documento",
+    "ingesta_resumen_sesion",
+    "match_resolver_documento",
+    "mercado_compras_bienvenida",
+    "movimientos_limite_plan",
+    "portal_documentos",
+    "portal_movimientos",
+    "portal_movimientos_resumen"
+   ]
+  },
+  "ejecuciones": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "carga_arrancar",
+    "carga_evaluar",
+    "consulta_iniciar",
+    "ejecucion_cerrar",
+    "ejecucion_preparar",
+    "informes_periodicos_disparar",
+    "mantenimiento_ciclo",
+    "portal_informe",
+    "portal_informes",
+    "router_plan",
+    "snapshots_backfill"
+   ]
+  },
+  "facturas": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "cartera_facturar_dian",
+    "informe_base_bloque",
+    "ingesta_resumen_documento",
+    "ingesta_resumen_sesion",
+    "pago_registrar",
+    "portal_cartera",
+    "portal_factura_guardar",
+    "portal_negocio_guardar",
+    "portal_pago_registrar",
+    "recomendacion_metrica_valor",
+    "recomendacion_objeto_evaluable",
+    "recomendaciones_negocio",
+    "salud_negocio"
+   ]
+  },
+  "fallas": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "ejecucion_cerrar",
+    "mantenimiento_ciclo",
+    "router_h_admin"
+   ]
+  },
+  "formatos_documento": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "extensiones_aceptadas",
+    "ingesta_cargar_inventario",
+    "ingesta_cargar_tabular",
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_identificar_tabular",
+    "ingesta_procesar_documento",
+    "ingesta_registrar_documento",
+    "ingesta_registrar_formato_inferido",
+    "ingesta_registrar_formato_resuelto",
+    "portal_documentos",
+    "portal_movimientos",
+    "portal_movimientos_resumen"
+   ]
+  },
+  "identidades": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "canal_de_chat",
+    "carga_panel",
+    "chat_de_usuario",
+    "usuario_de_canal"
+   ]
+  },
+  "intenciones": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "intencion_detectar",
+    "intencion_resolver"
+   ]
+  },
+  "metricas_resultado": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "recomendacion_marcar_cierre",
+    "recomendaciones_medir"
+   ]
+  },
+  "modulos": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "router_h_comandos",
+    "teclado_intake",
+    "teclado_modulos"
+   ]
+  },
+  "mov_visibles": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "alias_pendientes",
+    "carga_hay_con_que",
+    "consulta_iniciar",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "informe_base_bloque",
+    "ingesta_resumen_sesion",
+    "intencion_agregados",
+    "intencion_resolver",
+    "mercado_compras_bienvenida",
+    "recomendacion_metrica_valor",
+    "recomendacion_objeto_evaluable",
+    "recomendaciones_medir",
+    "recomendaciones_negocio",
+    "salud_negocio",
+    "snapshot_tomar"
+   ]
+  },
+  "movimientos": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "alias_pendientes",
+    "carga_panel",
+    "carga_resumen",
+    "cartera_facturar_dian",
+    "consulta_iniciar",
+    "informe_base_bloque",
+    "informes_periodicos_disparar",
+    "ingesta_cargar_tabular",
+    "ingesta_cargar_tabular_detalle",
+    "ingesta_parsear_dian",
+    "ingesta_resumen_documento",
+    "ingesta_resumen_sesion",
+    "intencion_agregados",
+    "intencion_resolver",
+    "match_confirmar_alias",
+    "match_resolver_documento",
+    "portal_alias_confirmar",
+    "portal_documentos",
+    "portal_movimientos",
+    "portal_movimientos_resumen",
+    "recomendaciones_negocio",
+    "snapshots_backfill"
+   ]
+  },
+  "negocios": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "alertas_evaluar",
+    "cartera_facturar_dian",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "informe_base_bloque",
+    "ingesta_resumen_documento",
+    "ingesta_resumen_sesion",
+    "plan_desde",
+    "portal_alias_confirmar",
+    "portal_cotizacion_publica",
+    "portal_negocio_guardar",
+    "router_arranque_servicio",
+    "router_h_comandos",
+    "router_plan",
+    "usuario_de_canal"
+   ]
+  },
+  "pagos": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "pago_registrar",
+    "portal_negocio_guardar"
+   ]
+  },
+  "parametros": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "parametro",
+    "snapshot_umbrales"
+   ]
+  },
+  "plantillas": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "ejecucion_cerrar",
+    "plantilla_cuerpo",
+    "plantilla_cuerpo_srv",
+    "resolver_plantilla",
+    "router_marcar_editables"
+   ]
+  },
+  "portal_tokens": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "portal_sesion_abrir",
+    "portal_token_crear"
+   ]
+  },
+  "productos": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "alias_pendientes",
+    "contexto_negocio_recuperar",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "informe_render",
+    "ingesta_resumen_documento",
+    "intencion_agregados",
+    "intencion_resolver",
+    "match_resolver_documento",
+    "match_resolver_producto",
+    "mercado_compras_bienvenida",
+    "pedido_sugerido",
+    "perfil_negocio",
+    "portal_alias_confirmar",
+    "portal_conteo_guardar",
+    "portal_conteos",
+    "portal_movimientos",
+    "portal_movimientos_resumen",
+    "portal_productos",
+    "portal_snapshots",
+    "recomendaciones_negocio",
+    "salud_negocio",
+    "snapshot_tomar",
+    "snapshots_backfill",
+    "validar_cifras"
+   ]
+  },
+  "prompts": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "ejecucion_preparar"
+   ]
+  },
+  "recomendaciones": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "alertas_evaluar",
+    "contexto_negocio_recuperar",
+    "ejecucion_cerrar",
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "informe_estructura_seca",
+    "pedido_sugerido",
+    "perfil_negocio",
+    "portal_recomendaciones",
+    "recomendacion_accion",
+    "recomendacion_marcar_cierre",
+    "recomendaciones_medir",
+    "recomendaciones_registrar",
+    "recomendaciones_vigentes",
+    "router_h_comandos",
+    "snapshot_tomar",
+    "teclado_recomendacion",
+    "teclado_recomendaciones"
+   ]
+  },
+  "servicios": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "ejecucion_cerrar",
+    "ejecucion_preparar",
+    "informe_render",
+    "informes_periodicos_disparar",
+    "portal_informe",
+    "portal_informes",
+    "router_arranque_servicio",
+    "router_ctx",
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_recibiendo",
+    "router_h_sin_sesion",
+    "snapshots_backfill",
+    "teclado_modulo"
+   ]
+  },
+  "sesiones": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "carga_arrancar",
+    "carga_evaluar",
+    "carga_hay_con_que",
+    "carga_panel",
+    "carga_panel_registrar",
+    "carga_registrar_fallo",
+    "carga_resumen",
+    "consulta_iniciar",
+    "ejecucion_cerrar",
+    "ejecucion_preparar",
+    "informes_periodicos_disparar",
+    "ingesta_resumen_sesion",
+    "mantenimiento_ciclo",
+    "router_h_comandos",
+    "router_h_intake",
+    "router_h_recibiendo",
+    "router_h_sin_sesion",
+    "router_procesar_mensaje",
+    "usuario_de_canal"
+   ]
+  },
+  "sinonimos_columna": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "ingesta_resolver_columnas"
+   ]
+  },
+  "snapshots_negocio": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "portal_snapshots",
+    "recomendaciones_negocio",
+    "snapshot_anterior",
+    "snapshot_tomar",
+    "snapshots_backfill"
+   ]
+  },
+  "terceros": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "portal_cartera",
+    "portal_factura_guardar",
+    "recomendacion_objeto_evaluable",
+    "recomendaciones_negocio",
+    "tercero_obtener"
+   ]
+  },
+  "tipos_negocio": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "router_h_comandos",
+    "teclado_tipos_negocio"
+   ]
+  },
+  "usuarios": {
+   "kind": "table",
+   "referenced_by_functions": [
+    "carga_panel",
+    "chat_de_usuario",
+    "mantenimiento_ciclo",
+    "portal_sesion_abrir",
+    "router_ctx",
+    "router_h_comandos",
+    "usuario_de_canal"
+   ]
+  },
+  "v_balance_unidades": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "intencion_agregados",
+    "portal_productos",
+    "recomendacion_metrica_valor",
+    "recomendaciones_negocio",
+    "snapshot_tomar"
+   ]
+  },
+  "v_calidad_matching": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "portal_alias_pendientes",
+    "snapshot_tomar"
+   ]
+  },
+  "v_cartera_edades": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "portal_cartera"
+   ]
+  },
+  "v_cartera_tercero": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "portal_cartera",
+    "recomendaciones_negocio"
+   ]
+  },
+  "v_conocimiento_faltante": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "conocimiento_guardar",
+    "portal_pendientes"
+   ]
+  },
+  "v_consumo_negocio": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "admin_reporte",
+    "ejecucion_preparar",
+    "router_plan"
+   ]
+  },
+  "v_deriva_costo": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "hallazgos_compras",
+    "hallazgos_generar",
+    "intencion_agregados",
+    "recomendaciones_negocio",
+    "salud_negocio",
+    "snapshot_tomar"
+   ]
+  },
+  "v_ejecuciones_fallidas": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "admin_reporte"
+   ]
+  },
+  "v_embudo_servicios": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "admin_reporte"
+   ]
+  },
+  "v_margen_producto": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "hallazgos_generar",
+    "intencion_agregados",
+    "recomendacion_metrica_valor",
+    "recomendaciones_negocio",
+    "salud_negocio",
+    "snapshot_tomar"
+   ]
+  },
+  "v_negocios_alertables": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "alertas_evaluar"
+   ]
+  },
+  "v_negocios_informe_periodico": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "informes_periodicos_disparar"
+   ]
+  },
+  "v_pareto_utilidad": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "hallazgos_generar",
+    "intencion_agregados",
+    "snapshot_tomar"
+   ]
+  },
+  "v_perfil_negocio": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "perfil_negocio"
+   ]
+  },
+  "v_proveedor_mas_barato": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "pedido_sugerido"
+   ]
+  },
+  "v_rotacion_producto": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "hallazgos_generar",
+    "intencion_agregados",
+    "recomendacion_metrica_valor",
+    "recomendaciones_negocio",
+    "salud_negocio",
+    "snapshot_tomar"
+   ]
+  },
+  "v_salud_ingesta": {
+   "kind": "view",
+   "referenced_by_functions": [
+    "admin_reporte"
+   ]
+  }
+ },
+ "workflows_to_functions": {
+  "wf_cron": [
+   "mantenimiento_ciclo"
+  ],
+  "wf_ejecutar": [
+   "canal_de_chat",
+   "ejecucion_cerrar",
+   "ejecucion_preparar",
+   "informe_estructura_seca",
+   "informe_render",
+   "validar_cifras"
+  ],
+  "wf_enviar": [
+   "canal_de_chat",
+   "carga_panel",
+   "carga_panel_registrar",
+   "resolver_plantilla",
+   "wa_payload",
+   "wa_texto"
+  ],
+  "wf_ingesta": [
+   "carga_evaluar",
+   "carga_registrar_fallo",
+   "ingesta_cargar_tabular",
+   "ingesta_identificar_tabular",
+   "ingesta_procesar_documento",
+   "ingesta_registrar_documento",
+   "ingesta_registrar_formato_inferido",
+   "ingesta_resumen_documento",
+   "match_resolver_documento"
+  ],
+  "wf_router": [
+   "router_marcar_editables",
+   "router_procesar_mensaje"
+  ],
+  "wf_wa_router": [
+   "router_procesar_mensaje"
+  ]
+ }
+}

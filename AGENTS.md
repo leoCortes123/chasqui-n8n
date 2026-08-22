@@ -1,7 +1,7 @@
 # AGENTS.md — Chasqui
 
 Contrato para cualquier agente de código que trabaje en este repositorio.
-Es normativo y corto. El conocimiento detallado vive en `decisiones/` y en `docs/`,
+Es normativo y corto. El conocimiento detallado vive en `decisiones/` y en `agent-context/`,
 no aquí.
 
 ## Qué es Chasqui
@@ -89,6 +89,9 @@ Dos servidores MCP, registrados en `.mcp.json`, deliberadamente separados:
 Sin cliente MCP, lo mismo se consulta a mano: `decisiones/INDICE.md`,
 `db/actual/INDICE.md` y `bash bin/impacto.sh <función>`.
 
+Para agentes: mapas por dominio, invariantes con evidencia, contratos entre
+componentes y navegación por tarea viven en `agent-context/README.md`.
+
 ## Comandos oficiales
 
 ```bash
@@ -103,6 +106,7 @@ bash bin/impacto.sh <función>        # quién la llama y a quién llama
 bash bin/verificar.sh                # invariantes estructurales del repo
 bash bin/verificar.sh --rapido       # sin los bancos SQL
 bash bin/limpiar_negocio.sh          # borrar los datos de una prueba y empezar de cero
+bash bin/pedidos.sh                  # qué cambios están en curso y qué les falta
 ```
 
 ## Limpiar entre pruebas
@@ -125,7 +129,8 @@ mitad, dejan un estado que después hay que adivinar.
 | `db/base/` | **Chasqui v0**: esquema completo + el contenido del sistema. Se aplica solo, una vez, sobre una base vacía |
 | `db/migraciones/` | los cambios **desde** v0. Arranca en la `074` |
 | `db/actual/` | la foto del estado vigente. Generada, para leer |
-| `docs/historico/migraciones/` | las 73 que construyeron v0. No se aplican y no gobiernan |
+| `pedidos/` | los cambios en curso. Un cambio empieza acá (`PROCESO-001`) |
+| `agent-context/history/migraciones/` | las 73 que construyeron v0. No se aplican y no gobiernan |
 
 `bin/migrar.sh` hace las dos cosas: instala `db/base/` si la base está vacía y
 después aplica lo pendiente.
@@ -172,19 +177,24 @@ afectados (`implementada_en`, `afecta`).
 
 ## Lo que NO gobierna
 
-`docs/historico/` conserva la auditoría de agosto de 2026, el roadmap ya
-ejecutado (A1..F2, migraciones 053-069), los planes superados y los artefactos
-del prototipo de julio.
+`agent-context/history/` es el capítulo de la documentación que responde **por
+qué** algo quedó como quedó: las 73 migraciones selladas, las auditorías de
+agosto de 2026, los planes ya ejecutados (A1..F2, migraciones 053-069) y el
+prototipo de julio.
 
-**Nada de ahí gobierna nada.** No se cita como justificación, no se toma como
-estado actual y no se lee al explorar. Se consulta sólo en un caso explícito:
-cuando hay que reconstruir **por qué** algo quedó como quedó y la cabecera de la
-migración no alcanza. Si contradice a `db/actual/`, `decisiones/` o este archivo,
-manda cualquiera de esos tres y el histórico está simplemente viejo.
+**Nada de ahí gobierna nada.** No se cita como justificación y no se toma como
+estado actual. Se abre en un caso: reconstruir un razonamiento cuando la cabecera
+de la migración y `git log` no alcanzan. Si contradice a `db/actual/`,
+`decisiones/` o este archivo, manda cualquiera de esos tres y el capítulo es
+simplemente lo que se pensaba entonces.
 
-Lo mismo vale para `docs/GUIA_TECNICA.md` y `docs/GUIA_FUNCIONAL.md`: son prosa
-descriptiva, útiles para entender el diseño, pero si discrepan de `db/actual/`
-manda `db/actual/` — uno envejece, el otro es la base.
+`agent-context/` es **la** documentación descriptiva del proyecto —no hay una
+segunda: `docs/` dejó de existir el 2026-08-22 (`DOCS-001`)—. Describe, no
+gobierna: si discrepa de `decisiones/` o de `db/actual/`, mandan ellos y la capa
+está vieja. Eso vale en particular para la prosa larga que absorbió,
+`agent-context/operations/guia-tecnica.md` y
+`agent-context/product/guia-funcional.md`: útiles para entender el diseño, pero
+uno envejece y el otro es la base.
 
 ## Configuración real del entorno
 
@@ -223,9 +233,11 @@ No se empieza leyendo el repositorio entero.
 | 4 | dependencias e impacto | `bash bin/impacto.sh <función>` |
 | 5 | contrastar la implementación contra los invariantes | — |
 | 6 | **reportar las contradicciones antes de proponer nada** | — |
-| 7 | proponer, ejecutar | — |
-| 8 | verificar | `bash bin/verificar.sh` |
-| 9 | registrar la decisión si cambió la arquitectura | `decisiones/`, mismo commit |
+| 7 | **escribir el pedido** y esperar aprobación | skill `/pedido` → `pedidos/NNN-slug.md` |
+| 8 | ejecutar, tildando cada tarea cuando corrió | — |
+| 9 | verificar | `bash bin/verificar.sh` |
+| 10 | registrar la decisión si cambió la arquitectura | `decisiones/`, mismo commit |
+| 11 | cerrar el pedido: `aplicado` y a `pedidos/archivo/` | — |
 
 El paso 2 va **antes** que el 3, siempre. Un agente que explora primero llega al
 paso 2 con una arquitectura ya formada en la cabeza, y entonces las decisiones
@@ -235,6 +247,25 @@ parecen: lo que el usuario quiere que pase, y la deuda que ya está ahí.
 Que `dominio_contexto` devuelva vacío **no significa que se pueda hacer
 cualquier cosa**: significa que la decisión no está escrita. Ante un cambio de
 arquitectura sin decisión que lo gobierne, la decisión se escribe primero.
+
+El paso 7 no es una formalidad: hasta que el pedido no está escrito y aprobado,
+**no se toca nada** (`PROCESO-001`). Un pedido en `propuesto` no autoriza; el
+estado es la autorización y lo cambia el humano, no el agente.
+
+## Los cambios en curso viven en `pedidos/`
+
+Un cambio empieza por un archivo, no por una conversación: `pedidos/NNN-slug.md`,
+con estado, decisiones consultadas, causa y tareas tildables. Lo escribe la skill
+`/pedido` al final del protocolo; el humano lo aprueba cambiando el estado. El
+formato y el ciclo de vida están en `pedidos/README.md`.
+
+    propuesto ──aprueba el humano──► aprobado ──aplicado y verificado──► aplicado
+        └──────────────rechaza──────────────────► descartado
+
+Lo mecánico lo comprueba `bin/verificar.sh` chequeo 10: estados válidos,
+coherencia con la carpeta, ninguna tarea sin tildar en un pedido `aplicado`, y
+**ninguna migración desde la `077` sin un pedido que la nombre**. Los abiertos
+salen solos al arrancar la sesión y con `bash bin/pedidos.sh`.
 
 ## Regla de contradicción
 

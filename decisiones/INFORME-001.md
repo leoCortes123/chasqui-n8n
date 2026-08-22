@@ -12,7 +12,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: [CORE-001, CORE-003, DATOS-001, HALLAZGOS-001]
-implementada_en: [docs/historico/migraciones/047_informe_prescriptivo.sql, docs/historico/migraciones/055_impacto_tipado.sql, docs/historico/migraciones/072_informe_declara_base.sql]
+implementada_en: [agent-context/history/migraciones/047_informe_prescriptivo.sql, agent-context/history/migraciones/055_impacto_tipado.sql, agent-context/history/migraciones/072_informe_declara_base.sql]
 afecta: [validar_cifras, informe_render, informe_estructura_seca, recomendaciones_negocio]
 procedencia: cabeceras de las migraciones 047, 055 y 072 (CAND-047/055/072), promovidas el 2026-08-19
 ---

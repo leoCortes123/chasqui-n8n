@@ -1,0 +1,76 @@
+%% Arquitectura — servicios, comunicaciones y almacenamiento.
+%% Toda arista sale de un archivo concreto; ver docs/traceability.md.
+flowchart TB
+    subgraph host["Host — docker compose (name: chasqui)"]
+        direction TB
+
+        subgraph publico["Único puerto público: proxy"]
+            CADDY["proxy · caddy:2-alpine<br/>127.0.0.1:8080 -> :80<br/>portal/Caddyfile"]
+        end
+
+        subgraph runtime["Runtime de orquestación"]
+            N8N["n8n · n8nio/n8n:2.31.5<br/>127.0.0.1:5678<br/>CONCURRENCY=5 · TIMEOUT=300 s"]
+            WFR["wf_router"]
+            WFW["wf_wa_router"]
+            WFI["wf_ingesta"]
+            WFE["wf_ejecutar"]
+            WFS["wf_enviar"]
+            WFC["wf_cron (5 min)"]
+            WFX["wf_error"]
+        end
+
+        subgraph api["API del portal"]
+            PGRST["postgrest v12.2.12<br/>rol anón: portal_anon<br/>sin GRANT sobre ninguna tabla"]
+        end
+
+        subgraph datos["Almacenamiento"]
+            DBCH[("db 'chasqui'<br/>datos + producto + archivos bytea")]
+            DBN8N[("db 'n8n'<br/>workflows, credenciales,<br/>ejecuciones fallidas 168 h")]
+            VOLN8N[["volumen n8n_data<br/>binarios de ejecución"]]
+            VOLCADDY[["volumen caddy_data"]]
+            SRV[["bind ./portal/publico como /srv"]]
+        end
+
+        subgraph local["Perfil 'local' (se apaga en nube)"]
+            CFD["cloudflared quick tunnel"]
+            REG["registrador (alpine)<br/>bin/registrar-webhook.sh"]
+        end
+    end
+
+    TG[["Telegram Bot API"]]
+    WAAPI[["Meta Graph API v23.0"]]
+    LLM[["LLM · DEEPSEEK_BASE_URL<br/>/chat/completions"]]
+
+    TG -->|"POST /webhook/telegram"| CADDY
+    WAAPI -.->|"POST /webhook/whatsapp"| CADDY
+    CADDY -->|"/webhook/*"| N8N
+    CADDY -->|"/api/* (strip_prefix)"| PGRST
+    CADDY -->|"/portal/* (handle_path)"| SRV
+
+    N8N --- WFR & WFW & WFI & WFE & WFS & WFC & WFX
+    WFR --> WFI & WFE & WFS
+    WFW -.-> WFI & WFE & WFS
+    WFI --> WFS & WFE
+    WFE --> WFS
+    WFC --> WFS & WFE
+    WFX --> WFS
+
+    WFR -->|"SELECT router_procesar_mensaje(ev)"| DBCH
+    WFI -->|"ingesta_* · match_*"| DBCH
+    WFE -->|"ejecucion_preparar / informe_render /<br/>validar_cifras / ejecucion_cerrar"| DBCH
+    WFS -->|"resolver_plantilla · carga_panel · wa_payload"| DBCH
+    WFC -->|"mantenimiento_ciclo()"| DBCH
+    WFX -->|"INSERT fallas"| DBCH
+    N8N --> DBN8N
+    N8N --- VOLN8N
+    PGRST -->|"EXECUTE portal_* (SECURITY DEFINER)"| DBCH
+
+    WFE -->|"HTTP POST · prompt + hallazgos JSON"| LLM
+    WFI -->|"HTTP POST · solo cabeceras + 5 filas"| LLM
+    WFS -->|"nodos Telegram"| TG
+    WFS -.->|"HTTP Graph API"| WAAPI
+    WFI -->|"descarga de archivo"| TG
+
+    CFD --> CADDY
+    REG -->|"setWebhook + setMyCommands"| TG
+    REG -->|"UPDATE parametros.portal_url_base"| DBCH

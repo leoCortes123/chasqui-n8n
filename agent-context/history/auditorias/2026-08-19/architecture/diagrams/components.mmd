@@ -1,0 +1,182 @@
+%% Componentes internos y dependencias.
+%% Los nombres son EXACTOS: funciones de pg_proc, vistas de pg_views,
+%% tablas de pg_class, workflows de workflow_entity.
+flowchart TB
+    subgraph canal["Canal (n8n)"]
+        WFROUTER["wf_router"]
+        WFWA["wf_wa_router"]
+        WFENVIAR["wf_enviar"]
+    end
+
+    subgraph router["Router — máquina de estados (SQL)"]
+        RPM["router_procesar_mensaje"]
+        RCTX["router_ctx"]
+        RADM["router_h_admin"]
+        RCMD["router_h_comandos"]
+        RSIN["router_h_sin_sesion"]
+        RINT["router_h_intake"]
+        RREC["router_h_recibiendo"]
+        RRESP["router_respuesta"]
+        RMARC["router_marcar_editables"]
+    end
+
+    subgraph identidad["Identidad y canal"]
+        UDC["usuario_de_canal"]
+        CDC["canal_de_chat"]
+        CDU["chat_de_usuario"]
+    end
+
+    subgraph presentacion["Presentación (SQL)"]
+        RESPLA["resolver_plantilla"]
+        TMARK["teclado_markup"]
+        TECL["teclado_intake / _modulo / _modulos /<br/>_recomendacion(es) / _tipos_negocio /<br/>_consentimiento"]
+        WATX["wa_texto"]
+        WAPL["wa_payload"]
+    end
+
+    subgraph carga["Carga / panel"]
+        CEVAL["carga_evaluar"]
+        CPANEL["carga_panel"]
+        CRES["carga_resumen"]
+        CARR["carga_arrancar"]
+        CHAY["carga_hay_con_que"]
+        CFALLO["carga_registrar_fallo"]
+        CREG["carga_panel_registrar"]
+    end
+
+    subgraph ingesta["Ingesta"]
+        WFING["wf_ingesta"]
+        IREG["ingesta_registrar_documento"]
+        IIDENT["ingesta_identificar_tabular"]
+        IHUE["ingesta_huella"]
+        ISQL["ingesta_inferir_mapeo_sql"]
+        IRESOL["ingesta_resolver_columnas"]
+        IRESUELTO["ingesta_registrar_formato_resuelto"]
+        IINFER["ingesta_registrar_formato_inferido"]
+        ICARGA["ingesta_cargar_tabular ->_detalle"]
+        IDIAN["ingesta_parsear_dian"]
+        IPROC["ingesta_procesar_documento"]
+        CARTDIAN["cartera_facturar_dian"]
+        MRESD["match_resolver_documento"]
+        MRESP["match_resolver_producto"]
+    end
+
+    subgraph analisis["Análisis"]
+        WFEJEC["wf_ejecutar"]
+        EPREP["ejecucion_preparar"]
+        ECIERRE["ejecucion_cerrar"]
+        HGEN["hallazgos_generar"]
+        HCOM["hallazgos_compras"]
+        CTXNEG["contexto_negocio_recuperar"]
+        SALUD["salud_negocio"]
+        RECN["recomendaciones_negocio"]
+        HCOMP["hallazgos_comparativo"]
+        IREND["informe_render"]
+        ISECA["informe_estructura_seca"]
+        VALC["validar_cifras"]
+    end
+
+    subgraph memoria["Memoria"]
+        STOM["snapshot_tomar"]
+        SANT["snapshot_anterior"]
+        RREG["recomendaciones_registrar"]
+        RMED["recomendaciones_medir"]
+        RACC["recomendacion_accion"]
+        CGUARD["conocimiento_guardar"]
+        CBUSC["conocimiento_buscar"]
+        CPEND["conocimiento_pendiente_registrar"]
+    end
+
+    subgraph consulta["Consulta"]
+        CINI["consulta_iniciar"]
+        IDET["intencion_detectar"]
+        IRES["intencion_resolver"]
+        IAGR["intencion_agregados"]
+        PRES["periodo_resolver"]
+        PERF["perfil_negocio"]
+    end
+
+    subgraph proactivo["Proactividad"]
+        WFCRON["wf_cron"]
+        MCICLO["mantenimiento_ciclo"]
+        AEVAL["alertas_evaluar"]
+        IPER["informes_periodicos_disparar"]
+    end
+
+    subgraph portal["Portal"]
+        PGRSTC["PostgREST"]
+        PSES["portal_sesion_abrir"]
+        PCLAIM["portal_claim -> portal_negocio"]
+        PFUNC["27 funciones portal_* con GRANT"]
+        PTOK["portal_token_crear"]
+    end
+
+    subgraph vistas["Vistas de lectura"]
+        MOVV["mov_visibles"]
+        VMARG["v_margen_producto"]
+        VROT["v_rotacion_producto"]
+        VBAL["v_balance_unidades"]
+        VDER["v_deriva_costo"]
+        VPAR["v_pareto_utilidad"]
+        VCAL["v_calidad_matching"]
+        VCONS["v_consumo_negocio"]
+        VALERT["v_negocios_alertables"]
+        VPERIOD["v_negocios_informe_periodico"]
+    end
+
+    WFROUTER --> RPM
+    WFWA --> RPM
+    WFROUTER --> RMARC
+    RPM --> RCTX --> UDC
+    RPM --> RADM & RCMD & RSIN & RINT & RREC
+    RCMD & RSIN & RINT & RREC --> RRESP
+    RCMD --> TECL
+    RREC --> CEVAL & CHAY
+    RSIN --> CINI
+
+    WFENVIAR --> RESPLA --> TMARK
+    WFENVIAR --> CPANEL
+    WFENVIAR --> CDC
+    WFENVIAR --> WAPL --> WATX
+    WFENVIAR --> CREG
+    CPANEL --> CRES & RESPLA & CDC
+    CEVAL --> CRES & CPANEL & CARR & CHAY
+
+    WFING --> IREG --> IPROC
+    WFING --> IIDENT --> IHUE & ISQL
+    ISQL --> IRESOL
+    IIDENT --> IRESUELTO
+    WFING --> IINFER
+    WFING --> ICARGA
+    WFING --> MRESD --> MRESP
+    WFING --> CEVAL & CFALLO
+    IPROC --> IDIAN --> CARTDIAN
+
+    WFEJEC --> EPREP --> HGEN & HCOM & CTXNEG
+    WFEJEC --> IREND & VALC & ISECA & ECIERRE
+    HGEN --> SALUD & RECN & HCOMP
+    HCOMP --> SANT & SALUD
+    CTXNEG --> PERF & CBUSC & IRES & SALUD & HCOMP
+    IRES --> IDET & IAGR & PRES
+    ECIERRE --> STOM & RREG & RMED & CDU
+    RREG --> RECN
+    CINI --> CBUSC & CPEND
+    RACC --> CGUARD
+
+    WFCRON --> MCICLO --> AEVAL & IPER
+    AEVAL --> VALERT & RECN
+    IPER --> VPERIOD
+
+    PGRSTC --> PSES & PFUNC
+    PFUNC --> PCLAIM
+    PSES --> PTOK
+
+    RECN --> MOVV & VMARG & VROT & VBAL & VDER
+    SALUD --> MOVV & VMARG & VROT & VDER
+    HGEN --> VPAR & MOVV
+    STOM --> VCAL & VPAR & VBAL
+    EPREP --> VCONS
+    VMARG --> MOVV
+    VROT --> VBAL --> MOVV
+    VDER --> MOVV
+    VPAR --> MOVV

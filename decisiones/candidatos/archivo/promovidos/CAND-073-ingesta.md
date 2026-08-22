@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/073_ingesta_sin_modelo.sql]
+implementada_en: [agent-context/history/migraciones/073_ingesta_sin_modelo.sql]
 afecta:
   - ingesta_cargar_tabular
   - ingesta_cargar_tabular_detalle
@@ -22,7 +22,7 @@ afecta:
   - ingesta_registrar_formato_resuelto
   - ingesta_resolver_columnas
   - sinonimos_columna   # ya no existe en db/actual/
-procedencia: cabecera de docs/historico/migraciones/073_ingesta_sin_modelo.sql, commit sin commit (migración aún no versionada)
+procedencia: cabecera de agent-context/history/migraciones/073_ingesta_sin_modelo.sql, commit sin commit (migración aún no versionada)
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

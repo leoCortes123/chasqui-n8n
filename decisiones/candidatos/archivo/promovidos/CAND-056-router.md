@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/056_router_modular.sql]
+implementada_en: [agent-context/history/migraciones/056_router_modular.sql]
 afecta:
   - router_ctx
   - router_h_admin
@@ -17,7 +17,7 @@ afecta:
   - router_h_recibiendo
   - router_h_sin_sesion
   - router_procesar_mensaje
-procedencia: cabecera de docs/historico/migraciones/056_router_modular.sql, commit da93a23 2026-08-15
+procedencia: cabecera de agent-context/history/migraciones/056_router_modular.sql, commit da93a23 2026-08-15
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

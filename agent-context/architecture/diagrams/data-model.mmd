@@ -1,0 +1,25 @@
+// Espejo de la sección "Dónde vive cada dato" de architecture/data-flow.md
+// y del modelo en agent-context/reference/modelo-de-datos.md. Entidades y relaciones principales.
+erDiagram
+    negocios ||--o{ usuarios : "usuario_de_canal crea ambos"
+    usuarios ||--o{ identidades : "una por canal"
+    usuarios ||--o{ sesiones : abre
+    sesiones ||--o{ documentos : recibe
+    documentos ||--o{ movimientos : "parseo (ingesta_*)"
+    movimientos }o--|| productos : "match_resolver_documento"
+    productos ||--o{ alias : "texto normalizado"
+    terceros ||--o{ facturas : "cartera_facturar_dian"
+    facturas ||--o{ pagos : "pago_registrar"
+    productos ||--o{ conteos_inventario : "portal_conteo_guardar"
+    sesiones ||--o{ ejecuciones : "carga_arrancar / consulta_iniciar"
+    ejecuciones ||--|| snapshots_negocio : "ejecucion_cerrar → snapshot_tomar (1/día)"
+    ejecuciones ||--o{ recomendaciones : "recomendaciones_registrar"
+    recomendaciones ||--o{ metricas_resultado : "medición por regla (sin FK)"
+    negocios ||--o{ conocimiento : "/saber · portal"
+    usuarios ||--o{ portal_tokens : "portal_token_crear (hash sha256)"
+    servicios ||--o{ prompts : "uq_prompt_activo: 1 activo"
+    servicios {
+        text codigo PK
+        text funcion_hallazgos "despacho dinámico EXECUTE"
+        text entrada "archivos|texto"
+    }

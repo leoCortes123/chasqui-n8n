@@ -7,14 +7,19 @@ dicen lo mismo pero esta explica el porqué y aquella impone el contrato.
 
 ## 1. Dónde está cada cosa
 
-Chasqui tiene tres registros distintos y confundirlos es el origen de casi todos
-los errores que ha tenido este proyecto.
+Chasqui tiene cuatro registros distintos y confundirlos es el origen de casi
+todos los errores que ha tenido este proyecto.
 
 | Pregunta | Dónde se responde | Qué NO sirve para responderla |
 |---|---|---|
 | **¿Cómo debe funcionar?** | `decisiones/` · `AGENTS.md` | el código |
 | **¿Cómo está implementado hoy?** | `db/actual/` | `db/migraciones/` |
-| **¿Por qué llegó a ser así?** | cabecera de la migración · `git log` | la intuición |
+| **¿Cómo funciona, explicado?** | `agent-context/` | como fuente normativa |
+| **¿Qué se está cambiando ahora?** | `pedidos/` · `bash bin/pedidos.sh` | tu memoria de la última sesión |
+| **¿Por qué llegó a ser así?** | cabecera de la migración · `git log` · `agent-context/history/` | la intuición |
+
+Desde el 2026-08-22 no hay `docs/`: la documentación descriptiva es una sola capa,
+`agent-context/`, y lo superado está en `agent-context/history/` (`DOCS-001`).
 
 La razón de la segunda fila, medida: las 73 migraciones que construyeron Chasqui
 eran acumulativas y una función se redefinía muchas veces.
@@ -25,7 +30,7 @@ que ya no existe. Eso costó un fix perdido: el `periodo` de
 borró sin mencionarlo.
 
 **Desde el 2026-08-18 eso está resuelto de raíz.** Las 73 se congelaron en
-`db/base/` (Chasqui v0) y se archivaron en `docs/historico/migraciones/`.
+`db/base/` (Chasqui v0) y se archivaron en `agent-context/history/migraciones/`.
 `db/migraciones/` arranca de nuevo en la `074` y sólo contiene cambios sobre v0.
 
 ---
@@ -43,7 +48,7 @@ db/actual/
   funciones/  160 archivos, uno por función
   vistas/      22
   tablas/      34
-  contenido/   12 tablas, 202 filas: textos, botones, umbrales, prompts
+  contenido/   12 tablas, 203 filas: textos, botones, umbrales, prompts
 ```
 
 ### Cómo consultarla
@@ -88,13 +93,14 @@ siguiente regeneración y `bin/verificar.sh` la detecta.
 |---|---|
 | `db/actual/INDICE.md` | la fotografía: qué existe **hoy** |
 | `AGENTS.md` | el contrato: restricciones R-I..R-IV, congelados, configuración real, prohibiciones |
-| `docs/GUIA_TECNICA.md` | cómo está construido y por qué (tesis, stack, los 7 workflows, operación) |
-| `docs/GUIA_FUNCIONAL.md` | qué ve el usuario final |
-| `decisiones/INDICE.md` | qué gobierna hoy: 18 decisiones vigentes por dominio |
-| `docs/TELEGRAM_UX.md` | decisiones de interfaz, incluidas las descartadas |
-| `docs/historico/` | **no gobierna nada**: auditoría de agosto, roadmap ejecutado, prototipo de julio. Sólo para reconstruir un porqué |
+| `agent-context/operations/guia-tecnica.md` | cómo está construido y por qué (tesis, stack, los 7 workflows, operación) |
+| `agent-context/product/guia-funcional.md` | qué ve el usuario final |
+| `decisiones/INDICE.md` | qué gobierna hoy: 20 decisiones vigentes por dominio |
+| `agent-context/product/telegram-ux.md` | decisiones de interfaz, incluidas las descartadas |
+| `agent-context/history/` | el porqué: migraciones selladas, auditorías, planes ejecutados. Parte de la documentación; **no gobierna** |
 
-Si `GUIA_TECNICA.md` y `db/actual/` se contradicen, **manda `db/actual/`**: uno
+Si `agent-context/operations/guia-tecnica.md` y `db/actual/` se contradicen,
+**manda `db/actual/`**: uno
 es prosa que puede envejecer, el otro es la base. Ya pasó: el ROADMAP viejo
 afirmaba que el LLM apuntaba a `opencode.ai/zen/v1` con modelo `hy3-free`, y la
 realidad era otro proveedor y otro modelo. Por eso la configuración real vive
@@ -118,6 +124,25 @@ Cuatro preguntas, en este orden. Si las respondes tú, el agente no las inventa.
 ---
 
 ## 4. Cómo se pide cada tipo de cambio
+
+**Todo cambio se pide igual: se lo describes al agente en lenguaje natural y él
+invoca la skill `/pedido`.** Tú no editas el repositorio a mano —ni el pedido, ni
+una migración, ni una decisión (`PROCESO-001`)—. La razón no es ceremonia: quien
+escribe el pedido tiene que haber consultado `decisiones/` *antes* de mirar el
+código, y ese orden es lo único que impide que el cambio se acomode al síntoma.
+
+Lo que hace la skill, en orden:
+
+1. Clasifica: **defecto**, **cambio de contenido** o **cambio de decisión**.
+2. Te exige la evidencia que corresponde a esa clase (§4.1–4.4).
+3. Lee el código vigente y el impacto.
+4. Te reporta las contradicciones **antes** de proponer.
+5. Escribe `pedidos/NNN-slug.md` en estado `propuesto` y te pregunta.
+
+Un pedido `propuesto` no autoriza nada. **Tu aprobación es lo que lo mueve a
+`aprobado`**, y recién ahí el agente toca algo. Lo que sigue en esta sección es
+qué evidencia hace falta según el tipo de cambio, que es la parte que sólo puedes
+aportar tú.
 
 ### 4.1 Función nueva o capacidad nueva
 
@@ -216,9 +241,15 @@ Corregir deuda es una tarea que tú priorizas, no un efecto secundario de otra.
 ```bash
 bash bin/migrar.sh          # aplica lo pendiente
 bash bin/gen_estado_sql.sh  # actualiza la fotografía
-bash bin/verificar.sh       # el juez: 6 chequeos, sin LLM
+bash bin/verificar.sh       # el juez: 10 chequeos, sin LLM
 git diff db/actual/         # ← la revisión que de verdad importa
 ```
+
+Y el cierre del pedido, que es parte del cambio y no un trámite posterior: con
+todas las tareas tildadas y `verificar.sh` en verde, el agente lo pasa a
+`aplicado`, le pone fecha de cierre y lo mueve a `pedidos/archivo/`. Un pedido
+`aplicado` con una casilla sin tildar es una violación del chequeo 10, no un
+detalle: significa que algo se dio por hecho sin haberse hecho.
 
 Ese último diff es el que hay que mirar. Muestra qué quedó en el sistema, no qué
 escribiste. Es lo que habría atrapado el fix perdido entre la 046 y la 051.
@@ -243,9 +274,13 @@ Verificación: bin/verificar.sh sin violaciones; 6 bancos verdes
 6. Decisiones coherentes: referencias resueltas, `supersede` sin ciclos, sin
    invariantes duplicados en un dominio, `INDICE.md` al día.
 7. Los bancos de `db/pruebas/` pasan.
+8. El baseline no trae entorno ni datos de un cliente.
+9. Ninguna sobrecarga de función deja una llamada ambigua.
+10. Pedidos coherentes: estados válidos, ninguna tarea sin tildar en un pedido
+    `aplicado`, y ninguna migración desde la `077` sin un pedido que la nombre.
 
-`bash bin/verificar.sh --rapido` omite el 6 cuando quieres una respuesta
-inmediata.
+`bash bin/verificar.sh --rapido` omite el 7 (los bancos SQL) cuando quieres una
+respuesta inmediata.
 
 ---
 
@@ -261,20 +296,9 @@ inmediata.
 
 ---
 
-## 9. Estado de la arquitectura
+## 9. Qué falta
 
-Construido y funcionando:
-
-- `AGENTS.md` — el contrato, leído por Claude Code, Codex, Cursor y otros.
-- `db/actual/` + `bin/gen_estado_sql.sh` — la fotografía, regenerable.
-- `bin/verificar.sh` — los invariantes, sin LLM.
-- `decisiones/` — la estructura y el esquema; `deuda.md` con D-001 a D-004.
-
-Falta, y hasta entonces los pasos 2 y 3 de la sección 3 se hacen con `grep`:
-
-| Fase | Qué habilita |
-|---|---|
-| 4-5 | grafo de llamadas real: *"si cambio esto, qué se rompe"* |
-| 6-7 | las decisiones pobladas: candidatos extraídos de 73 migraciones y 38 transcripts, promovidos a mano |
-| 8 | `dominio_contexto()`: el paso 2 en una sola consulta |
-| 10 | hooks: contrato inyectado al arrancar, verificación al cerrar |
+`ROADMAP.md` — corto a propósito, con lo abierto y la deuda que pesa. La
+arquitectura de conocimiento (contrato, fotografía regenerable, verificador,
+decisiones, MCP, hooks y pedidos) está construida y en uso; lo que entra de acá
+en adelante entra por un pedido.

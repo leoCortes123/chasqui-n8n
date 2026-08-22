@@ -85,32 +85,82 @@ pedido no puede responder R-IV, decirlo:
 > ¿Esta pieza hace que Chasqui entienda mejor el negocio, recomiende algo mejor
 > o permita ejecutar una decisión?
 
-## Paso 5 — Emitir la solicitud
+## Paso 5 — Escribir el pedido
 
-Salida en este formato, para que el usuario la apruebe:
+La solicitud **no se emite en el chat: se escribe en `pedidos/`**. Un pedido que
+sólo existe en la conversación muere con la sesión, y con él la clasificación,
+las decisiones citadas y la causa. Ver `pedidos/README.md`.
 
-```
-PEDIDO
-  Dominio:        <dominio>
-  Clasificación:  defecto | cambio de contenido | cambio de decisión
-  Decisiones:     <IDs consultados> — <invariante textual que aplica>
-  Evidencia:      <corrida, qué se esperaba, qué se vio>
-  Causa:          <ruta:línea> — <mecanismo>, o "sin confirmar: <cómo se confirma>"
-  Cambio:         <qué se toca exactamente>
-  Migración:      <NNN>_<nombre_en_snake_case>.sql
-  Decisión nueva: no | <ID> (supersede a <ID>, motivo)
-  Regenerar:      bin/gen_estado_sql.sh | python3 bin/gen_wf_<x>.py + bin/importar-workflows.sh | ninguno
-  Verificar:      bash bin/verificar.sh · bash bin/pruebas.sh · <banco puntual>
-  R-IV:           <justificación en una línea>
+El número es el siguiente disponible:
+
+```bash
+bash bin/pedidos.sh          # última línea: "El próximo pedido es el NNN"
 ```
 
-El número de migración es el siguiente al último de `db/migraciones/`:
+Escribir `pedidos/NNN-slug.md` con este contenido exacto:
+
+```markdown
+---
+id: P-NNN
+titulo: <frase que se entiende sola>
+dominio: <dominio>
+clasificacion: defecto | contenido | decision | proceso
+estado: propuesto
+decisiones: [<IDs consultados en el paso 1>]
+decision_nueva: null | <ID nuevo que supersede>
+migracion: null | <NNN>_<nombre_en_snake_case>.sql
+abierto: <YYYY-MM-DD>
+cerrado: null
+---
+
+## Evidencia
+<corrida, qué se esperaba **por qué invariante**, qué se vio>
+
+## Causa
+<ruta:línea — mecanismo>, o "sin confirmar: <cómo se confirma>"
+
+## Cambio
+<qué se toca exactamente>
+
+## Tareas
+- [ ] <cada paso ejecutable>
+- [ ] regenerar: bin/gen_estado_sql.sh | python3 bin/gen_wf_<x>.py + bin/importar-workflows.sh | ninguno
+- [ ] bash bin/verificar.sh
+- [ ] <banco puntual de db/pruebas/>
+
+## R-IV
+<justificación en una línea>
+```
+
+El número de la migración es el siguiente al último de `db/migraciones/`:
 
 ```bash
 ls db/migraciones/ | sort | tail -1
 ```
 
-Cerrar preguntando si se ejecuta. **No ejecutar sin esa respuesta.**
+Escrito el archivo, resumir en el chat en cinco líneas —clasificación, decisión
+que aplica, causa, cambio, migración— y **preguntar si se aprueba. No ejecutar
+sin esa respuesta.** Escribir el pedido no es ejecutarlo: `estado: propuesto`
+significa que nadie autorizó nada.
+
+## Paso 6 — Después de la aprobación
+
+Sólo cuando el humano aprueba:
+
+1. `estado: aprobado` en el pedido. Recién ahí se toca código o base.
+2. Se ejecuta tildando cada tarea **cuando corrió**, no antes. Una casilla
+   tildada es una afirmación sobre lo que pasó.
+3. Si el pedido lleva `decision_nueva`, la decisión se escribe **antes** del
+   código y va en el mismo commit (`AGENTS.md` §creación de decisiones).
+4. Con todo tildado y `bin/verificar.sh` sin violaciones: `estado: aplicado`,
+   `cerrado: <fecha>`, y el archivo se mueve a `pedidos/archivo/`.
+5. Si el humano lo rechaza: `estado: descartado`, el motivo escrito en el cuerpo,
+   y también a `pedidos/archivo/`. **No se borra**: existe para que nadie
+   reproponga lo mismo en tres meses.
+
+`bin/verificar.sh` chequeo 10 comprueba lo mecánico de todo esto: estados
+válidos, coherencia con la carpeta, ninguna tarea sin tildar en un pedido
+`aplicado`, y ninguna migración desde la `077` sin un pedido que la nombre.
 
 ## Reglas que la skill no puede violar
 
@@ -122,6 +172,8 @@ De `AGENTS.md` y `decisiones/`:
 - Nunca editar lo generado: `db/actual/`, `db/base/`, `workflows/wf_*.json`.
 - Nunca `docker compose down`. Solo `up -d`.
 - Deuda descubierta de paso se registra en `decisiones/deuda.md`, no se corrige.
+- Nunca ejecutar un pedido en `propuesto`: el estado es la autorización.
+- Nunca tildar una tarea que no corrió.
 - Una migración que agrega o quita un parámetro borra la firma que reemplaza
   (`MIGRACION-001`); una que cambia un estado del router reemplaza solo ese
   handler (`ROUTER-001`); una que toca una función RPC termina en `NOTIFY pgrst`

@@ -8,13 +8,13 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/023_teclados.sql]
+implementada_en: [agent-context/history/migraciones/023_teclados.sql]
 afecta:
   - esc_html
   - resolver_plantilla
   - teclado_markup
   - teclado_servicios   # ya no existe en db/actual/
-procedencia: cabecera de docs/historico/migraciones/023_teclados.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/023_teclados.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

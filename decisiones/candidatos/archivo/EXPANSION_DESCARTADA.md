@@ -20,9 +20,9 @@ Retomarlas exige una decisión nueva que superseda a `CORE-004` para esa pieza.
 
 | migración | de qué trata |
 |---|---|
-| [`035_portal_movimientos.sql`](../../docs/historico/migraciones/035_portal_movimientos.sql) | facturación en el portal — pieza de expansión ERP |
-| [`036_cartera.sql`](../../docs/historico/migraciones/036_cartera.sql) | cartera completa — reconvertida en 069, la versión ERP se descarta |
-| [`037_portal_cartera.sql`](../../docs/historico/migraciones/037_portal_cartera.sql) | cartera en el portal — ídem |
-| [`038_portal_nit.sql`](../../docs/historico/migraciones/038_portal_nit.sql) | captura de NIT — sólo sirve a facturación |
-| [`040_cotizador.sql`](../../docs/historico/migraciones/040_cotizador.sql) | cotizador — congelado en CORE-004 |
-| [`041_cobro.sql`](../../docs/historico/migraciones/041_cobro.sql) | cobro Wompi — congelado en CORE-004 |
+| [`035_portal_movimientos.sql`](../../agent-context/history/migraciones/035_portal_movimientos.sql) | facturación en el portal — pieza de expansión ERP |
+| [`036_cartera.sql`](../../agent-context/history/migraciones/036_cartera.sql) | cartera completa — reconvertida en 069, la versión ERP se descarta |
+| [`037_portal_cartera.sql`](../../agent-context/history/migraciones/037_portal_cartera.sql) | cartera en el portal — ídem |
+| [`038_portal_nit.sql`](../../agent-context/history/migraciones/038_portal_nit.sql) | captura de NIT — sólo sirve a facturación |
+| [`040_cotizador.sql`](../../agent-context/history/migraciones/040_cotizador.sql) | cotizador — congelado en CORE-004 |
+| [`041_cobro.sql`](../../agent-context/history/migraciones/041_cobro.sql) | cobro Wompi — congelado en CORE-004 |

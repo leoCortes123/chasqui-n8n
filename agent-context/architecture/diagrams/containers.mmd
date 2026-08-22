@@ -1,0 +1,20 @@
+// Espejo de architecture/containers.md. Si difieren, manda el .md.
+flowchart TB
+    subgraph internet["Único hostname público"]
+        CADDY["Caddy (proxy)"]
+    end
+    subgraph docker["docker compose"]
+        N8N["n8n<br/>base n8n"]
+        PGRST["PostgREST"]
+        PG[("PostgreSQL 16<br/>base chasqui")]
+        CF["cloudflared (perfil local)"]
+        REG["registrador (perfil local)"]
+    end
+    CADDY -->|" /webhook/* "| N8N
+    CADDY -->|" /api/* "| PGRST
+    CADDY -->|" /portal/* "| HTML["portal/publico estático"]
+    N8N -->|"rol chasqui"| PG
+    PGRST -->|"authenticator → portal_*"| PG
+    CF --- CADDY
+    REG -->|"setWebhook + portal_url_base"| PG
+    REG --> TG["Telegram API"]

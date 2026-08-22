@@ -1,6 +1,6 @@
 ---
 name: ejemplos-en-docs-ejemplos
-description: "Todo archivo de ejemplo/fixture de prueba va en docs/ejemplos/, nunca repartido en varias carpetas"
+description: "Todo archivo de ejemplo/fixture de prueba va en ejemplos/, nunca repartido en varias carpetas"
 metadata: 
   node_type: memory
   type: feedback
@@ -8,8 +8,8 @@ metadata:
   modified: 2026-07-26T15:44:53.966Z
 ---
 
-Todos los archivos de ejemplo y fixtures de prueba (CSV de ventas, XML DIAN, XLSX) viven en `docs/ejemplos/`. La carpeta `db/fixtures/` se eliminó (2026-07-26) y su contenido se movió ahí.
+Todos los archivos de ejemplo y fixtures de prueba (CSV de ventas, XML DIAN, XLSX) viven en `ejemplos/`. La carpeta `db/fixtures/` se eliminó (2026-07-26) y su contenido se movió ahí.
 
-**Why:** El usuario se molestó al encontrar ejemplos repartidos entre `db/fixtures/` y `docs/ejemplos/`: quiere una sola carpeta para todos los ejemplos.
+**Why:** El usuario se molestó al encontrar ejemplos repartidos entre `db/fixtures/` y `ejemplos/`: quiere una sola carpeta para todos los ejemplos.
 
-**How to apply:** Cualquier archivo de prueba nuevo (incluida la salida de `bin/gen_ventas_demo.py`, que ya escribe ahí por defecto) va a `docs/ejemplos/`; no crear carpetas nuevas de fixtures.
+**How to apply:** Cualquier archivo de prueba nuevo (incluida la salida de `bin/gen_ventas_demo.py`, que ya escribe ahí por defecto) va a `ejemplos/`; no crear carpetas nuevas de fixtures.

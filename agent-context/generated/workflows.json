@@ -1,0 +1,728 @@
+{
+ "_": "Generado por bin/gen_agent_context.py. Los JSON son generados por los gen_wf_*.py (fuente real); active=false en el repo, el estado vivo vive en la base n8n. sql_functions_called sale de regex sobre los parametros de los nodos: informativo, no exhaustivo.",
+ "workflows": [
+  {
+   "name": "wf_cron",
+   "file": "workflows/wf_cron.json",
+   "generator": "bin/gen_wf_cron.py",
+   "active_in_repo": false,
+   "error_workflow": "wfError0000000000001",
+   "node_count": 6,
+   "nodes": [
+    {
+     "name": "Cada5min",
+     "type": "n8n-nodes-base.scheduleTrigger"
+    },
+    {
+     "name": "Mantenimiento",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Fanout",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Avisar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "FanoutEjec",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Analizar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    }
+   ],
+   "calls_subworkflows": [
+    "wfEjecutar000000001",
+    "wfEnviar00000000001"
+   ],
+   "sql_functions_called": [
+    "mantenimiento_ciclo"
+   ]
+  },
+  {
+   "name": "wf_ejecutar",
+   "file": "workflows/wf_ejecutar.json",
+   "generator": "bin/gen_wf_ejecutar.py",
+   "active_in_repo": false,
+   "error_workflow": "wfError0000000000001",
+   "node_count": 29,
+   "nodes": [
+    {
+     "name": "Inicio",
+     "type": "n8n-nodes-base.executeWorkflowTrigger"
+    },
+    {
+     "name": "CanalChat",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "EsTelegram?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "Escribiendo",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "Preparar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Bloqueado?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "RespBloqueo",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "ArmarLLM",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "DeepSeek1",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "Extraer1",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Render1",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Validar1",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Cifras1ok?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "TextoOK",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "ArmarLLM2",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "DeepSeek2",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "Extraer2",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Render2",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Validar2",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Cifras2ok?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "TextoOK2",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "SecaSQL",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "EstructuraSeca",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "RenderSeco",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "TextoSeco",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Consolidar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Cerrar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "RespFinal",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "EntregarInforme",
+     "type": "n8n-nodes-base.executeWorkflow"
+    }
+   ],
+   "calls_subworkflows": [
+    "wfEnviar00000000001"
+   ],
+   "sql_functions_called": [
+    "canal_de_chat",
+    "ejecucion_cerrar",
+    "ejecucion_preparar",
+    "informe_estructura_seca",
+    "informe_render",
+    "validar_cifras"
+   ]
+  },
+  {
+   "name": "wf_enviar",
+   "file": "workflows/wf_enviar.json",
+   "generator": "bin/gen_wf_enviar.py",
+   "active_in_repo": false,
+   "error_workflow": "wfError0000000000001",
+   "node_count": 49,
+   "nodes": [
+    {
+     "name": "Inicio",
+     "type": "n8n-nodes-base.executeWorkflowTrigger"
+    },
+    {
+     "name": "Expandir",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Resolver",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "EsWa?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "PartirWa",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "EnviarWa",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "Filas",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "EsEdicion?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "CuantasFilas",
+     "type": "n8n-nodes-base.switch"
+    },
+    {
+     "name": "CuantasFilasEd",
+     "type": "n8n-nodes-base.switch"
+    },
+    {
+     "name": "EnviarTexto0",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EnviarTexto1",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EnviarTexto2",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EnviarTexto3",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EnviarTexto4",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EnviarTexto5",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EnviarTexto6",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto0",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto1",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto2",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto3",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto4",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto5",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EditarTexto6",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "EdicionFallo?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "EsPanel?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "PanelResolver",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "PanelHay?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "PanelFilas",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "PanelEsTg?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "PanelEditar?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "PanelCuantas",
+     "type": "n8n-nodes-base.switch"
+    },
+    {
+     "name": "PanelCrear0",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelCrear1",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelCrear2",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelGuardar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "PanelFijar",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelCuantasEd",
+     "type": "n8n-nodes-base.switch"
+    },
+    {
+     "name": "PanelEditar0",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelEditar1",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelEditar2",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "PanelEdFallo?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "HayDoc?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "CanalDoc",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "PrepDoc",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "DocWa?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "EnviarDoc",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "WaSubirDoc",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "WaMandarDoc",
+     "type": "n8n-nodes-base.httpRequest"
+    }
+   ],
+   "calls_subworkflows": [],
+   "sql_functions_called": [
+    "canal_de_chat",
+    "carga_panel"
+   ]
+  },
+  {
+   "name": "wf_error",
+   "file": "workflows/wf_error.json",
+   "generator": "bin/gen_wf_error.py",
+   "active_in_repo": false,
+   "error_workflow": null,
+   "node_count": 6,
+   "nodes": [
+    {
+     "name": "Error",
+     "type": "n8n-nodes-base.errorTrigger"
+    },
+    {
+     "name": "Clasificar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Registrar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Admins",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "FanoutAdmin",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "AvisarAdmin",
+     "type": "n8n-nodes-base.executeWorkflow"
+    }
+   ],
+   "calls_subworkflows": [
+    "wfEnviar00000000001"
+   ],
+   "sql_functions_called": [
+    "jsonb_build_object"
+   ]
+  },
+  {
+   "name": "wf_ingesta",
+   "file": "workflows/wf_ingesta.json",
+   "generator": "bin/gen_wf_ingesta.py",
+   "active_in_repo": false,
+   "error_workflow": "wfError0000000000001",
+   "node_count": 34,
+   "nodes": [
+    {
+     "name": "Inicio",
+     "type": "n8n-nodes-base.executeWorkflowTrigger"
+    },
+    {
+     "name": "DeWa?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "BajarArchivo",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "WaUrlArchivo",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "WaBajarArchivo",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "Empaquetar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Registrar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Reconocido?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "RequiereTabla?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "Procesar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "RecuperarBinario",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "EsCSV?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "DetectarSeparador",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "ExtraerCSV",
+     "type": "n8n-nodes-base.extractFromFile"
+    },
+    {
+     "name": "ExtraerHoja",
+     "type": "n8n-nodes-base.extractFromFile"
+    },
+    {
+     "name": "AgruparFilas",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Identificar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Inferir?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "ArmarMapeo",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "InferirMapeo",
+     "type": "n8n-nodes-base.httpRequest"
+    },
+    {
+     "name": "LeerMapeo",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "RegistrarFormato",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "CargarTabular",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Resolver",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "AnotarNoBajado",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "AnotarNoGuardado",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Sesion",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Esperar",
+     "type": "n8n-nodes-base.wait"
+    },
+    {
+     "name": "Evaluar",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Decidir",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "PanelEnviar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "Analizar?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "ArmarEjecutar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "LlamarEjecutar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    }
+   ],
+   "calls_subworkflows": [
+    "wfEjecutar000000001",
+    "wfEnviar00000000001"
+   ],
+   "sql_functions_called": [
+    "carga_evaluar",
+    "carga_registrar_fallo",
+    "ingesta_cargar_tabular",
+    "ingesta_identificar_tabular",
+    "ingesta_procesar_documento",
+    "ingesta_registrar_documento",
+    "ingesta_registrar_formato_inferido",
+    "jsonb_array_elements_text",
+    "match_resolver_documento",
+    "to_jsonb"
+   ]
+  },
+  {
+   "name": "wf_router",
+   "file": "workflows/wf_router.json",
+   "generator": "bin/gen_wf_router.py",
+   "active_in_repo": false,
+   "error_workflow": "wfError0000000000001",
+   "node_count": 10,
+   "nodes": [
+    {
+     "name": "Webhook",
+     "type": "n8n-nodes-base.webhook"
+    },
+    {
+     "name": "Normalizar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "EsBoton?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "Responder",
+     "type": "n8n-nodes-base.telegram"
+    },
+    {
+     "name": "Router",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Despachar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Switch",
+     "type": "n8n-nodes-base.switch"
+    },
+    {
+     "name": "LlamarEnviar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "LlamarIngesta",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "LlamarEjecutar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    }
+   ],
+   "calls_subworkflows": [
+    "wfEjecutar000000001",
+    "wfEnviar00000000001",
+    "wfIngesta00000000001"
+   ],
+   "sql_functions_called": [
+    "router_marcar_editables"
+   ]
+  },
+  {
+   "name": "wf_wa_router",
+   "file": "workflows/wf_wa_router.json",
+   "generator": "bin/gen_wf_wa_router.py",
+   "active_in_repo": false,
+   "error_workflow": "wfError0000000000001",
+   "node_count": 14,
+   "nodes": [
+    {
+     "name": "WebhookGet",
+     "type": "n8n-nodes-base.webhook"
+    },
+    {
+     "name": "Verificar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "TokenOk?",
+     "type": "n8n-nodes-base.if"
+    },
+    {
+     "name": "Challenge",
+     "type": "n8n-nodes-base.respondToWebhook"
+    },
+    {
+     "name": "Rechazar",
+     "type": "n8n-nodes-base.respondToWebhook"
+    },
+    {
+     "name": "Webhook",
+     "type": "n8n-nodes-base.webhook"
+    },
+    {
+     "name": "Normalizar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Router",
+     "type": "n8n-nodes-base.postgres"
+    },
+    {
+     "name": "Despachar",
+     "type": "n8n-nodes-base.code"
+    },
+    {
+     "name": "Switch",
+     "type": "n8n-nodes-base.switch"
+    },
+    {
+     "name": "LlamarEnviar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "LlamarIngesta",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "LlamarEjecutar",
+     "type": "n8n-nodes-base.executeWorkflow"
+    },
+    {
+     "name": "EnviarInforme",
+     "type": "n8n-nodes-base.executeWorkflow"
+    }
+   ],
+   "calls_subworkflows": [
+    "wfEjecutar000000001",
+    "wfEnviar00000000001",
+    "wfIngesta00000000001"
+   ],
+   "sql_functions_called": [
+    "router_procesar_mensaje"
+   ]
+  }
+ ]
+}

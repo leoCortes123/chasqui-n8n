@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/047_informe_prescriptivo.sql]
+implementada_en: [agent-context/history/migraciones/047_informe_prescriptivo.sql]
 afecta:
   - barra_10
   - hallazgos_compras   # ya no existe en db/actual/
@@ -20,7 +20,7 @@ afecta:
   - salud_negocio
   - semaforo
   - unidades_es
-procedencia: cabecera de docs/historico/migraciones/047_informe_prescriptivo.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/047_informe_prescriptivo.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

@@ -5,18 +5,18 @@
 .env.local
 respaldos/
 bin/gen_ventas_demo.py
-docs/ejemplos/ventas_demo_*.csv
+ejemplos/ventas_demo_*.csv
 __pycache__/
-docs/historico/prototipo/credenciales-*.json
+agent-context/history/prototipo/credenciales-*.json
 *.dump
 .fuse_hidden*
 
 # Datos de prueba generados: el dataset de UCI pesa 45 MB y lo generado se
 # vuelve a producir con `bin/gen_datos_prueba.py --seed`. Los manifests sí se
 # versionan: son el contrato de los escenarios.
-docs/ejemplos/fuente/
-docs/ejemplos/generados/*/
-!docs/ejemplos/generados/manifests/
+ejemplos/fuente/
+ejemplos/generados/*/
+!ejemplos/generados/manifests/
 
 # Configuración local de Claude Code. La skill /pedido ya está versionada;
 # lo que se agregue después queda fuera salvo que se fuerce con `git add -f`.

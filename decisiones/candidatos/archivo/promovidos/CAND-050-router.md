@@ -8,10 +8,10 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/050_negocio_automatico.sql]
+implementada_en: [agent-context/history/migraciones/050_negocio_automatico.sql]
 afecta:
   - usuario_de_canal
-procedencia: cabecera de docs/historico/migraciones/050_negocio_automatico.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/050_negocio_automatico.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

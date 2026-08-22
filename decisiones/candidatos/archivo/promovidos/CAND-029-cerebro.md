@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/029_servicios_identidades_conocimiento.sql]
+implementada_en: [agent-context/history/migraciones/029_servicios_identidades_conocimiento.sql]
 afecta:
   - IF   # ya no existe en db/actual/
   - conocimiento_buscar
@@ -21,7 +21,7 @@ afecta:
   - usuario_de_telegram
   - v_conocimiento_cobertura   # ya no existe en db/actual/
   - v_conocimiento_faltante   # ya no existe en db/actual/
-procedencia: cabecera de docs/historico/migraciones/029_servicios_identidades_conocimiento.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/029_servicios_identidades_conocimiento.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.

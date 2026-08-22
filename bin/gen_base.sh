@@ -173,7 +173,7 @@ mkdir -p "$DESTINO"
 -- GENERADO por bin/gen_base.sh desde el catálogo vivo. No editar a mano.
 --
 -- Reemplaza a las 73 migraciones que lo construyeron, archivadas en
--- docs/historico/migraciones/. El porqué de cada pieza vive ahora en
+-- agent-context/history/migraciones/. El porqué de cada pieza vive ahora en
 -- decisiones/; el qué existe, en db/actual/INDICE.md.
 --
 -- Las extensiones (pgcrypto, pg_trgm, unaccent) las instala db/init/00_bases.sh

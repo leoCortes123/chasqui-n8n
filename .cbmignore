@@ -10,14 +10,14 @@ db/migraciones/
 
 # Auditoría cerrada, planes superados y el prototipo de julio. No gobiernan
 # nada y no describen el sistema actual.
-docs/historico/
+agent-context/history/
 
 # Exportaciones de n8n: fotos del estado real, no fuente. La fuente son
 # workflows/wf_*.json y sus generadores en bin/.
 workflows/fotos/
 
 # Datos, no código.
-docs/ejemplos/
+ejemplos/
 respaldos/
 portal/publico/vendor/
 

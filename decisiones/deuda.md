@@ -15,7 +15,7 @@ Nada de acá se toca sin una decisión explícita que lo ordene.
 ## D-001 · Diez migraciones sin cabecera que explique el porqué — CERRADA
 
 **Cerrada:** 2026-08-18, por el baseline. Las diez quedaron absorbidas en
-`db/base/` y archivadas en `docs/historico/migraciones/`. `bin/verificar.sh`
+`db/base/` y archivadas en `agent-context/history/migraciones/`. `bin/verificar.sh`
 dejó de tener la excepción "desde la 015": ahora la regla aplica a toda
 migración nueva, sin asteriscos.
 
@@ -67,9 +67,9 @@ haya negocios generados. Un banco que falla siempre en una base recién instalad
 ## D-005 · Dos migraciones citan una ruta que ya no existe
 
 **Fecha:** 2026-08-18
-**Evidencia:** `docs/historico/migraciones/029_servicios_identidades_conocimiento.sql:2` y
-`docs/historico/migraciones/047_informe_prescriptivo.sql:25` citan
-`docs/PLAN_PRODUCCION.md`, que se archivó en `docs/historico/`.
+**Evidencia:** `agent-context/history/migraciones/029_servicios_identidades_conocimiento.sql:2` y
+`agent-context/history/migraciones/047_informe_prescriptivo.sql:25` citan
+`docs/PLAN_PRODUCCION.md`, que se archivó en `agent-context/history/`.
 **Por qué no se corrige:** son migraciones aplicadas. Editarlas para arreglar
 una ruta en un comentario viola la inmutabilidad por una ganancia nula. La
 referencia sigue resolviendo con un `find`.
@@ -151,3 +151,16 @@ baseline y ahora dice tres valores donde la base tiene cuatro.
 pedirlo explícitamente— el desfase entre baseline y base viva existe igual para
 todo lo que las migraciones cambian. Se corrige junto con el próximo rebase, no
 antes: dos fuentes de verdad para el esquema es peor que una desactualizada.
+
+## D-011 · El baseline sellado cita una ruta que ya no existe
+
+**Fecha:** 2026-08-22
+**Evidencia:** `db/base/000_esquema.sql:6` y el encabezado que genera
+`bin/gen_base.sh:176` remiten a `docs/historico/migraciones/`. Esa ruta se movió
+dos veces el 2026-08-22 (`DOCS-001`) y hoy es
+`agent-context/history/migraciones/`. `gen_base.sh` ya quedó corregido; el
+`.sql` no.
+**Por qué no se corrige:** `db/base/` está sellado y el chequeo 3 de
+`bin/verificar.sh` trata cualquier modificación suya como violación; regenerarlo
+exige un rebase, que `BASE-001` obliga a pedir explícitamente. Es un comentario
+en prosa: no afecta a la instalación. Se corrige solo en el próximo rebase.

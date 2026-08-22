@@ -8,7 +8,7 @@ supersede: []
 superseded_by: null
 motivo_reemplazo: null
 relacionada_con: []
-implementada_en: [docs/historico/migraciones/044_whatsapp.sql]
+implementada_en: [agent-context/history/migraciones/044_whatsapp.sql]
 afecta:
   - canal_de_chat
   - chat_de_usuario
@@ -16,7 +16,7 @@ afecta:
   - usuario_de_canal
   - wa_payload
   - wa_texto
-procedencia: cabecera de docs/historico/migraciones/044_whatsapp.sql, commit 7eb606e 2026-08-14
+procedencia: cabecera de agent-context/history/migraciones/044_whatsapp.sql, commit 7eb606e 2026-08-14
 ---
 
 > **Candidato, no decisión.** Extraído automáticamente el 2026-08-18.
