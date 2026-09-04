@@ -21,3 +21,12 @@ ejemplos/generados/*/
 # Configuración local de Claude Code. La skill /pedido ya está versionada;
 # lo que se agregue después queda fuera salvo que se fuerce con `git add -f`.
 .claude/
+
+# Token Bearer del MCP de Quipu (http://localhost:8001/mcp). El secreto no se
+# versiona. opencode.json lo lee vía {file:...}; Claude Code lo toma de la
+# variable QUIPU_MCP_TOKEN (definida en .claude/settings.local.json).
+.mcp-quipu-token
+
+# Config local de opencode (otra herramienta de IA). No se versiona.
+opencode.json
+.obsidian/

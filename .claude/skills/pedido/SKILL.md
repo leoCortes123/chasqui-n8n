@@ -109,6 +109,7 @@ estado: propuesto
 decisiones: [<IDs consultados en el paso 1>]
 decision_nueva: null | <ID nuevo que supersede>
 migracion: null | <NNN>_<nombre_en_snake_case>.sql
+bloque: null | chasqui-<feature>-P-<NNN>
 abierto: <YYYY-MM-DD>
 cerrado: null
 ---
@@ -148,12 +149,19 @@ significa que nadie autorizó nada.
 Sólo cuando el humano aprueba:
 
 1. `estado: aprobado` en el pedido. Recién ahí se toca código o base.
-2. Se ejecuta tildando cada tarea **cuando corrió**, no antes. Una casilla
-   tildada es una afirmación sobre lo que pasó.
+2. Si el pedido lleva `bloque`, la ejecución va por Quipu (`PROCESO-002`):
+   `claim_block` → `plan_microtasks` → por cada microtarea `start_microtask`,
+   construir, `add_evidence` con la **salida real** (`bin/verificar.sh`,
+   `bin/pruebas.sh`, `bin/impacto.sh`, `git diff db/actual/` — nunca un
+   resumen), `mark_criterion_met`, `complete_task`. Después `get_gate_status`.
+   Cada tarea del pedido se tilda **cuando su criterio quedó cumplido**.
+   Si Quipu no responde, se ejecuta igual y la evidencia se carga al volver;
+   el pedido no espera a Quipu.
 3. Si el pedido lleva `decision_nueva`, la decisión se escribe **antes** del
    código y va en el mismo commit (`AGENTS.md` §creación de decisiones).
-4. Con todo tildado y `bin/verificar.sh` sin violaciones: `estado: aplicado`,
-   `cerrado: <fecha>`, y el archivo se mueve a `pedidos/archivo/`.
+4. Con todo tildado, `bin/verificar.sh` sin violaciones y el bloque aprobado por
+   el humano en la Web UI: `estado: aplicado`, `cerrado: <fecha>`, y el archivo
+   se mueve a `pedidos/archivo/`.
 5. Si el humano lo rechaza: `estado: descartado`, el motivo escrito en el cuerpo,
    y también a `pedidos/archivo/`. **No se borra**: existe para que nadie
    reproponga lo mismo en tres meses.
@@ -173,7 +181,12 @@ De `AGENTS.md` y `decisiones/`:
 - Nunca `docker compose down`. Solo `up -d`.
 - Deuda descubierta de paso se registra en `decisiones/deuda.md`, no se corrige.
 - Nunca ejecutar un pedido en `propuesto`: el estado es la autorización.
+  Eso incluye `claim_block`: reclamar el bloque de un pedido no aprobado es
+  ejecutar sin permiso. Quipu no lo impide; el protocolo sí (`PROCESO-002`).
 - Nunca tildar una tarea que no corrió.
+- Nunca pegar un resumen como evidencia en Quipu: se pega la salida real.
+- Nunca buscar la norma en Quipu: sus `business_rule` son un espejo sin ciclo de
+  vida. Los invariantes se consultan en el MCP `decisiones` (paso 1).
 - Una migración que agrega o quita un parámetro borra la firma que reemplaza
   (`MIGRACION-001`); una que cambia un estado del router reemplaza solo ese
   handler (`ROUTER-001`); una que toca una función RPC termina en `NOTIFY pgrst`

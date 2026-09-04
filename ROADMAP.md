@@ -4,7 +4,7 @@ Corto a propósito. Lo cerrado está en `agent-context/history/auditorias/2026-0
 restricciones que gobiernan cualquier cosa que entre acá están en `AGENTS.md` y
 en `decisiones/`.
 
-**Última actualización: 2026-08-19.**
+**Última actualización: 2026-08-28.**
 
 ---
 
@@ -31,6 +31,12 @@ nuevas y trazabilidad en `decisiones/candidatos/archivo/promovidos/INDICE.md`.
 descriptiva, `agent-context/` (`DOCS-001`). Y un cambio ya no empieza en una
 conversación sino en `pedidos/NNN-slug.md`, con `bin/verificar.sh` chequeo 10
 como juez (`PROCESO-001`).
+
+**Quipu como columna de ejecución (2026-08-28).** El pedido autoriza, Quipu
+prueba, `decisiones/` gobierna (`PROCESO-002`). Una tarea del pedido se tilda
+cuando su criterio de bloque quedó cumplido **con evidencia real**, no cuando
+alguien decidió que ya estaba. La metodología anterior está archivada en
+`agent-context/history/metodologia/`.
 
 ---
 
@@ -64,7 +70,26 @@ gobierne**, así que hoy no es más que una idea. Si entra, entra como decisión
 nueva y un pedido; lo que la condiciona es que `initData` exige el token del bot
 dentro de Postgres o de n8n (`PORTAL-001`).
 
-### 4. Deuda registrada
+### 4. Quipu — cuatro huecos que condicionan la metodología
+
+El proyecto `chasqui` está cargado y la columna de ejecución opera
+(`PROCESO-002`). Lo que falta **en Quipu**, y hasta que se cierre `pedidos/`
+sigue siendo el expediente:
+
+- **Q-1** una tool que cree un bloque colgando de un `cambio`. Hoy sólo existe
+  `import_project_structure`, que toma el proyecto entero y no ata a un cambio.
+- **Q-2** que `claim_block` envíe las reglas del bloque en su payload: el agente
+  que reclama un bloque no ve un solo invariante.
+- **Q-3** que `block_rule` deje de ser tabla muerta —nada la lee ni la escribe— y
+  una puerta frene al bloque que contradice una regla.
+- **Q-4** ciclo de vida de `business_rule` (`estado`, `supersede`,
+  `motivo_reemplazo`, `procedencia`), o aceptar formalmente que lo lleva
+  `decisiones/`.
+
+Con Q-1 y Q-2 cerradas, `pedidos/` se reevalúa: ahí Quipu podría absorber el
+expediente sin perder la autorización ni el rastro. No antes.
+
+### 5. Deuda registrada
 
 Once entradas en `decisiones/deuda.md`; D-001 y D-004 cerradas. Las abiertas que
 más pesan:

@@ -9,6 +9,14 @@
       "command": "codebase-memory-mcp",
       "args": [],
       "description": "Estado vigente del codigo: como esta implementado hoy. Indexa db/actual/, bin/, workflows/, portal/."
+    },
+    "quipu": {
+      "type": "http",
+      "url": "http://localhost:8001/mcp",
+      "headers": {
+        "Authorization": "Bearer ${QUIPU_MCP_TOKEN}"
+      },
+      "description": "Quipu: la columna de EJECUCION (paso 8 del protocolo). Bloques listos, reclamo, microtareas y evidencia real. NO gobierna: sus business_rule son un espejo sin ciclo de vida y ninguna puerta suya comprueba un invariante. La norma es decisiones/ (MCP decisiones) y la autorizacion es el pedido. Ver AGENTS.md y PROCESO-002."
     }
   }
 }

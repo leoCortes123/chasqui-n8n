@@ -82,5 +82,24 @@ if [ -f db/actual/MANIFIESTO.txt ]; then
   sed -n '3,5p' db/actual/MANIFIESTO.txt | sed 's/^/  /'
 fi
 echo
+# ── Quipu ────────────────────────────────────────────────────────────────────
+# Existe porque el reparto no es obvio: Quipu prueba la ejecución, pero no
+# gobierna. Un agente que busque la norma en Quipu no la encuentra (PROCESO-002).
+echo "--- Quipu — columna de ejecución (ver AGENTS.md § Quipu) ---"
+if command -v curl >/dev/null 2>&1 \
+   && [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 http://localhost:8001/up 2>/dev/null)" = "200" ]; then
+  echo "  Arriba en localhost:8001. Paso 8 del protocolo: claim_block →"
+  echo "  plan_microtasks → add_evidence (salida REAL) → mark_criterion_met →"
+  echo "  get_gate_status → complete_task. El bloque lo cierra un humano."
+else
+  echo "  NO responde en localhost:8001. Levantar: cd ../QUIPU_ENTERPRISE &&"
+  echo "  docker compose up -d. Sin Quipu el desarrollo NO se detiene: se avanza"
+  echo "  por el pedido y la evidencia se carga cuando vuelva."
+fi
+echo "  Quipu NO gobierna: sus business_rule son un espejo sin ciclo de vida y"
+echo "  ninguna puerta suya comprueba un invariante. La norma es decisiones/ y"
+echo "  se consulta con dominio_contexto ANTES del código. El pedido autoriza:"
+echo "  claim_block sobre un pedido que no está 'aprobado' es ejecutar sin permiso."
+echo
 echo "Consulta: decisiones/INDICE.md · db/actual/INDICE.md · agent-context/README.md"
 echo "Cambiar algo: la skill /pedido lo escribe en pedidos/. Ver bash bin/pedidos.sh"

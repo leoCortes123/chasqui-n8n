@@ -44,6 +44,13 @@ y disparó la reestructuración: el sellado de v0 en `db/base/`, el archivo de l
 que dio origen a esta capa; sus afirmaciones `[CONFIRMADO]` son la procedencia de
 buena parte de lo que hoy afirman `../architecture/` y `../domains/`.
 
+**Agosto 2026, semana 4 — la metodología anterior a Quipu.**
+[`metodologia/`](metodologia/) conserva el ciclo que gobernó del 2026-08-22 al
+2026-08-28, cuando `pedidos/` era el único registro de un cambio en curso, y la
+§Quipu de `AGENTS.md` que lo describía mal. Se archivó al entrar `PROCESO-002`.
+Buena parte de ese ciclo **sigue vigente**: qué se conservó y qué no está en la
+propia decisión.
+
 **Los planes.** [`planes/`](planes/) conserva `PLAN_PRODUCCION.md` y
 `PLAN_DATOS_PRUEBA.md`: **ya ejecutados o superados**. Están acá porque varias
 decisiones promovidas desde `decisiones/candidatos/` los citan como procedencia.

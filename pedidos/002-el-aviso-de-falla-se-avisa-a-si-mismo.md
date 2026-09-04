@@ -32,6 +32,31 @@ mismo nodo de `wf_enviar` y el mismo mensaje: `Forbidden - perhaps check your
 credentials?`, que es lo que devuelve Telegram cuando el usuario cerró el chat
 con el bot.
 
+### Lo que se midió después, en la tercera prueba de usuario
+
+El bucle siguió girando cinco horas y se comió la prueba entera del negocio 168
+(usuario 159, sesión 1, ejecución 1, 2026-08-22):
+
+```
+fallas               2.845, todas 'Forbidden', de las 12:15 a las 17:24
+execution_entity     113 en 'running' a la vez, 110 de ellas wf_error
+N8N_CONCURRENCY_PRODUCTION_LIMIT = 5
+```
+
+Con las cinco ranuras ocupadas por el diagnóstico, **las dos entregas al usuario
+nuevo nunca salieron**: las ejecuciones 5359 (el informe, generado 12:59) y 5366
+(una alerta de margen) quedaron encoladas a las 13:01 y ahí murieron.
+`EXECUTIONS_TIMEOUT=300` no las liberó porque cuenta desde que la ejecución
+arranca, y nunca arrancaron. El usuario cargó 101 archivos y no recibió nada.
+
+Esa saturación es un defecto propio y sobrevive aunque este pedido se aplique
+entero: va en **P-003**. Acá queda como la medida del daño.
+
+El bucle se cortó a mano el 2026-08-22 17:24 (`UPDATE usuarios SET rol='operador'
+WHERE id=52`), deshaciendo la promoción manual que lo había habilitado. Es un
+parche de instalación, no el arreglo: nada impide que vuelva a formarse en cuanto
+haya otro admin con chat.
+
 ## Causa
 
 El circuito se cierra sobre sí mismo:
@@ -72,7 +97,7 @@ Propuesta, a discutir antes de escribirla:
 ## Tareas
 
 - [ ] decidir el alcance con el humano (los tres puntos, o sólo el 1 y el 2)
-- [ ] migración `077`: consulta de admins con la barrera, marca de identidad inalcanzable, parámetro de cooldown
+- [ ] migración (el número se fija al aprobar; `verificar.sh` rechaza un pedido que declare una migración inexistente): consulta de admins con la barrera, marca de identidad inalcanzable, parámetro de cooldown
 - [ ] caso en `db/pruebas/router_casos.sql` o banco nuevo: un `403` no genera un segundo aviso
 - [ ] `bash bin/verificar.sh`
 - [ ] regenerar: `bin/gen_estado_sql.sh`

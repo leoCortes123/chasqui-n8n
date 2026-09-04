@@ -16,7 +16,14 @@ todos los errores que ha tenido este proyecto.
 | **¿Cómo está implementado hoy?** | `db/actual/` | `db/migraciones/` |
 | **¿Cómo funciona, explicado?** | `agent-context/` | como fuente normativa |
 | **¿Qué se está cambiando ahora?** | `pedidos/` · `bash bin/pedidos.sh` | tu memoria de la última sesión |
+| **¿Qué se construyó y con qué prueba?** | Quipu (`localhost:8001`) | las casillas tildadas del pedido |
 | **¿Por qué llegó a ser así?** | cabecera de la migración · `git log` · `agent-context/history/` | la intuición |
+
+Desde el 2026-08-28 hay una quinta fila y es nueva: **Quipu**. No gobierna y no
+autoriza; prueba. Un pedido dice qué se cambia y quién lo aprobó, y su bloque de
+Quipu dice qué se construyó y con qué evidencia real (`PROCESO-002`). La
+metodología anterior, cuando `pedidos/` era el único registro, está archivada en
+`agent-context/history/metodologia/`.
 
 Desde el 2026-08-22 no hay `docs/`: la documentación descriptiva es una sola capa,
 `agent-context/`, y lo superado está en `agent-context/history/` (`DOCS-001`).
@@ -140,9 +147,26 @@ Lo que hace la skill, en orden:
 5. Escribe `pedidos/NNN-slug.md` en estado `propuesto` y te pregunta.
 
 Un pedido `propuesto` no autoriza nada. **Tu aprobación es lo que lo mueve a
-`aprobado`**, y recién ahí el agente toca algo. Lo que sigue en esta sección es
-qué evidencia hace falta según el tipo de cambio, que es la parte que sólo puedes
-aportar tú.
+`aprobado`**, y recién ahí el agente toca algo — incluido reclamar su bloque en
+Quipu. Lo que sigue en esta sección es qué evidencia hace falta según el tipo de
+cambio, que es la parte que sólo puedes aportar tú.
+
+### Y qué pasa después, en Quipu
+
+Aprobado el pedido, el agente ejecuta por microtareas y **cada una tiene que
+dejar prueba**: `add_evidence` con la salida real de `bin/verificar.sh` o
+`bin/pruebas.sh`, y `mark_criterion_met`, que **falla si no hay evidencia
+enlazada**. Ésa es la diferencia con la metodología anterior: antes una casilla
+tildada afirmaba que algo corrió, sin nada detrás.
+
+Al terminar, el bloque queda en `verifying` y **lo cierras tú** desde la Web UI
+de Quipu (`localhost:8001`). No hay tool para que un agente apruebe su propio
+trabajo, igual que no hay una para que apruebe su propio pedido. Ahí el pedido
+pasa a `aplicado`.
+
+Si Quipu está caído, el trabajo no se detiene: se ejecuta por el pedido y la
+evidencia se carga cuando vuelva. Levantarlo es
+`cd ../QUIPU_ENTERPRISE && docker compose up -d`.
 
 ### 4.1 Función nueva o capacidad nueva
 

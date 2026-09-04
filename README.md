@@ -24,7 +24,7 @@ idéntica a la que recibiría un cliente nuevo. Lo que sigue no se decide otra v
 | el próximo cambio de SQL | migración `077` en `db/migraciones/`, y empieza por un pedido |
 | las 73 viejas | `agent-context/history/migraciones/`. **No se aplican ni se consultan para saber cómo funciona algo** |
 | cómo funciona algo hoy | `db/actual/` |
-| qué gobierna | `decisiones/` — 20 decisiones vigentes |
+| qué gobierna | `decisiones/` — 21 decisiones vigentes |
 | volver a dejar la base limpia | `bash bin/limpiar_negocio.sh` y nada más |
 
 ### Arrancar una prueba de usuario
@@ -46,6 +46,7 @@ negocio y usuario solos — no hay que sembrar nada a mano.
 |---|---|
 | pedir un cambio | la skill `/pedido` — el humano no edita el repo a mano (`PROCESO-001`) |
 | ver qué cambios están en curso | `bash bin/pedidos.sh` · `pedidos/README.md` |
+| ver qué se construyó y con qué prueba | Quipu, `localhost:8001` (`PROCESO-002`) |
 | trabajar en el proyecto (humano) | `GUIA_TRABAJO.md` |
 | trabajar en el proyecto (agente de código) | `AGENTS.md` |
 | la documentación del sistema | `agent-context/README.md` |
@@ -62,9 +63,10 @@ Cuatro registros y no se mezclan (`DOCS-001`):
 | ¿qué debe ser? | `decisiones/` — normativo |
 | ¿cómo está hoy? | `db/actual/` — generado del catálogo vivo |
 | ¿cómo funciona, en prosa? | `agent-context/` — describe, no gobierna |
-| ¿qué se está cambiando? | `pedidos/` — los cambios en curso |
+| ¿qué se está cambiando? | `pedidos/` — el expediente: qué, por qué, quién autorizó |
+| ¿qué se construyó y con qué prueba? | Quipu — la evidencia, no la norma |
 
-La quinta pregunta —*¿por qué llegó a ser así?*— la responde
+La última pregunta —*¿por qué llegó a ser así?*— la responde
 `agent-context/history/`: las 73 migraciones selladas, las auditorías y los
 planes ya ejecutados. Es parte de la documentación y no gobierna nada.
 `ejemplos/` son fixtures de prueba.

@@ -1,7 +1,21 @@
 # pedidos/ — los cambios en curso
 
 Un cambio de Chasqui no empieza en el código: empieza en un **pedido**. Este
-directorio es el único lugar donde vive un cambio que todavía no terminó.
+directorio es el **expediente** de un cambio en curso: qué se cambia, por qué, y
+quién lo autorizó.
+
+Desde el 2026-08-28 no es el único registro. Un cambio que lleva SQL tiene además
+un **bloque en Quipu**, que es la otra mitad: qué se construyó y con qué prueba
+(`PROCESO-002`). El reparto es estricto y no se solapa:
+
+| | `pedidos/` | Quipu |
+|---|---|---|
+| responde | qué, por qué, quién autorizó | qué se construyó, con qué evidencia |
+| autoriza | **sí** — el campo `estado` | no |
+| prueba | no — una casilla no es prueba | **sí** — `mark_criterion_met` falla sin evidencia |
+
+`claim_block` sobre un bloque cuyo pedido no está en `aprobado` es ejecutar sin
+autorización. Quipu no lo impide; el protocolo sí.
 
 Existe porque el protocolo de `AGENTS.md` se ejecutaba entero dentro de una
 conversación: el agente clasificaba el pedido, citaba las decisiones, proponía, y
@@ -51,6 +65,7 @@ estado: propuesto              # propuesto | aprobado | aplicado | descartado
 decisiones: [INGESTA-001]      # las consultadas, no las que suenan parecido
 decision_nueva: null           # id, si el cambio contradice una vigente
 migracion: null                # 077_slug.sql cuando lo lleve
+bloque: null                   # full_id del bloque en Quipu, si el cambio lleva SQL
 abierto: 2026-08-22
 cerrado: null
 ---
@@ -63,6 +78,11 @@ cerrado: null
 ## Verificación
 ## R-IV
 ```
+
+`bloque:` es el `full_id` del bloque de Quipu que ejecuta este pedido
+(`chasqui-<feature>-P-NNN`), o `null` si el cambio no lleva SQL. Una tarea se
+tilda **cuando su criterio de bloque quedó cumplido con evidencia enlazada** —
+no cuando alguien decidió que ya estaba (`PROCESO-002`).
 
 ## Qué comprueba `bin/verificar.sh` (chequeo 10)
 

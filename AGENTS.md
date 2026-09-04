@@ -77,20 +77,94 @@ workflow se lee su generador o `workflows/wf_*.json`, nunca una foto.
 
 ## Herramientas de consulta
 
-Dos servidores MCP, registrados en `.mcp.json`, deliberadamente separados:
+Tres servidores MCP, registrados en `.mcp.json`, deliberadamente separados:
 
 | Servidor | Responde | Fuente |
 |---|---|---|
 | `decisiones` | ¿cómo hemos decidido que debe funcionar? | `decisiones/` (`bin/mcp_decisiones.py`) |
-| `codigo` | ¿cómo está implementado hoy? | índice de `db/actual/`, `bin/`, `workflows/`, `portal/` |
+| `codigo` | ¿cómo está implementado hoy? | grafo de `codebase-memory-mcp` sobre `bin/`, `portal/`, `workflows/` y `db/actual/` |
+| `quipu` | ¿qué microtarea puedo tomar y con qué evidencia se cierra? | Quipu (`http://localhost:8001/mcp`) — la columna de ejecución |
 
 `codigo` **nunca** es fuente normativa: describe lo que hay, no lo que debe ser.
+`quipu` **tampoco**: prueba lo que se construyó, no dice qué debe construirse.
+La norma es `decisiones/`, y sólo `decisiones/` (`PROCESO-002`).
+
+`codigo` sirve para el código Python/portal/shell y para búsqueda estructural,
+pero **su grafo es ciego a PL/pgSQL**: tree-sitter deja sin parsear la mayoría de
+las 160 funciones de `db/actual/funciones/` y no ve el despacho por filas
+(`servicios.funcion_hallazgos` → `EXECUTE`). Para el grafo de llamadas y el
+impacto sobre SQL manda `bash bin/impacto.sh <función>` y
+`agent-context/generated/{symbols,dependencies}.json`, no `codigo`.
 
 Sin cliente MCP, lo mismo se consulta a mano: `decisiones/INDICE.md`,
 `db/actual/INDICE.md` y `bash bin/impacto.sh <función>`.
 
 Para agentes: mapas por dominio, invariantes con evidencia, contratos entre
 componentes y navegación por tarea viven en `agent-context/README.md`.
+
+## Quipu — la columna de ejecución
+
+Quipu es una app aparte (Laravel en `localhost:8001`, repo
+`QUIPU_ENTERPRISE/code/api`) que traza el trabajo pieza a pieza y **exige prueba
+de cada pieza**. Ahí está su valor: `mark_criterion_met` falla si no hay
+evidencia enlazada, y `add_evidence` pide el output real. Una casilla `- [x]` no
+falla nunca.
+
+El proyecto `chasqui` está cargado (id 1, adoptado el 2026-08-27): 8 features,
+43 rules, 8 bloques (P-002…P-009), 32 endpoints, 2 pantallas, 8 lecciones.
+
+**El ciclo de ejecución** — es el paso 8 del protocolo, no un proceso aparte:
+
+```
+get_ready_blocks → get_block_detail → claim_block → plan_microtasks
+  ↳ por microtarea: start_microtask → construir → add_evidence
+                    → mark_criterion_met → complete_task
+get_gate_status → complete_task (del bloque) → queda en `verifying`
+```
+
+Lo cierra un humano en la Web UI (`POST /api/blocks/{id}/approve`). **No hay tool
+MCP para aprobar, y es deliberado.**
+
+Antes de escribir código, dos consultas baratas: `query_knowledge` (¿ya se
+cometió este error?) y `get_existing_components` (¿ya existe?). La segunda hoy
+devuelve vacío —`code_class = 0`—; para impacto sobre SQL manda
+`bash bin/impacto.sh`.
+
+### Qué NO hace Quipu, y por eso `decisiones/` y `pedidos/` siguen en pie
+
+Quipu **sí** tiene cadena de gobierno (`necesidad → cambio → requisito →
+cobertura`, con seis puertas de cierre y firmas humanas). Lo que no tiene, medido
+el 2026-08-28 (`PROCESO-002`):
+
+- **No puede atar un cambio a los bloques de Chasqui.** `cambio_ambito()` alcanza
+  los criterios de un bloque sólo por `feature.cambio_id`, y los 8 features son
+  `es_heredado` con `cambio_id = NULL`. No hay tool que cree un bloque colgando
+  de un cambio.
+- **`business_rule` no tiene ciclo de vida**: sin `estado`, `supersede`,
+  `motivo_reemplazo` ni `procedencia`. Las 43 rules son un **espejo de sólo
+  lectura** de los invariantes; la norma vigente es `decisiones/`.
+- **Ninguna puerta frena un bloque que contradiga una regla.** `block_rule` es
+  una tabla que nada lee ni escribe, y el payload de `claim_block` no lleva
+  reglas: el agente que reclama un bloque no ve un solo invariante. **Los
+  invariantes se consultan en el MCP `decisiones`, siempre, antes del código.**
+- R-I..R-IV, la lista de congelados y los 10 chequeos de `bin/verificar.sh` no
+  tienen representación en Quipu.
+
+Traducción de vocabulario, porque no coincide y eso ya costó cinco días de
+Quipu invisible (`agent-context/history/metodologia/quipu-dormido.md`):
+
+| Chasqui | Quipu |
+|---|---|
+| pedido | `cambio` + `requisitos` (hoy sin uso: no ata a bloques) |
+| invariante | `business_rule` (espejo, sin ciclo de vida) |
+| tarea del pedido | microtarea + criterio con evidencia |
+| deuda / lección | `knowledge_entry` (`query_knowledge`) |
+| contradicción | `enlace` sospechoso (`listar_sospechas`) — sin uso en este proyecto |
+
+Si Quipu no responde en `localhost:8001`: `cd ../QUIPU_ENTERPRISE && docker
+compose up -d`. Si aun así no está, el desarrollo **no se detiene** — se avanza
+por el pedido y la evidencia se carga cuando vuelva.
+
 
 ## Comandos oficiales
 
@@ -229,20 +303,34 @@ No se empieza leyendo el repositorio entero.
 |---|---|---|
 | 1 | identificar el o los dominios que toca la solicitud | — |
 | 2 | decisiones vigentes, superadas relevantes e invariantes | `dominio_contexto(dominio)` — MCP `decisiones` |
-| 3 | estado real del código, **no** `db/migraciones/` | `db/actual/INDICE.md`, `search_graph` — MCP `codigo` |
+| 3 | estado real del código, **no** `db/migraciones/` | SQL: `db/actual/INDICE.md`. Resto y búsqueda estructural: `search_graph` — MCP `codigo` |
 | 4 | dependencias e impacto | `bash bin/impacto.sh <función>` |
 | 5 | contrastar la implementación contra los invariantes | — |
 | 6 | **reportar las contradicciones antes de proponer nada** | — |
 | 7 | **escribir el pedido** y esperar aprobación | skill `/pedido` → `pedidos/NNN-slug.md` |
-| 8 | ejecutar, tildando cada tarea cuando corrió | — |
-| 9 | verificar | `bash bin/verificar.sh` |
+| 8a | reclamar el bloque y planificar | `claim_block` → `plan_microtasks` — MCP `quipu` |
+| 8b | construir cada microtarea **con evidencia real** | `start_microtask` → `add_evidence` → `mark_criterion_met` → `complete_task` |
+| 9 | verificar, los dos | `get_gate_status` **y** `bash bin/verificar.sh` |
 | 10 | registrar la decisión si cambió la arquitectura | `decisiones/`, mismo commit |
-| 11 | cerrar el pedido: `aplicado` y a `pedidos/archivo/` | — |
+| 11 | cerrar: humano aprueba el bloque, pedido a `aplicado` y a `pedidos/archivo/` | Web UI de Quipu |
 
 El paso 2 va **antes** que el 3, siempre. Un agente que explora primero llega al
 paso 2 con una arquitectura ya formada en la cabeza, y entonces las decisiones
 sólo la confirman o le estorban. En el paso 6 hay que distinguir dos cosas que se
 parecen: lo que el usuario quiere que pase, y la deuda que ya está ahí.
+
+Los pasos 1-7 son de Chasqui y **Quipu no participa**: no tiene ciclo de vida de
+decisiones ni puerta que compruebe un invariante. Los pasos 8-9 son de Quipu, y
+ahí una tarea del pedido se tilda **cuando su criterio quedó cumplido con
+evidencia enlazada**, no cuando alguien decidió que ya estaba (`PROCESO-002`).
+
+La evidencia es salida real: `bash bin/verificar.sh`, `bash bin/pruebas.sh`,
+`bash bin/impacto.sh <función>`, el `git diff db/actual/`. Nunca un resumen —
+`add_evidence` lo dice y `mark_criterion_met` falla sin evidencia enlazada.
+
+Un cambio que no lleva SQL ni bloque —tocar un generador, un documento— se queda
+en `pedidos/` y salta los pasos 8-9 de Quipu. Todo cambio necesita expediente; no
+todo cambio necesita evidencia de construcción.
 
 Que `dominio_contexto` devuelva vacío **no significa que se pueda hacer
 cualquier cosa**: significa que la decisión no está escrita. Ante un cambio de
@@ -250,7 +338,9 @@ arquitectura sin decisión que lo gobierne, la decisión se escribe primero.
 
 El paso 7 no es una formalidad: hasta que el pedido no está escrito y aprobado,
 **no se toca nada** (`PROCESO-001`). Un pedido en `propuesto` no autoriza; el
-estado es la autorización y lo cambia el humano, no el agente.
+estado es la autorización y lo cambia el humano, no el agente. **`claim_block`
+sobre un bloque cuyo pedido no está en `aprobado` es ejecutar sin autorización**
+— Quipu no lo impide, el protocolo sí (`PROCESO-002`).
 
 ## Los cambios en curso viven en `pedidos/`
 
@@ -261,6 +351,11 @@ formato y el ciclo de vida están en `pedidos/README.md`.
 
     propuesto ──aprueba el humano──► aprobado ──aplicado y verificado──► aplicado
         └──────────────rechaza──────────────────► descartado
+
+**El pedido y su bloque son el mismo cambio visto desde dos lados**: el pedido
+dice qué se cambia, por qué y quién lo autorizó; el bloque dice qué se construyó
+y con qué prueba. Los 8 pedidos abiertos ya tienen bloque
+(`chasqui-<dominio>-P-NNN`); un pedido nuevo que lleve SQL necesita el suyo.
 
 Lo mecánico lo comprueba `bin/verificar.sh` chequeo 10: estados válidos,
 coherencia con la carpeta, ninguna tarea sin tildar en un pedido `aplicado`, y

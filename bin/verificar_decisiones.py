@@ -37,7 +37,11 @@ for d in todas.values():
         if "/" in ruta:
             existe = (RAIZ / ruta).exists()
         else:
-            existe = bool(list((RAIZ / "db/actual").rglob(f"{ruta}*.sql"))) or \
+            # un nombre suelto es una función (db/actual/, bin/) o un archivo de
+            # la raíz: AGENTS.md y GUIA_TRABAJO.md son afectables como cualquier
+            # otro artefacto, y sin esto una decisión de proceso no puede citarlos.
+            existe = (RAIZ / ruta).is_file() or \
+                     bool(list((RAIZ / "db/actual").rglob(f"{ruta}*.sql"))) or \
                      bool(list((RAIZ / "bin").glob(f"*{ruta}*")))
         if not existe:
             malas.append(f"{n}: afecta a '{ruta}', que no existe en db/actual/ ni bin/")

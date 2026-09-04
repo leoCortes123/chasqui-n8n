@@ -56,14 +56,19 @@ reemplaza. En orden:
    vigente, detente: la decisión nueva que la supersede se escribe **antes**
    (`decisiones/`, mismo commit).
 8. Escribe el pedido (`pedidos/NNN-slug.md`, skill `/pedido`) y **espera la
-   aprobación del humano**. Antes de eso no se toca nada (`PROCESO-001`).
-9. Implementa siguiendo las restricciones de generación (`db/base/`,
+   aprobación del humano**. Antes de eso no se toca nada (`PROCESO-001`), y eso
+   incluye `claim_block` sobre su bloque de Quipu (`PROCESO-002`).
+9. Implementa por microtarea de Quipu (`claim_block` → `plan_microtasks` →
+   `start_microtask`), siguiendo las restricciones de generación (`db/base/`,
    `db/actual/`, `workflows/wf_*.json` son generados: se cambia el generador y
    se regenera, jamás a mano).
-10. Verifica: `bash bin/verificar.sh --rapido` (estructura), `bash bin/pruebas.sh`
-   (bancos SQL, terminan en ROLLBACK), `python3 bin/prueba_ciclo_vida.py` (E2E).
-   Si tocaste contratos de este directorio, actualízalos en el mismo commit.
-11. Cierra el pedido: `aplicado`, con todas las tareas tildadas, a `pedidos/archivo/`.
+10. Verifica y **pega la evidencia**: `bash bin/verificar.sh --rapido`
+   (estructura), `bash bin/pruebas.sh` (bancos SQL, terminan en ROLLBACK),
+   `python3 bin/prueba_ciclo_vida.py` (E2E). Su salida real va a `add_evidence`
+   y de ahí a `mark_criterion_met`; después `get_gate_status`. Si tocaste
+   contratos de este directorio, actualízalos en el mismo commit.
+11. Cierra: un humano aprueba el bloque en la Web UI de Quipu; el pedido pasa a
+   `aplicado`, con todas las tareas tildadas, y va a `pedidos/archivo/`.
 
 ## Reglas de esta capa
 

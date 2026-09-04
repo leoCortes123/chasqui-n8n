@@ -2,7 +2,7 @@
 
 Generado por `bin/gen_indice_decisiones.py`. **No editar a mano.**
 
-20 decisiones (20 vigentes, 0 superadas o descartadas) · 0 candidatos sin promover en `candidatos/`
+21 decisiones (21 vigentes, 0 superadas o descartadas) · 0 candidatos sin promover en `candidatos/`
 
 ## alertas
 
@@ -91,6 +91,7 @@ Generado por `bin/gen_indice_decisiones.py`. **No editar a mano.**
 | id | estado | título | invariantes |
 |---|---|---|---|
 | [`PROCESO-001`](PROCESO-001.md) | ✅ vigente | Un cambio empieza por un pedido escrito, no por una conversación | 5 |
+| [`PROCESO-002`](PROCESO-002.md) | ✅ vigente | El pedido es el expediente y Quipu es la prueba; la norma no se muda | 6 |
 
 ## producto
 
